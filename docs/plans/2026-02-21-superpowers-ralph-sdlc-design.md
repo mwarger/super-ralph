@@ -209,7 +209,7 @@ Ralph TUI executes all of these as regular beads — no special handling require
 
 After the PRD is generated, Ralph TUI's built-in flow asks: "Create tasks as JSON or Beads?" The user chooses Beads.
 
-A custom bead conversion skill (`superpowers-create-beads`, placed in `skills_dir`) converts the PRD to beads. It extends the bundled `ralph-tui-create-beads` skill's approach with:
+A custom bead conversion skill (`super-ralph-create-beads`, placed in `skills_dir`) converts the PRD to beads. It extends the bundled `ralph-tui-create-beads` skill's approach with:
 
 - PRD -> Epic bead (with `--external-ref` linking back to the PRD file and the design doc)
 - Each user story -> Child bead (with acceptance criteria + quality gates)
@@ -611,12 +611,12 @@ Supported phases:
 
 ---
 
-## 5. Custom Bead Conversion Skill: `superpowers-create-beads`
+## 5. Custom Bead Conversion Skill: `super-ralph-create-beads`
 
 ### 5.1 Skill Location
 
 ```
-<skills_dir>/superpowers-create-beads/SKILL.md
+<skills_dir>/super-ralph-create-beads/SKILL.md
 ```
 
 This is a custom version of the bundled `ralph-tui-create-beads` skill, placed in `skills_dir`. It follows the same pattern (using `bd create`, `bd dep add`, `bd label add`) but adds:
@@ -760,7 +760,7 @@ project/
 ├── skills/
 │   ├── superpowers-intake/
 │   │   └── SKILL.md             # Custom PRD skill (Section 4)
-│   └── superpowers-create-beads/
+│   └── super-ralph-create-beads/
 │       └── SKILL.md             # Custom bead conversion skill (Section 5)
 ├── docs/
 │   ├── plans/
@@ -788,7 +788,7 @@ ralph-tui create-prd --prd-skill superpowers-intake
 #    Repeat 4-5 rounds until steady-state
 
 # 3. Choose "Beads" when prompted for task format
-#    -> Uses superpowers-create-beads skill
+#    -> Uses super-ralph-create-beads skill
 #    -> Implementation beads + review beads + audit beads + learning bead
 #    -> All wired into dependency tree
 
@@ -857,7 +857,7 @@ The framework is successful when:
 
 ### From v1
 
-1. **Phase label parsing:** Resolved by writing a custom `superpowers-create-beads` skill in `skills_dir`. The bundled skill is not extended — a custom skill is written that follows the same pattern but adds phase labels, review beads, and audit beads.
+1. **Phase label parsing:** Resolved by writing a custom `super-ralph-create-beads` skill in `skills_dir`. The bundled skill is not extended — a custom skill is written that follows the same pattern but adds phase labels, review beads, and audit beads.
 
 2. **Automated phase pause:** Resolved by making phase checkpoints into beads. No pausing needed — Ralph executes review beads like any other bead. The dependency tree ensures they run at the right time.
 

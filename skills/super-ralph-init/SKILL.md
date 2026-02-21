@@ -222,7 +222,7 @@ Output a summary of everything that was done. Use this format:
 
 ### Next Steps
 1. Run the **superpowers-intake** skill to create your first PRD
-2. Run the **superpowers-create-beads** skill to convert the PRD to beads
+2. Run the **super-ralph-create-beads** skill to convert the PRD to beads
 3. Run `ralph-tui run --tracker beads-bv` to start autonomous execution
 ```
 

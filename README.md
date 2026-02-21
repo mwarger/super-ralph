@@ -70,7 +70,7 @@ Type `/superralph:feature` (or `/superralph:bug`, `/superralph:hotfix`, `/superr
 
 ### 2. Bead Conversion
 
-The `superpowers-create-beads` skill converts the PRD to beads with:
+The `super-ralph-create-beads` skill converts the PRD to beads with:
 - Implementation beads with phase labels
 - Review beads at phase boundaries
 - Fresh-eyes bug scan beads
@@ -99,7 +99,7 @@ Audit beads review the entire implementation. The learning bead extracts lessons
 |---|---|
 | `super-ralph-init` | Initialize a project for the framework |
 | `superpowers-intake` | Relentless intake protocol + PRD generation (work-type aware) |
-| `superpowers-create-beads` | Convert PRDs to beads with review/audit structure + launch wizard |
+| `super-ralph-create-beads` | Convert PRDs to beads with review/audit structure + launch wizard |
 
 ## Updating
 

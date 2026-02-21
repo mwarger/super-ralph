@@ -23,7 +23,7 @@ Take a PRD (produced by `superpowers-intake`) and create beads in `.beads/beads.
 10. Run a **self-check round** on all beads before finishing
 11. Output ready for `ralph-tui run --tracker beads-bv`
 
-**Announce at start:** "I'm using the superpowers-create-beads skill to convert the PRD to beads with review/audit structure."
+**Announce at start:** "I'm using the super-ralph-create-beads skill to convert the PRD to beads with review/audit structure."
 
 ---
 

@@ -15,7 +15,7 @@
 ### Two-Layer Architecture
 
 **Global layer** (installed once, auto-updates via `git pull`):
-- Skills: `superpowers-intake`, `superpowers-create-beads`, `super-ralph-init`
+- Skills: `superpowers-intake`, `super-ralph-create-beads`, `super-ralph-init`
 - Commands: `/super-ralph-init` slash command
 - Plugins: platform-specific bootstrap injection
 - Templates: source files for project init
@@ -47,7 +47,7 @@ super-ralph/
 ├── skills/                                 # Shared across all platforms
 │   ├── super-ralph-init/SKILL.md           # Init skill — scaffolds project-local files
 │   ├── superpowers-intake/SKILL.md         # Custom PRD skill (relentless intake)
-│   └── superpowers-create-beads/SKILL.md   # Custom bead conversion skill
+│   └── super-ralph-create-beads/SKILL.md   # Custom bead conversion skill
 │
 ├── commands/                               # Slash commands (Claude Code discovers these)
 │   └── super-ralph-init.md                 # /super-ralph-init → invokes init skill
@@ -232,7 +232,7 @@ The current `agent-framework/` directory becomes the `super-ralph` repo:
 | Current location | New location |
 |---|---|
 | `skills/superpowers-intake/SKILL.md` | `skills/superpowers-intake/SKILL.md` (same) |
-| `skills/superpowers-create-beads/SKILL.md` | `skills/superpowers-create-beads/SKILL.md` (same) |
+| `skills/super-ralph-create-beads/SKILL.md` | `skills/super-ralph-create-beads/SKILL.md` (same) |
 | `.ralph-tui-prompt.hbs` | `templates/prompt.hbs` |
 | `AGENTS.md` | `templates/agents.md` |
 | `.ralph-tui/config.toml` | `templates/config.toml` |

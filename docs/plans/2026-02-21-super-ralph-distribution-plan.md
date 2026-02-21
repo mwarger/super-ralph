@@ -61,7 +61,7 @@ sound = "off"
 ls templates/
 # Expected: agents.md  config.toml  intake-checklist.md  prompt.hbs
 ls skills/
-# Expected: superpowers-create-beads/  superpowers-intake/
+# Expected: super-ralph-create-beads/  superpowers-intake/
 ```
 
 **Step 4: Commit**
@@ -320,7 +320,7 @@ Expected:
 ./INSTALL.md
 ./README.md
 ./skills/super-ralph-init/SKILL.md
-./skills/superpowers-create-beads/SKILL.md
+./skills/super-ralph-create-beads/SKILL.md
 ./skills/superpowers-intake/SKILL.md
 ./templates/agents.md
 ./templates/config.toml
