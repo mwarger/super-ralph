@@ -8,24 +8,27 @@ Every piece of work — feature, bug, refactor, hotfix — flows through the sam
 
 ### Claude Code
 
+Tell Claude Code:
+
 ```
-/plugin marketplace add mwarger/super-ralph-marketplace
-/plugin install super-ralph@super-ralph-marketplace
+Fetch and follow instructions from https://raw.githubusercontent.com/mwarger/super-ralph/main/.claude/INSTALL.md
 ```
 
 ### OpenCode
 
+Tell OpenCode:
+
 ```
-Fetch and follow instructions from https://raw.githubusercontent.com/mwarger/super-ralph/main/INSTALL.md
+Fetch and follow instructions from https://raw.githubusercontent.com/mwarger/super-ralph/main/.opencode/INSTALL.md
 ```
 
 ### Codex
 
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/mwarger/super-ralph/main/INSTALL.md
-```
+Tell Codex:
 
-See [INSTALL.md](INSTALL.md) for detailed platform-specific instructions.
+```
+Fetch and follow instructions from https://raw.githubusercontent.com/mwarger/super-ralph/main/.codex/INSTALL.md
+```
 
 ## Per-Project Setup
 
