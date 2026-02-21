@@ -25,14 +25,21 @@ mkdir -p ~/.config/opencode/skills
 ln -s ~/.agents/super-ralph/skills ~/.config/opencode/skills/super-ralph
 ```
 
-### 3. Install plugin
+### 3. Symlink commands
+
+```bash
+mkdir -p ~/.config/opencode/commands
+ln -s ~/.agents/super-ralph/commands/super-ralph-init.md ~/.config/opencode/commands/super-ralph-init.md
+```
+
+### 4. Install plugin
 
 ```bash
 mkdir -p ~/.config/opencode/plugins
 ln -s ~/.agents/super-ralph/.opencode/plugins/super-ralph.js ~/.config/opencode/plugins/super-ralph.js
 ```
 
-### 4. Restart OpenCode
+### 5. Restart OpenCode
 
 Restart OpenCode to pick up the new skills and plugin.
 
@@ -40,14 +47,15 @@ Restart OpenCode to pick up the new skills and plugin.
 
 ```bash
 ls -la ~/.config/opencode/skills/super-ralph
+ls -la ~/.config/opencode/commands/super-ralph-init.md
 ls -la ~/.config/opencode/plugins/super-ralph.js
 ```
 
-Both should show symlinks pointing into `~/.agents/super-ralph/`.
+All should show symlinks pointing into `~/.agents/super-ralph/`.
 
 ## Per-Project Setup
 
-After installation, initialize any project by saying:
+After installation, initialize any project by typing `/super-ralph-init` or saying:
 
 > "Initialize this project for super-ralph"
 
@@ -65,6 +73,7 @@ Because skills and plugins are symlinked, the update takes effect immediately. R
 
 ```bash
 rm ~/.config/opencode/skills/super-ralph
+rm ~/.config/opencode/commands/super-ralph-init.md
 rm ~/.config/opencode/plugins/super-ralph.js
 rm -rf ~/.agents/super-ralph
 ```
