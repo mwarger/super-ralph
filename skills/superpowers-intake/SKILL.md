@@ -146,27 +146,92 @@ Once the intake is complete, produce a design document following the Superpowers
 
 ## Step 3: Iterative Plan Refinement (Emanuel Method)
 
-After the design is approved, generate an initial set of user stories (iteration-sized, see sizing rules below). Then offer the plan refinement loop:
+After the design is approved, generate an initial set of user stories (iteration-sized, see sizing rules below). Then offer the plan refinement loop.
 
 **When to offer this:** For features and substantial work. Skip for hotfixes and small bugs where the plan is obvious.
 
-Tell the user:
-
-> "The initial plan is ready. For substantial features, Emanuel's iterative refinement loop improves the plan significantly — you send the plan to a separate model (e.g., GPT Pro via OpenCode) for review, then integrate its suggestions. Typically 4-5 rounds until suggestions become incremental.
->
-> Would you like to run the refinement loop, or proceed directly to PRD generation?"
-
-**If they choose refinement, provide the exact prompt for the reviewer model:**
+**The reviewer prompt** (used by all modes below):
 
 > Carefully review this entire plan for me and come up with your best revisions in terms of better architecture, new features, changed features, etc. to make it better, more robust/reliable, more performant, more compelling/useful, etc. For each proposed change, give me your detailed analysis and rationale/justification for why it would make the project better along with the git-diff style changes relative to the original markdown plan.
 
-**The loop:**
-1. User sends plan to reviewer model (GPT Pro via OpenCode, or paste into ChatGPT)
-2. User brings back the review output
-3. You revise the plan in-place using the feedback
-4. Repeat until the user is satisfied or suggestions become incremental
+### Offering the refinement loop
 
-**Wait for the user to return with the refined plan before proceeding to Step 4.**
+Present the user with these options:
+
+> "The initial plan is ready. For substantial features, Emanuel's iterative refinement loop improves the plan significantly. How would you like to run the review?
+>
+> 1. **Auto-review (one round)** — I'll run `opencode run` with the design doc and reviewer prompt using `openai/gpt-5.2`. You review the output and decide whether to integrate.
+> 2. **Auto-review (full loop, 4-5 rounds unattended)** — I'll run the full Emanuel loop automatically — send for review, integrate feedback, repeat until suggestions become incremental. You review the final result.
+> 3. **Copy to clipboard** — I'll copy the design doc content and reviewer prompt to your clipboard for your tool of choice.
+> 4. **Manual** — You handle sending the plan to a reviewer yourself and bring back the feedback.
+> 5. **Skip** — Proceed directly to PRD generation."
+
+### Thinking level (options 1 and 2 only)
+
+Before running the OpenCode CLI, ask the user what reasoning effort level to use:
+
+> "What thinking/reasoning level for the reviewer?
+>
+> - **max** — Deepest reasoning, slowest, most expensive
+> - **high** — Strong reasoning, good balance *(recommended)*
+> - **minimal** — Fast, lighter reasoning"
+
+This maps to the `--variant` flag on the CLI call.
+
+### Option 1: Auto-review (one round)
+
+1. Construct and execute the CLI command:
+
+```bash
+opencode run -m openai/gpt-5.2 --variant <thinking_level> \
+  -f <design_doc_path> \
+  "<reviewer_prompt>"
+```
+
+Where `<design_doc_path>` is the path to the saved design doc (e.g., `docs/plans/YYYY-MM-DD-<feature>-design.md`).
+
+2. Capture and present the reviewer's output to the user.
+3. Ask: "Integrate this feedback into the design? (yes / skip / revise manually)"
+4. If yes, revise the design doc in-place using the feedback.
+5. After integration, ask: "Run another round, switch modes, or proceed to PRD generation?"
+
+### Option 2: Auto-review (full loop, unattended)
+
+1. Run up to 5 rounds automatically. Each round:
+   a. Send the design doc + reviewer prompt via `opencode run` (same CLI shape as option 1).
+   b. Capture the reviewer output.
+   c. Revise the design doc in-place using the feedback.
+   d. Save the updated design doc.
+
+2. **Steady-state detection:** Starting from round 2, prepend this to the reviewer prompt:
+
+> Note: This is round N of iterative refinement on this plan. Previous rounds have already incorporated reviewer feedback. If the plan is now solid and your remaining suggestions are only incremental or cosmetic, respond with STEADY_STATE on the first line followed by any minor notes.
+
+3. **Stop conditions:** The loop stops when the reviewer responds with STEADY_STATE at the top of their response, OR 5 rounds are completed, whichever comes first.
+
+4. After the loop completes, present a summary:
+   - How many rounds were run
+   - Key changes made in each round (1-2 bullet points per round)
+   - Ask the user to review the final design doc before proceeding to PRD generation
+
+### Option 3: Copy to clipboard
+
+1. Construct the full text: reviewer prompt + a blank line + the complete design doc content.
+2. Copy it to the clipboard using `pbcopy` (macOS).
+3. Tell the user: "Copied the reviewer prompt and design doc to your clipboard. Paste it into your reviewer tool, then bring the feedback back here."
+4. Wait for the user to return with the review output.
+5. Revise the design doc in-place using the feedback.
+6. Ask: "Run another round (same mode or different), or proceed to PRD generation?"
+
+### Option 4: Manual
+
+1. Display the reviewer prompt for the user to copy.
+2. Tell them the design doc path so they can reference it.
+3. Wait for the user to return with the review output.
+4. Revise the design doc in-place using the feedback.
+5. Ask: "Run another round, or proceed to PRD generation?"
+
+**Wait for the refinement loop to complete (or be skipped) before proceeding to Step 4.**
 
 ---
 

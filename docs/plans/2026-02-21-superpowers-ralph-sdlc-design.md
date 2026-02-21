@@ -99,26 +99,41 @@ The design is saved to `docs/plans/YYYY-MM-DD-<feature>-design.md`.
 
 #### 2.3 Iterative Plan Refinement (Emanuel Method)
 
-After the design document is approved, the skill produces an initial implementation plan (user stories sized for Ralph iterations). Then comes a refinement loop borrowed from Emanuel's workflow:
-
-**The refinement loop:**
-
-1. Send the complete plan to a reviewer model (e.g., GPT Pro with extended reasoning) with this prompt:
-
-> Carefully review this entire plan for me and come up with your best revisions in terms of better architecture, new features, changed features, etc. to make it better, more robust/reliable, more performant, more compelling/useful, etc. For each proposed change, give me your detailed analysis and rationale/justification for why it would make the project better along with the git-diff style changes relative to the original markdown plan.
-
-2. Take the reviewer's output and feed it to the working agent (Claude Code, OpenCode) with instructions to revise the plan file in-place using the feedback.
-3. Repeat steps 1-2 for 4-5 rounds until the suggestions become incremental (steady-state).
+After the design document is approved, the skill produces an initial implementation plan (user stories sized for Ralph iterations). Then comes a refinement loop borrowed from Emanuel's workflow.
 
 **When to use this loop:** For features and substantial work. Skip for hotfixes and small bugs where the plan is obvious.
 
-**Automation via OpenCode:** Rather than manually copy-pasting between models, use [OpenCode](https://opencode.ai) configured with the OpenAI provider (ChatGPT Plus/Pro) for the reviewer role. OpenCode supports 75+ providers including OpenAI, OpenRouter, Anthropic, and Google. Configure it via `/connect` → OpenAI → ChatGPT Plus/Pro, then select the desired model (e.g., GPT Pro) via `/models`. The workflow becomes:
+**The reviewer prompt** (used by all modes):
 
-1. In OpenCode (configured with GPT Pro): paste the plan with the review prompt above. Copy the output.
-2. In Claude Code (or OpenCode configured with Claude): paste the review output with "revise the plan in-place using this feedback."
-3. Repeat until steady-state.
+> Carefully review this entire plan for me and come up with your best revisions in terms of better architecture, new features, changed features, etc. to make it better, more robust/reliable, more performant, more compelling/useful, etc. For each proposed change, give me your detailed analysis and rationale/justification for why it would make the project better along with the git-diff style changes relative to the original markdown plan.
 
-This keeps the refinement loop within terminal-based tools rather than requiring browser-based ChatGPT. The skill documents this step, provides the exact prompts, tells the user when to run the refinement loop, and waits for them to return with the refined plan before proceeding to PRD generation.
+**Refinement modes:** The skill presents four options for how to run the review, plus a skip option:
+
+1. **Auto-review (one round)** — The skill executes `opencode run` with the design doc and reviewer prompt, captures the output, presents it to the user, and integrates feedback upon approval. The user decides after each round whether to continue.
+
+2. **Auto-review (full loop, 4-5 rounds unattended)** — The skill runs the complete Emanuel loop automatically: send for review, integrate feedback, repeat until steady-state. Stops when the reviewer signals STEADY_STATE or after 5 rounds. Presents a round-by-round summary at the end for user review.
+
+3. **Copy to clipboard** — Copies the reviewer prompt + design doc content to the system clipboard via `pbcopy`. The user pastes into their tool of choice and brings the feedback back.
+
+4. **Manual** — Current behavior. The skill provides the reviewer prompt and design doc path; the user handles the review process entirely.
+
+5. **Skip** — Proceed directly to PRD generation.
+
+**Automation via OpenCode CLI:** Modes 1 and 2 use [OpenCode](https://opencode.ai)'s non-interactive `run` subcommand to call a reviewer model directly from the terminal. The default reviewer model is `openai/gpt-5.2`. The CLI command shape:
+
+```bash
+opencode run -m openai/gpt-5.2 --variant <thinking_level> \
+  -f <design_doc_path> \
+  "<reviewer_prompt>"
+```
+
+**Thinking/reasoning level:** Before running the CLI (modes 1 and 2), the skill asks the user to select a reasoning effort level: `max` (deepest, slowest), `high` (recommended default), or `minimal` (fast, lighter). This maps to OpenCode's `--variant` flag, which controls provider-specific reasoning effort.
+
+**Steady-state detection (mode 2 only):** Starting from round 2, the reviewer prompt is prefixed with an instruction asking the reviewer to respond with `STEADY_STATE` on the first line if remaining suggestions are only incremental or cosmetic. This allows the automated loop to terminate early when further refinement has diminishing returns.
+
+**Round-by-round summary (mode 2 only):** After the loop completes, the skill presents how many rounds were run and the key changes made in each round (1-2 bullet points per round), then asks the user to review the final design doc before proceeding.
+
+This keeps the refinement loop within terminal-based tools, eliminating manual copy-paste friction while preserving user control over the process.
 
 #### 2.4 Plan -> User Stories -> PRD Output
 
