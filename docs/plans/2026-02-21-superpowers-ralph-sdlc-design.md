@@ -257,7 +257,7 @@ Ralph TUI takes over. It runs the autonomous loop:
 
 **Cross-iteration learning:** Each iteration reads `progress.md` (via the `{{recentProgress}}` template variable) to understand what previous iterations accomplished. Each iteration appends its own learnings to `progress.md` before signaling completion. This is Huntley's "leave notes for future Ralphs" principle, already implemented by Ralph TUI.
 
-**Error handling:** Configurable per project. Default: `skip` (move to next bead on failure). For critical work: `retry` with fallback agents. For CI: `abort`.
+**Error handling:** Configurable per project. Default: `retry` (retry up to maxRetries then stop). **Do not use `skip`** — it marks failed beads as completed, corrupting the dependency graph. For CI: `stop` (halt on first error).
 
 **Emanuel's "reread AGENTS.md" pattern:** If the agent does a context compaction mid-iteration, the prompt template includes instructions to re-read key files. This is handled by including file references in the template rather than relying on compaction-surviving context.
 
@@ -721,7 +721,8 @@ subagentTracingDetail = "moderate"
 model = "claude-sonnet-4-6"
 
 [errorHandling]
-strategy = "skip"
+# Do NOT use "skip" — it marks failed beads as completed.
+strategy = "retry"
 maxRetries = 3
 
 [notifications]

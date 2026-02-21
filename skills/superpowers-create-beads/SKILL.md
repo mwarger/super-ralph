@@ -427,8 +427,12 @@ Design: docs/plans/YYYY-MM-DD-<feature>-design.md
 Schema → REVIEW-001 → BUGSCAN-001 → Backend → REVIEW-002 → BUGSCAN-002 → UI → ...
 
 ### Run Command
-ralph-tui run --tracker beads-bv --epic <EPIC_ID>
+ralph-tui run --tracker beads-bv --epic <EPIC_ID> --iterations <RECOMMENDED>
+
+> Setting --iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)
 ```
+
+**Calculate recommended iterations:** Count the total beads created (implementation + review + audit + learn). Multiply by 2. This accounts for retries on failures and corrective beads that review beads may create. Example: 27 beads → `--iterations 54`.
 
 Then proceed to **Step 9: Launch**.
 
@@ -436,7 +440,17 @@ Then proceed to **Step 9: Launch**.
 
 ## Step 9: Launch
 
-After presenting the summary, offer to launch execution immediately. Present the user with these options:
+### Preflight check
+
+Before offering launch options, run `ralph-tui doctor` and verify the output is healthy. If unhealthy, stop and help the user resolve issues before launching. Common problems:
+
+- Agent CLI not in PATH
+- Agent not authenticated
+- Template resolution errors (see beads-bv workaround in `super-ralph-init` troubleshooting section)
+
+### Launch options
+
+After the preflight passes, offer to launch execution immediately. Use `<ITERATIONS>` as the calculated value from Step 8 (total beads x 2).
 
 > "Beads are ready. How would you like to start execution?
 >
@@ -455,21 +469,25 @@ Before running, ask about agent/model overrides:
 > - **Override model** — e.g., `opus`, `sonnet`
 > - **Override both**"
 
-Construct the command based on their choices:
+Construct the command based on their choices. **All commands include `--iterations`:**
 
 ```bash
 # Default (no overrides)
-ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID>
+ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --iterations <ITERATIONS>
 
 # With agent override
-ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --agent <agent>
+ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --iterations <ITERATIONS> --agent <agent>
 
 # With model override
-ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --model <model>
+ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --iterations <ITERATIONS> --model <model>
 
 # With both
-ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --agent <agent> --model <model>
+ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --iterations <ITERATIONS> --agent <agent> --model <model>
 ```
+
+Tell the user why:
+
+> "Setting --iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"
 
 Run the command via bash. The `--headless` flag streams structured logs to stdout instead of launching the TUI.
 
@@ -482,12 +500,13 @@ After execution completes (or if it's interrupted), inform the user:
 Construct the command **without** `--headless` (the user will want the TUI in their own terminal):
 
 ```bash
-ralph-tui run --tracker beads-bv --epic <EPIC_ID>
+ralph-tui run --tracker beads-bv --epic <EPIC_ID> --iterations <ITERATIONS>
 ```
 
 Copy it to the clipboard using `pbcopy` (macOS). Tell the user:
 
-> "Copied to clipboard. Open a new terminal tab and paste to start the TUI."
+> "Copied to clipboard. Open a new terminal tab and paste to start the TUI.
+> Setting --iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"
 
 Always also display the command in the output as a fallback.
 
@@ -496,8 +515,10 @@ Always also display the command in the output as a fallback.
 Display the full command:
 
 ```
-ralph-tui run --tracker beads-bv --epic <EPIC_ID>
+ralph-tui run --tracker beads-bv --epic <EPIC_ID> --iterations <ITERATIONS>
 ```
+
+> "Setting --iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"
 
 No clipboard, no execution — the user copies it themselves.
 
@@ -534,5 +555,6 @@ Before finishing:
 - [ ] LEARN-001 created as final bead
 - [ ] All dependencies wired correctly
 - [ ] Self-check round completed
-- [ ] Summary output provided with run command
+- [ ] Summary output provided with run command and calculated --iterations
+- [ ] Preflight check (`ralph-tui doctor`) passed
 - [ ] Launch wizard presented (headless / clipboard / show command)

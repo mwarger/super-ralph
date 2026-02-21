@@ -1,3 +1,5 @@
+# Agent is set during `super-ralph-init` based on your environment.
+# Supported: claude, opencode, codex, gemini, droid, kiro
 agent = "claude"
 tracker = "beads-bv"
 skills_dir = "~/.agents/super-ralph/skills"
@@ -6,12 +8,24 @@ autoCommit = false
 subagentTracingDetail = "moderate"
 
 [agentOptions]
+# Model format is agent-specific:
+#   claude:   "claude-sonnet-4-6" or "sonnet" or "opus"
+#   opencode: "anthropic/claude-sonnet-4-6" (provider/model format)
+#   codex:    "5.3-codex"
+#   gemini:   "gemini-2.5-pro"
 model = "claude-sonnet-4-6"
 
 [errorHandling]
-strategy = "skip"
+# IMPORTANT: Do NOT use strategy = "skip" unless you understand the risk.
+# "skip" marks failed beads as completed, which can corrupt your dependency graph.
+# Use "retry" (retries up to maxRetries then stops) or "stop" (halts on first error).
+strategy = "retry"
 maxRetries = 3
 
 [notifications]
 enabled = true
 sound = "off"
+
+# Iterations are set per-epic by the launch wizard (total_beads x 2).
+# Override here for a project-wide default, or use --iterations on the CLI.
+# iterations = 50

@@ -63,13 +63,39 @@ Do NOT proceed without the templates.
 
 ---
 
-## Step 3: Select Agent
+## Step 3: Verify Ralph TUI Health
 
-Ask the user which AI coding agent they'll use with Ralph TUI:
+Run `ralph-tui doctor` and check the output.
+
+- **If healthy:** Continue to Step 4.
+- **If unhealthy:** Help the user resolve issues before proceeding. Common problems:
+  - Agent CLI not installed or not in PATH
+  - Authentication not configured for the agent's provider
+
+Also run `ralph-tui template show` to verify the prompt template system works. If it fails with a template resolution error, this may be the known `beads-bv` template path bug. See the **Troubleshooting** section at the bottom of this skill for the workaround.
+
+**Do not skip this step.** A broken ralph-tui install will silently fail during execution.
+
+---
+
+## Step 4: Select Agent
+
+**Auto-detection:** Before asking, try to detect the current agent environment:
+
+- If the `OPENCODE` environment variable is set, or you are running inside OpenCode: pre-select **opencode**
+- If you are running inside Claude Code (check `CLAUDE_CODE` env var or self-identify as Claude Code): pre-select **claude**
+- If the `CODEX_CLI` environment variable is set: pre-select **codex**
+- If none detected: no pre-selection, ask the user
+
+If auto-detected, confirm with the user:
+
+> "Detected that you're running inside **{agent}**. Use this as the Ralph TUI agent? (yes / choose a different agent)"
+
+If not detected (or user wants to choose), present the full menu:
 
 > "Which agent will Ralph TUI use for iterations?
 >
-> 1. **claude** — Claude Code CLI *(recommended)*
+> 1. **claude** — Claude Code CLI
 > 2. **opencode** — OpenCode CLI
 > 3. **codex** — OpenAI Codex CLI
 > 4. **gemini** — Google Gemini CLI
@@ -93,15 +119,15 @@ After selecting the agent, ask if they want to override the default model:
 
 If droid or kiro, this question becomes required since there's no default.
 
-Store the selected agent and model for Step 4.
+Store the selected agent and model for Step 5.
 
 ---
 
-## Step 4: Create `.ralph-tui/config.toml`
+## Step 5: Create `.ralph-tui/config.toml`
 
 1. Create the `.ralph-tui/` directory if it doesn't exist
 2. Copy `~/.agents/super-ralph/templates/config.toml` to `.ralph-tui/config.toml`
-3. **Edit the copied file** to set the correct `agent` and `model` values from Step 3:
+3. **Edit the copied file** to set the correct `agent` and `model` values from Step 4:
    - Replace the `agent = "..."` line with the selected agent
    - Replace the `model = "..."` line under `[agentOptions]` with the selected model
 
@@ -109,7 +135,7 @@ If re-initializing (user said yes in Step 1), overwrite the existing file.
 
 ---
 
-## Step 5: Create `.super-ralph/` Directory and Files
+## Step 6: Create `.super-ralph/` Directory and Files
 
 Create the `.super-ralph/` directory if it doesn't exist. Then copy each template file, **but only if the target does not already exist** — don't overwrite customizations.
 
@@ -125,7 +151,7 @@ For each file:
 
 ---
 
-## Step 6: Create `tasks/` Directory
+## Step 7: Create `tasks/` Directory
 
 Create the `tasks/` directory if it doesn't exist. This is where generated PRDs will be saved.
 
@@ -137,7 +163,7 @@ This is inherently idempotent — if it already exists, nothing happens.
 
 ---
 
-## Step 7: Update Project Root `AGENTS.md`
+## Step 8: Update Project Root `AGENTS.md`
 
 The reference line to add is:
 
@@ -171,7 +197,7 @@ Also read .super-ralph/AGENTS.md for SDLC framework instructions.
 
 ---
 
-## Step 8: Report Results
+## Step 9: Report Results
 
 Output a summary of everything that was done. Use this format:
 
@@ -223,7 +249,8 @@ Before reporting completion:
 
 - [ ] Checked for existing `.ralph-tui/config.toml` and asked user if re-initializing
 - [ ] Verified templates exist at `~/.agents/super-ralph/templates/`
-- [ ] Asked user which agent to use and confirmed default model (or accepted override)
+- [ ] Ran `ralph-tui doctor` and confirmed healthy (or resolved issues)
+- [ ] Auto-detected or asked user which agent to use; confirmed default model (or accepted override)
 - [ ] `.ralph-tui/config.toml` created with correct agent and model values (or confirmed overwrite)
 - [ ] `.super-ralph/AGENTS.md` created or skipped (already exists)
 - [ ] `.super-ralph/prompt.hbs` created or skipped (already exists)
@@ -231,3 +258,25 @@ Before reporting completion:
 - [ ] `tasks/` directory exists
 - [ ] Root `AGENTS.md` has reference to `.super-ralph/AGENTS.md` (not duplicated)
 - [ ] Summary report output with agent configuration and all created/modified/skipped files listed
+
+---
+
+## Troubleshooting
+
+### beads-bv template.hbs path resolution bug
+
+**Symptom:** `ralph-tui template show` fails, or ralph-tui crashes during execution with a template not found error when using `--tracker beads-bv`.
+
+**Root cause:** This is an upstream ralph-tui bug. The beads-bv tracker plugin resolves its built-in `template.hbs` from `__dirname`, which in bun's bundled output points to the dist root (`/dist/template.hbs`) instead of the plugin directory (`/dist/plugins/trackers/builtin/beads-bv/template.hbs`).
+
+**Workaround:**
+
+```bash
+# Copy the template to where the path resolution expects it
+cp "$(dirname $(which ralph-tui))/../lib/node_modules/ralph-tui/dist/plugins/trackers/builtin/beads-bv/template.hbs" \
+   "$(dirname $(which ralph-tui))/../lib/node_modules/ralph-tui/dist/template.hbs" 2>/dev/null || true
+```
+
+If this workaround doesn't apply (e.g., different install method), check where ralph-tui is installed and manually copy `template.hbs` from the beads-bv plugin directory to the dist root.
+
+This bug should be reported upstream to the ralph-tui project.
