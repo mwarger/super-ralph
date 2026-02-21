@@ -1,0 +1,89 @@
+{{!-- Superpowers + Ralph TUI SDLC Framework — Custom Prompt Template --}}
+{{!-- This template governs what each Ralph TUI iteration sees and does. --}}
+{{!-- It is type-agnostic: implementation, review, and audit beads all use --}}
+{{!-- the same template. The bead's own description drives agent behavior. --}}
+
+{{#if prdContent}}
+## Project Context
+
+We are implementing the following PRD:
+
+{{prdContent}}
+
+---
+{{/if}}
+
+{{#if selectionReason}}
+## Why This Task Was Selected
+{{selectionReason}}
+{{/if}}
+
+## Your Task: {{taskId}} - {{taskTitle}}
+
+{{#if taskDescription}}
+### Description
+{{taskDescription}}
+{{/if}}
+
+{{#if acceptanceCriteria}}
+### Acceptance Criteria
+{{acceptanceCriteria}}
+{{/if}}
+
+{{#if dependsOn}}
+**Prerequisites completed:** {{dependsOn}}
+{{/if}}
+
+{{#if blocks}}
+**Your work unblocks:** {{blocks}}
+{{/if}}
+
+{{#if recentProgress}}
+## What Previous Iterations Accomplished
+{{recentProgress}}
+{{/if}}
+
+## Workflow
+
+1. Read the AGENTS.md and README.md files carefully if they exist.
+2. Study the PRD context above to understand the bigger picture.
+3. Read `.ralph-tui/progress.md` for learnings, patterns, and gotchas from previous iterations.
+4. Search the codebase before implementing. Do not assume something doesn't exist. Do not assume something is not implemented. Use subagents for search when available.
+5. Implement this task following the acceptance criteria exactly.
+6. Run all quality gate commands. Fix any failures before proceeding.
+7. Self-review (see below).
+8. Commit with message: `feat: {{taskId}} - {{taskTitle}}`
+9. Document learnings in progress.md (see below).
+10. Signal completion.
+
+## Self-Review (REQUIRED before committing)
+
+Before committing your work, verify:
+- [ ] Every acceptance criterion is met (check each one explicitly).
+- [ ] All quality gate commands pass (typecheck, lint, test, build as applicable).
+- [ ] No placeholder or minimal implementations. Full implementations only.
+- [ ] No code was written that goes beyond this task's scope.
+- [ ] If you found a bug unrelated to this task, document it in progress.md but do not fix it unless it blocks your work.
+
+If any criterion is NOT met, fix it before committing. If it cannot be fixed within this task's scope, document the gap in progress.md and signal completion with a note about what remains.
+
+## Before Completing
+
+APPEND to `.ralph-tui/progress.md`:
+
+### [Date] - {{taskId}}: {{taskTitle}}
+- **What was implemented:** [summary]
+- **Files changed:** [list]
+- **Learnings:**
+  - [Patterns discovered]
+  - [Gotchas encountered]
+  - [Things the next iteration should know]
+
+If you discovered a reusable pattern, also add it to the `## Codebase Patterns` section at the TOP of progress.md.
+
+## Stop Condition
+
+If the work described in this task is already complete (implemented in a previous iteration or already exists in the codebase), verify it meets the acceptance criteria and signal completion immediately. Do not re-implement.
+
+When finished (or if already complete), signal completion with:
+<promise>COMPLETE</promise>
