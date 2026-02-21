@@ -63,16 +63,53 @@ Do NOT proceed without the templates.
 
 ---
 
-## Step 3: Create `.ralph-tui/config.toml`
+## Step 3: Select Agent
+
+Ask the user which AI coding agent they'll use with Ralph TUI:
+
+> "Which agent will Ralph TUI use for iterations?
+>
+> 1. **claude** — Claude Code CLI *(recommended)*
+> 2. **opencode** — OpenCode CLI
+> 3. **codex** — OpenAI Codex CLI
+> 4. **gemini** — Google Gemini CLI
+> 5. **droid** — Factory Droid CLI
+> 6. **kiro** — AWS Kiro CLI"
+
+Based on their selection, use these defaults:
+
+| Agent | `agent` value | Default `model` value |
+|-------|--------------|----------------------|
+| claude | `claude` | `claude-sonnet-4-6` |
+| opencode | `opencode` | `anthropic/claude-sonnet-4-6` |
+| codex | `codex` | `5.3-codex` |
+| gemini | `gemini` | `gemini-2.5-pro` |
+| droid | `droid` | *(leave blank — user must configure)* |
+| kiro | `kiro` | *(leave blank — user must configure)* |
+
+After selecting the agent, ask if they want to override the default model:
+
+> "The default model for **{agent}** is `{model}`. Use this, or specify a different model?"
+
+If droid or kiro, this question becomes required since there's no default.
+
+Store the selected agent and model for Step 4.
+
+---
+
+## Step 4: Create `.ralph-tui/config.toml`
 
 1. Create the `.ralph-tui/` directory if it doesn't exist
 2. Copy `~/.agents/super-ralph/templates/config.toml` to `.ralph-tui/config.toml`
+3. **Edit the copied file** to set the correct `agent` and `model` values from Step 3:
+   - Replace the `agent = "..."` line with the selected agent
+   - Replace the `model = "..."` line under `[agentOptions]` with the selected model
 
 If re-initializing (user said yes in Step 1), overwrite the existing file.
 
 ---
 
-## Step 4: Create `.super-ralph/` Directory and Files
+## Step 5: Create `.super-ralph/` Directory and Files
 
 Create the `.super-ralph/` directory if it doesn't exist. Then copy each template file, **but only if the target does not already exist** — don't overwrite customizations.
 
@@ -88,7 +125,7 @@ For each file:
 
 ---
 
-## Step 5: Create `tasks/` Directory
+## Step 6: Create `tasks/` Directory
 
 Create the `tasks/` directory if it doesn't exist. This is where generated PRDs will be saved.
 
@@ -100,7 +137,7 @@ This is inherently idempotent — if it already exists, nothing happens.
 
 ---
 
-## Step 6: Update Project Root `AGENTS.md`
+## Step 7: Update Project Root `AGENTS.md`
 
 The reference line to add is:
 
@@ -134,15 +171,18 @@ Also read .super-ralph/AGENTS.md for SDLC framework instructions.
 
 ---
 
-## Step 7: Report Results
+## Step 8: Report Results
 
 Output a summary of everything that was done. Use this format:
 
 ```
 ## Super-Ralph Init Complete
 
+### Agent Configuration
+- Agent: {agent} | Model: {model}
+
 ### Files Created
-- .ralph-tui/config.toml ← copied from template
+- .ralph-tui/config.toml ← copied from template, configured for {agent}
 - .super-ralph/AGENTS.md ← copied from template
 - .super-ralph/prompt.hbs ← copied from template
 - .super-ralph/intake-checklist.md ← copied from template
@@ -155,10 +195,9 @@ Output a summary of everything that was done. Use this format:
 - (list any files that were skipped)
 
 ### Next Steps
-1. Review `.ralph-tui/config.toml` and adjust settings for your project
-2. Run the **superpowers-intake** skill to create your first PRD
-3. Run the **superpowers-create-beads** skill to convert the PRD to beads
-4. Run `ralph-tui run --tracker beads-bv` to start autonomous execution
+1. Run the **superpowers-intake** skill to create your first PRD
+2. Run the **superpowers-create-beads** skill to convert the PRD to beads
+3. Run `ralph-tui run --tracker beads-bv` to start autonomous execution
 ```
 
 Adjust the lists based on what actually happened — only show sections that have entries.
@@ -184,10 +223,11 @@ Before reporting completion:
 
 - [ ] Checked for existing `.ralph-tui/config.toml` and asked user if re-initializing
 - [ ] Verified templates exist at `~/.agents/super-ralph/templates/`
-- [ ] `.ralph-tui/config.toml` created (or confirmed overwrite)
+- [ ] Asked user which agent to use and confirmed default model (or accepted override)
+- [ ] `.ralph-tui/config.toml` created with correct agent and model values (or confirmed overwrite)
 - [ ] `.super-ralph/AGENTS.md` created or skipped (already exists)
 - [ ] `.super-ralph/prompt.hbs` created or skipped (already exists)
 - [ ] `.super-ralph/intake-checklist.md` created or skipped (already exists)
 - [ ] `tasks/` directory exists
 - [ ] Root `AGENTS.md` has reference to `.super-ralph/AGENTS.md` (not duplicated)
-- [ ] Summary report output with all created/modified/skipped files listed
+- [ ] Summary report output with agent configuration and all created/modified/skipped files listed

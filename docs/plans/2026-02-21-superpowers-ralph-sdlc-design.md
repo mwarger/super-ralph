@@ -696,6 +696,19 @@ These prompts are embedded in the appropriate bead descriptions and template sec
 
 ### 7.1 Ralph TUI Config (`.ralph-tui/config.toml`)
 
+During `super-ralph-init`, the user selects which agent Ralph TUI should use for iterations. The init skill sets the `agent` and `model` values accordingly:
+
+| Agent | `agent` value | Default `model` |
+|-------|--------------|----------------|
+| Claude Code | `claude` | `claude-sonnet-4-6` |
+| OpenCode | `opencode` | `anthropic/claude-sonnet-4-6` |
+| Codex | `codex` | `5.3-codex` |
+| Gemini | `gemini` | `gemini-2.5-pro` |
+| Droid | `droid` | *(user must configure)* |
+| Kiro | `kiro` | *(user must configure)* |
+
+The user can override the default model during init. Example config for Claude (the recommended default):
+
 ```toml
 agent = "claude"
 tracker = "beads-bv"
@@ -705,7 +718,7 @@ autoCommit = false
 subagentTracingDetail = "moderate"
 
 [agentOptions]
-model = "claude-sonnet-4-20250514"
+model = "claude-sonnet-4-6"
 
 [errorHandling]
 strategy = "skip"
