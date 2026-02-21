@@ -50,12 +50,25 @@ Both should show symlinks pointing into `~/.agents/super-ralph/`.
 After installation, initialize any project by running:
 
 ```
-/super-ralph-init
+/superralph:init
 ```
 
 Or say: "Initialize this project for super-ralph"
 
 This creates the project-local `.ralph-tui/config.toml`, `.super-ralph/` directory with AGENTS.md and templates, and a `tasks/` directory.
+
+### Available commands
+
+| Command | Purpose |
+|---------|---------|
+| `/superralph:init` | Initialize project |
+| `/superralph:feature [desc]` | New feature (full pipeline) |
+| `/superralph:bug [desc]` | Fix a bug (focused intake) |
+| `/superralph:hotfix [desc]` | Urgent fix (minimal intake) |
+| `/superralph:refactor [desc]` | Restructure code |
+| `/superralph:plan [desc]` | Plan only (stops after design doc) |
+| `/superralph:resume` | Resume interrupted epic |
+| `/superralph:status` | Check epic progress |
 
 ## Updating
 

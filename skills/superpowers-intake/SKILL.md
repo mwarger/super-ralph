@@ -20,6 +20,24 @@
 
 ---
 
+## Work Types
+
+The intake depth and pipeline steps vary based on the work type. This is typically set by the slash command that invoked this skill (e.g., `/superralph:feature` sets `work_type = "feature"`). If no work type is set, determine it during Phase A of intake.
+
+| Work Type | Intake Depth | Design Doc | Refinement | PRD | Beads + Launch |
+|-----------|-------------|------------|------------|-----|----------------|
+| **feature** | Full (all phases, 10-15+ questions) | Yes | Yes (offer all modes) | Yes | Yes |
+| **bug** | Medium (reproduce, root cause, 4-8 questions) | No — skip Step 2 | Yes (still offer) | Yes | Yes |
+| **hotfix** | Minimal (what's broken + what's the fix, 1-2 questions) | No — skip Step 2 | No — skip Step 3 | Yes (1-3 stories) | Yes |
+| **refactor** | Medium (pain points, desired state, risks, 5-10 questions) | Yes | No — skip Step 3 | Yes | Yes |
+| **plan** | Full (same as feature) | Yes | Yes | **No** — stop after design doc | **No** |
+
+When a step is skipped for a given work type, proceed directly to the next applicable step.
+
+**Seed description:** If the user provided a description with the command (e.g., `/superralph:feature add dark mode toggle`), use it as starting context. Begin Phase A by confirming the description rather than asking "what is this?" from scratch.
+
+---
+
 ## Process Flow
 
 ```
@@ -31,13 +49,15 @@ Phase B: Technical Deep-Dive (one question at a time)
         ↓
 Phase C: Learned Questions (from docs/intake-checklist.md)
         ↓
-Present design in sections → get user approval
+[feature, refactor, plan] Present design in sections → get user approval
         ↓
-Save design doc to docs/plans/
+[feature, refactor, plan] Save design doc to docs/plans/
+        ↓
+[plan stops here]
         ↓
 Generate initial user stories
         ↓
-(Optional) Iterative plan refinement loop
+[feature, bug] (Optional) Iterative plan refinement loop
         ↓
 Generate final PRD with review/audit/learning beads
         ↓
@@ -67,7 +87,7 @@ A one-bead hotfix might resolve in 4 questions. A major feature might take 15+ r
 
 ### Phase A: Business Interrogation
 
-1. **What is this?** Classify the work:
+1. **What is this?** If `work_type` was set by a slash command, skip this question — the type is already known. If a seed description was provided, confirm it: "You want to [description] — is that right, or should I adjust?" Otherwise, classify the work:
    - A. New feature
    - B. Bug fix
    - C. Refactor / technical debt
@@ -142,13 +162,21 @@ Once the intake is complete, produce a design document following the Superpowers
 
 5. **Save the design** to `docs/plans/YYYY-MM-DD-<feature>-design.md`.
 
+**If work_type = "plan":** STOP HERE. Tell the user:
+
+> "Design doc saved to `docs/plans/YYYY-MM-DD-<feature>-design.md`. Run `/superralph:feature` when you're ready to execute this plan."
+
+Do NOT proceed to Step 3 or beyond.
+
+**If work_type = "bug" or "hotfix":** Skip this step entirely — proceed directly to Step 3 (or Step 4 for hotfix).
+
 ---
 
 ## Step 3: Iterative Plan Refinement (Emanuel Method)
 
 After the design is approved, generate an initial set of user stories (iteration-sized, see sizing rules below). Then offer the plan refinement loop.
 
-**When to offer this:** For features and substantial work. Skip for hotfixes and small bugs where the plan is obvious.
+**When to offer this:** For feature and bug work types. Skip for hotfix and refactor.
 
 **The reviewer prompt** (used by all modes below):
 

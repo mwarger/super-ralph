@@ -35,27 +35,38 @@ Fetch and follow instructions from https://raw.githubusercontent.com/mwarger/sup
 After installing globally, initialize any project:
 
 ```
-/super-ralph-init
+/superralph:init
 ```
 
 Or say: "Initialize this project for super-ralph"
 
 This creates:
-- `.ralph-tui/config.toml` — Ralph TUI configuration
+- `.ralph-tui/config.toml` — Ralph TUI configuration (agent-specific)
 - `.super-ralph/AGENTS.md` — Framework agent instructions
 - `.super-ralph/prompt.hbs` — Custom prompt template
 - `.super-ralph/intake-checklist.md` — Growing intake checklist
 - `tasks/` — Directory for generated PRDs
 
+## Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/superralph:init` | Initialize project for the framework |
+| `/superralph:feature [desc]` | New feature — full pipeline (intake → design → refinement → PRD → beads → launch) |
+| `/superralph:bug [desc]` | Fix a bug — focused intake, skip design doc |
+| `/superralph:hotfix [desc]` | Urgent fix — minimal intake, 1-3 beads |
+| `/superralph:refactor [desc]` | Restructure code — design doc, skip refinement |
+| `/superralph:plan [desc]` | Plan only — stops after design doc |
+| `/superralph:resume` | Resume an interrupted epic |
+| `/superralph:status` | Check progress on current epic |
+
+All pipeline commands accept an optional inline description (e.g., `/superralph:feature add dark mode toggle`).
+
 ## The Pipeline
 
 ### 1. Intake + Design + Plan
 
-```bash
-ralph-tui create-prd --prd-skill superpowers-intake
-```
-
-The `superpowers-intake` skill runs a relentless interrogation — business context, technical deep-dive, learned questions from past projects. It produces a design document, runs an optional iterative refinement loop, then generates a PRD with user stories sized for single Ralph TUI iterations.
+Type `/superralph:feature` (or `/superralph:bug`, `/superralph:hotfix`, `/superralph:refactor`). The intake skill runs a relentless interrogation — business context, technical deep-dive, learned questions from past projects. Depth adjusts automatically based on work type. For features and refactors, it produces a design document and runs an optional iterative refinement loop (automated via `opencode run` or manual). Then generates a PRD with user stories sized for single Ralph TUI iterations.
 
 ### 2. Bead Conversion
 
@@ -70,8 +81,10 @@ All wired into a dependency graph that enforces correct execution order.
 
 ### 3. Autonomous Execution
 
+The launch wizard offers to run Ralph TUI headless, copy the command to clipboard, or display it:
+
 ```bash
-ralph-tui run --tracker beads-bv --epic <epic-id>
+ralph-tui run --tracker beads-bv --epic <epic-id> --iterations <beads x 2>
 ```
 
 Ralph TUI runs the loop: select (PageRank-optimized) → prompt → execute → evaluate. Review beads execute automatically at phase boundaries — no manual pausing.
@@ -85,8 +98,8 @@ Audit beads review the entire implementation. The learning bead extracts lessons
 | Skill | Purpose |
 |---|---|
 | `super-ralph-init` | Initialize a project for the framework |
-| `superpowers-intake` | Relentless intake protocol + PRD generation |
-| `superpowers-create-beads` | Convert PRDs to beads with review/audit structure |
+| `superpowers-intake` | Relentless intake protocol + PRD generation (work-type aware) |
+| `superpowers-create-beads` | Convert PRDs to beads with review/audit structure + launch wizard |
 
 ## Updating
 

@@ -29,7 +29,9 @@ ln -s ~/.agents/super-ralph/skills ~/.config/opencode/skills/super-ralph
 
 ```bash
 mkdir -p ~/.config/opencode/commands
-ln -s ~/.agents/super-ralph/commands/super-ralph-init.md ~/.config/opencode/commands/super-ralph-init.md
+for cmd in ~/.agents/super-ralph/commands/*.md; do
+  ln -sf "$cmd" ~/.config/opencode/commands/"$(basename "$cmd")"
+done
 ```
 
 ### 4. Install plugin
@@ -47,7 +49,7 @@ Restart OpenCode to pick up the new skills and plugin.
 
 ```bash
 ls -la ~/.config/opencode/skills/super-ralph
-ls -la ~/.config/opencode/commands/super-ralph-init.md
+ls -la ~/.config/opencode/commands/superralph:*.md
 ls -la ~/.config/opencode/plugins/super-ralph.js
 ```
 
@@ -55,11 +57,24 @@ All should show symlinks pointing into `~/.agents/super-ralph/`.
 
 ## Per-Project Setup
 
-After installation, initialize any project by typing `/super-ralph-init` or saying:
+After installation, initialize any project by typing `/superralph:init` or saying:
 
 > "Initialize this project for super-ralph"
 
 This creates the project-local `.ralph-tui/config.toml`, `.super-ralph/` directory with AGENTS.md and templates, and a `tasks/` directory.
+
+### Available commands
+
+| Command | Purpose |
+|---------|---------|
+| `/superralph:init` | Initialize project |
+| `/superralph:feature [desc]` | New feature (full pipeline) |
+| `/superralph:bug [desc]` | Fix a bug (focused intake) |
+| `/superralph:hotfix [desc]` | Urgent fix (minimal intake) |
+| `/superralph:refactor [desc]` | Restructure code |
+| `/superralph:plan [desc]` | Plan only (stops after design doc) |
+| `/superralph:resume` | Resume interrupted epic |
+| `/superralph:status` | Check epic progress |
 
 ## Updating
 
@@ -73,7 +88,7 @@ Because skills and plugins are symlinked, the update takes effect immediately. R
 
 ```bash
 rm ~/.config/opencode/skills/super-ralph
-rm ~/.config/opencode/commands/super-ralph-init.md
+rm ~/.config/opencode/commands/superralph:*.md
 rm ~/.config/opencode/plugins/super-ralph.js
 rm -rf ~/.agents/super-ralph
 ```
