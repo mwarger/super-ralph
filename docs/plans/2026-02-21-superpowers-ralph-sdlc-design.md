@@ -230,11 +230,19 @@ After initial creation, the skill does a self-check round (also from Emanuel):
 
 Result: `.beads/beads.jsonl` with a fully structured epic containing implementation beads, review beads, audit beads, and learning beads, all wired into the correct dependency order.
 
+**Launch wizard:** After outputting the bead summary, the skill offers to launch execution immediately:
+
+1. **Run headless** — Executes `ralph-tui run --headless --tracker beads-bv --epic <id>` directly in the current session. Streams structured logs to stdout. Before running, offers optional agent/model overrides (default: use project config). Progress can be checked from another terminal via `ralph-tui status --json`, and interrupted runs can be resumed with `ralph-tui resume`.
+2. **Copy command to clipboard** — Copies the `ralph-tui run` command (without `--headless`, for TUI mode) to the system clipboard via `pbcopy`. The user pastes it in a new terminal tab.
+3. **Show command** — Displays the command for manual copying.
+
+The command is always displayed in the output regardless of which option is chosen.
+
 ---
 
 ### Act 2: Execution
 
-**Trigger:** `ralph-tui run --tracker beads-bv --epic <id>`
+**Trigger:** `ralph-tui run --tracker beads-bv --epic <id>` (or launched automatically by the bead creation skill's launch wizard)
 
 **What happens:**
 
@@ -770,7 +778,7 @@ ralph-tui create-prd --prd-skill superpowers-intake
 #    -> Implementation beads + review beads + audit beads + learning bead
 #    -> All wired into dependency tree
 
-# 4. Run Ralph
+# 4. Launch (skill offers: run headless, copy to clipboard, or show command)
 ralph-tui run --tracker beads-bv --epic <epic-id>
 
 # 5. Ralph runs autonomously through:

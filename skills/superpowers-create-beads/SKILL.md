@@ -430,6 +430,77 @@ Schema → REVIEW-001 → BUGSCAN-001 → Backend → REVIEW-002 → BUGSCAN-002
 ralph-tui run --tracker beads-bv --epic <EPIC_ID>
 ```
 
+Then proceed to **Step 9: Launch**.
+
+---
+
+## Step 9: Launch
+
+After presenting the summary, offer to launch execution immediately. Present the user with these options:
+
+> "Beads are ready. How would you like to start execution?
+>
+> 1. **Run headless** — I'll run `ralph-tui run --headless` right here. Output streams to this session. You can check status from another terminal with `ralph-tui status --json`.
+> 2. **Copy command to clipboard** — I'll copy the full `ralph-tui run` command to your clipboard so you can paste it in a new terminal tab (TUI mode).
+> 3. **Show command** — I'll display the command for you to copy manually."
+
+### Option 1: Run headless
+
+Before running, ask about agent/model overrides:
+
+> "The project config will be used by default. Would you like to override agent or model for this run?
+>
+> - **Use config defaults** *(recommended)* — whatever is in `.ralph-tui/config.toml`
+> - **Override agent** — e.g., `claude`, `opencode`
+> - **Override model** — e.g., `opus`, `sonnet`
+> - **Override both**"
+
+Construct the command based on their choices:
+
+```bash
+# Default (no overrides)
+ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID>
+
+# With agent override
+ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --agent <agent>
+
+# With model override
+ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --model <model>
+
+# With both
+ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --agent <agent> --model <model>
+```
+
+Run the command via bash. The `--headless` flag streams structured logs to stdout instead of launching the TUI.
+
+After execution completes (or if it's interrupted), inform the user:
+- To check progress: `ralph-tui status --json`
+- To resume if interrupted: `ralph-tui resume --headless` (or `ralph-tui resume` for TUI mode)
+
+### Option 2: Copy command to clipboard
+
+Construct the command **without** `--headless` (the user will want the TUI in their own terminal):
+
+```bash
+ralph-tui run --tracker beads-bv --epic <EPIC_ID>
+```
+
+Copy it to the clipboard using `pbcopy` (macOS). Tell the user:
+
+> "Copied to clipboard. Open a new terminal tab and paste to start the TUI."
+
+Always also display the command in the output as a fallback.
+
+### Option 3: Show command
+
+Display the full command:
+
+```
+ralph-tui run --tracker beads-bv --epic <EPIC_ID>
+```
+
+No clipboard, no execution — the user copies it themselves.
+
 ---
 
 ## Differences from Bundled `ralph-tui-create-beads`
@@ -464,3 +535,4 @@ Before finishing:
 - [ ] All dependencies wired correctly
 - [ ] Self-check round completed
 - [ ] Summary output provided with run command
+- [ ] Launch wizard presented (headless / clipboard / show command)
