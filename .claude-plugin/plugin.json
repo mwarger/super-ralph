@@ -1,0 +1,8 @@
+{
+  "name": "super-ralph",
+  "version": "0.1.0",
+  "author": "mwarger",
+  "description": "Superpowers + Ralph TUI SDLC Framework — relentless intake, autonomous execution, embedded review",
+  "keywords": ["sdlc", "ralph-tui", "superpowers", "beads"],
+  "license": "MIT"
+}

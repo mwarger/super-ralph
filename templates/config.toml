@@ -1,0 +1,17 @@
+agent = "claude"
+tracker = "beads-bv"
+skills_dir = "~/.agents/super-ralph/skills"
+prompt_template = "./.super-ralph/prompt.hbs"
+autoCommit = false
+subagentTracingDetail = "moderate"
+
+[agentOptions]
+model = "claude-sonnet-4-20250514"
+
+[errorHandling]
+strategy = "skip"
+maxRetries = 3
+
+[notifications]
+enabled = true
+sound = "off"
