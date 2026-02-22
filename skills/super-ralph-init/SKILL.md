@@ -221,9 +221,9 @@ Output a summary of everything that was done. Use this format:
 - (list any files that were skipped)
 
 ### Next Steps
-1. Run the **superpowers-intake** skill to create your first PRD
-2. Run the **super-ralph-create-beads** skill to convert the PRD to beads
-3. Run `ralph-tui run --tracker beads-bv` to start autonomous execution
+1. Run `/superralph:feature` (or `:bug`, `:hotfix`, `:refactor`) to start the pipeline
+2. The skill handles intake, PRD, beads, and launch in one session
+3. Or run `/superralph:plan` to plan without executing
 ```
 
 Adjust the lists based on what actually happened — only show sections that have entries.

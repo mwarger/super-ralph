@@ -1,6 +1,6 @@
 # Intake Checklist
 
-> This file is read by the `superpowers-intake` skill during Phase C of the intake protocol.
+> This file is read during Phase C of the intake protocol by the ralph-tui PRD skills.
 > It contains learned questions — things the team has discovered should always be asked during intake.
 > The `LEARN-001` bead at the end of each epic appends new entries here.
 
