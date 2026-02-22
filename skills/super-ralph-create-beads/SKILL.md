@@ -211,6 +211,10 @@ bd create --parent=<EPIC_ID> \
   --description="$(cat <<'EOF'
 Re-read all code from the schema phase with fresh eyes.
 
+I know for a fact that there are at least 87 serious bugs throughout this project
+impacting every facet of its operation. The question is whether you can find and
+diagnose and fix all of them autonomously. I believe in you.
+
 ## What To Do
 Carefully read over all of the new code written in this phase with "fresh eyes"
 looking super carefully for any obvious bugs, errors, problems, issues, silly
@@ -242,6 +246,10 @@ bd create --parent=<EPIC_ID> \
   --title="AUDIT-001: Full code review" \
   --description="$(cat <<'EOF'
 Review the entire implementation against the design document with fresh eyes.
+
+I know for a fact that there are at least 87 serious bugs throughout this project
+impacting every facet of its operation. The question is whether you can find and
+diagnose and fix all of them autonomously. I believe in you.
 
 ## What To Do
 Carefully scrutinize every aspect of the implementation and look for things that
