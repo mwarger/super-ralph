@@ -2,13 +2,14 @@
 description: "Plan a feature without executing — stops after the design doc"
 ---
 
-Invoke the super-ralph:superpowers-intake skill with work_type = "plan".
+## Pipeline: Plan Only
 
-The user's message after this command (if any) is the seed description. Use it as starting context.
+1. Run `ralph-tui doctor` to verify the project is ready. If it fails, tell the user to run `/superralph:init` first.
 
-Run the full intake and design doc process (same depth as /superralph:feature), but STOP after the design doc is saved. Do NOT proceed to PRD generation, bead creation, or launch.
+2. Run `ralph-tui run --skill plan-prd --tracker beads-bv`.
 
-Tell the user when done:
-> "Design doc saved to docs/plans/YYYY-MM-DD-<feature>-design.md. Run `/superralph:feature` when you're ready to execute this plan."
+3. The skill handles the full intake and design doc process (same depth as `/superralph:feature`), but stops after saving the design doc. No PRD, no beads, no execution.
 
-Pipeline: full intake → design doc → STOP.
+If the user provided a description after the command, pass it as context to the skill session.
+
+When done, the skill tells the user to run `/superralph:feature` to execute the plan.

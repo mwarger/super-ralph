@@ -2,16 +2,12 @@
 description: "Restructure existing code through the super-ralph pipeline"
 ---
 
-Invoke the super-ralph:superpowers-intake skill with work_type = "refactor".
+## Pipeline: Refactor
 
-The user's message after this command (if any) is the refactoring description. Use it as starting context.
+1. Run `ralph-tui doctor` to verify the project is ready. If it fails, tell the user to run `/superralph:init` first.
 
-Refactor intake focuses on:
-1. Current pain points / code smells
-2. Desired architecture / structure
-3. What should NOT change (preserve behavior)
-4. Risk areas and testing strategy
+2. Run `ralph-tui run --skill refactor-prd --tracker beads-bv`.
 
-Produce a design doc (refactors benefit from explicit before/after architecture). Skip the refinement loop (refactors are typically well-understood by the person requesting them). Then PRD, beads, launch.
+3. The skill handles everything: architecture-focused intake, design doc (with current/target state), PRD, beads, and launch offer.
 
-Pipeline: focused intake → design doc → PRD → beads → launch.
+If the user provided a refactoring description after the command, pass it as context to the skill session.

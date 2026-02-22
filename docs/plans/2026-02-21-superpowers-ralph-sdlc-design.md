@@ -1,5 +1,9 @@
 # Superpowers + Ralph TUI SDLC Framework Design
 
+> **Note (2026-02-22):** This design has been superseded by the two-phase pipeline architecture.
+> See `docs/plans/2026-02-22-two-phase-pipeline-design.md` for the current design.
+> The skill-chaining approach described below has been replaced with self-contained ralph-tui skills.
+
 > **For Claude:** This is a design document, not an implementation plan. Do not implement without explicit approval.
 
 **Goal:** Create a unified software development lifecycle framework that combines [Superpowers](https://github.com/obra/superpowers)' rigorous intake/design/review methodology with [Ralph TUI](https://github.com/subsy/ralph-tui)'s autonomous execution loop, using [Beads](https://github.com/jeffreyemanuel/beads) as the task tracking backbone and [Emanuel's flywheel tools](https://github.com/jeffreyemanuel) for cross-session intelligence.

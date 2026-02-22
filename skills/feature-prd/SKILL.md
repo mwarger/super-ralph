@@ -258,7 +258,7 @@ For UI stories, also include:
 
 **Acceptance Criteria:**
 - [ ] progress.md reviewed for reusable patterns
-- [ ] docs/intake-checklist.md updated with new questions
+- [ ] .super-ralph/intake-checklist.md updated with new questions
 - [ ] Epic summary written to progress.md
 
 ## Non-Goals

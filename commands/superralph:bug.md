@@ -2,16 +2,12 @@
 description: "Fix a bug through the super-ralph pipeline with focused intake"
 ---
 
-Invoke the super-ralph:superpowers-intake skill with work_type = "bug".
+## Pipeline: Bug Fix
 
-The user's message after this command (if any) is the bug description. Use it as starting context for the intake.
+1. Run `ralph-tui doctor` to verify the project is ready. If it fails, tell the user to run `/superralph:init` first.
 
-Bug intake is shorter than feature intake. Focus on:
-1. Reproduction steps (what triggers the bug?)
-2. Expected vs actual behavior
-3. Root cause hypothesis
-4. Affected code areas
+2. Run `ralph-tui run --skill bug-prd --tracker beads-bv`.
 
-Skip the design doc. Go straight from intake to PRD generation. Still offer the refinement loop.
+3. The skill handles everything: focused intake, PRD, beads, and launch offer. No design doc for bugs.
 
-Pipeline: focused intake → PRD → beads → launch.
+If the user provided a bug description after the command, pass it as context to the skill session.
