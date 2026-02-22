@@ -62,6 +62,8 @@ Generate initial user stories
 Generate final PRD with review/audit/learning beads
         ↓
 Output wrapped in [PRD]...[/PRD]
+        ↓
+Invoke super-ralph-create-beads skill automatically
 ```
 
 ---
@@ -453,6 +455,16 @@ See: docs/plans/YYYY-MM-DD-<feature>-design.md
 
 ---
 
+## Step 6: Proceed to Bead Creation
+
+After the PRD is saved, **immediately invoke the `super-ralph-create-beads` skill** to convert the PRD to beads. Do not wait for the user to ask — this is the next step in the pipeline.
+
+Pass the PRD path (`./tasks/prd-<feature-name>.md`) and the design doc path (`docs/plans/YYYY-MM-DD-<feature>-design.md`) to the bead creation skill.
+
+**If work_type = "plan":** This step does not apply — the pipeline already stopped at Step 2.
+
+---
+
 ## Relationship to Superpowers Skills
 
 This skill **invokes and extends** two Superpowers skills:
@@ -492,3 +504,4 @@ Before outputting the PRD:
 - [ ] LEARN-001 bead included as final bead
 - [ ] PRD wrapped in [PRD]...[/PRD] markers
 - [ ] PRD saved to tasks/prd-<feature-name>.md
+- [ ] Bead creation skill invoked automatically (unless work_type = "plan")

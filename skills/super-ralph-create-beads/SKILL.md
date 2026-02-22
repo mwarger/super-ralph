@@ -56,6 +56,22 @@ bd label add <issue-id> <label>
 
 ---
 
+## Step 0: Verify Git Repository
+
+Before creating any beads, verify that the project has a git repository initialized. Beads requires a git repo.
+
+1. Run `git status` to check.
+2. **If no git repo exists:** Initialize one:
+   ```bash
+   git init
+   git add -A
+   git commit -m "chore: initial commit"
+   ```
+   Tell the user: "Initialized a git repo and created an initial commit — beads requires this."
+3. **If a git repo exists:** Continue to Step 1.
+
+---
+
 ## Step 1: Extract Quality Gates
 
 Look for the "Quality Gates" section in the PRD:
@@ -543,6 +559,7 @@ This skill extends the bundled skill with:
 
 Before finishing:
 
+- [ ] Git repository verified (or initialized)
 - [ ] Quality gates extracted from PRD
 - [ ] Epic created with --external-ref to PRD and design doc
 - [ ] Each user story → one bead (iteration-sized)
