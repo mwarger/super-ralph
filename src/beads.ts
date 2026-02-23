@@ -17,14 +17,17 @@ async function runBr(args: string[], cwd?: string): Promise<unknown> {
   }
 
   // Filter out log lines (br outputs INFO/WARN lines to stdout before JSON in some cases)
+  // JSON output may be pretty-printed across multiple lines, so find the first line
+  // that starts a JSON array or object, then take everything from there onwards.
   const lines = stdout.trim().split("\n");
-  const jsonLine = lines.findLast((line) => line.startsWith("[") || line.startsWith("{"));
-  if (!jsonLine) {
+  const jsonStartIdx = lines.findIndex((line) => line.startsWith("[") || line.startsWith("{"));
+  if (jsonStartIdx === -1) {
     // Empty result is valid (e.g., no ready beads)
     return [];
   }
 
-  return JSON.parse(jsonLine);
+  const jsonStr = lines.slice(jsonStartIdx).join("\n");
+  return JSON.parse(jsonStr);
 }
 
 // Map br's snake_case JSON to our BeadInfo type
@@ -93,8 +96,26 @@ export async function closeBead(beadId: string, reason?: string): Promise<{ sugg
 }
 
 // Get all beads in an epic
+// Uses `br show` to get child IDs from the dependents array, then `br list --id` to get full details
 export async function getAllBeads(epicId: string): Promise<BeadInfo[]> {
-  const result = await runBr(["list", "--parent", epicId, "--json"]);
+  // First, get the epic to extract child IDs from its dependents
+  const epicResult = await runBr(["show", epicId, "--json"]);
+  const epicRaw = Array.isArray(epicResult) ? epicResult[0] : epicResult;
+  const epic = epicRaw as Record<string, unknown>;
+
+  const dependents = (epic.dependents || []) as Record<string, unknown>[];
+  const childIds = dependents
+    .filter((d) => d.dependency_type === "parent-child")
+    .map((d) => d.id as string);
+
+  if (childIds.length === 0) return [];
+
+  // Fetch full details for all children using --id filters
+  const args = ["list", "--all", "--json"];
+  for (const id of childIds) {
+    args.push("--id", id);
+  }
+  const result = await runBr(args);
   const beads = result as Record<string, unknown>[];
   return beads.map(mapBead);
 }

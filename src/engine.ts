@@ -21,18 +21,35 @@ export async function runLoop(
   let config = loadConfig(projectDir);
   config = mergeCliFlags(config, {});
 
-  // Connect to OpenCode server
-  const client = await connectToServer(config.opencode.url);
-  console.log(`Connected to OpenCode server at ${config.opencode.url}`);
-
-  // Load prompt template
-  const template = loadTemplate(projectDir);
-
   // Get initial bead count for max iterations default
   const allBeads = await getAllBeads(epicId);
   const maxIterations = flags.maxIterations || allBeads.length * 2;
 
   console.log(`Starting loop for epic ${epicId}: ${allBeads.length} beads, max ${maxIterations} iterations`);
+
+  // Dry run doesn't need a server connection or prompt template
+  if (flags.dryRun) {
+    let iteration = 0;
+    const seen = new Set<string>();
+    while (iteration < maxIterations) {
+      const bead = await getNextReady(epicId);
+      if (!bead || seen.has(bead.id)) break;
+      seen.add(bead.id);
+      iteration++;
+      const model = resolveModel(bead.labels, bead.title, config, flags.modelOverride);
+      const modelString = `${model.providerID}/${model.modelID}`;
+      console.log(`[dry-run] Iteration ${iteration}: ${bead.id} — ${bead.title} (model: ${modelString})`);
+    }
+    console.log(`\n[dry-run] Would process up to ${allBeads.length} beads`);
+    return { completed: 0, failed: 0, skipped: 0, totalTime: 0 };
+  }
+
+  // Connect to OpenCode server (only needed for real runs)
+  const client = await connectToServer(config.opencode.url);
+  console.log(`Connected to OpenCode server at ${config.opencode.url}`);
+
+  // Load prompt template
+  const template = loadTemplate(projectDir);
 
   if (!flags.headless) {
     await showToast(client, `Starting epic ${epicId}: ${allBeads.length} beads`, "info");
@@ -71,12 +88,6 @@ export async function runLoop(
     // Resolve model for this bead
     const model = resolveModel(bead.labels, bead.title, config, flags.modelOverride);
     const modelString = `${model.providerID}/${model.modelID}`;
-
-    // Dry run mode
-    if (flags.dryRun) {
-      console.log(`[dry-run] Iteration ${iteration}: ${bead.id} — ${bead.title} (model: ${modelString})`);
-      continue;
-    }
 
     console.log(`\n--- Iteration ${iteration} ---`);
     console.log(`Bead: ${bead.id} — ${bead.title}`);
