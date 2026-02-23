@@ -1,0 +1,16 @@
+[engine]
+timeout_minutes = 30
+iteration_delay_ms = 2000
+strategy = "retry"
+max_retries = 3
+
+[opencode]
+url = "http://localhost:4096"
+
+[models]
+default = "anthropic/claude-sonnet-4-6"
+
+[models.auto]
+review = "default"
+audit = "default"
+bugscan = "default"
