@@ -3,6 +3,8 @@
 ## Prerequisites
 
 - Git installed
+- `br` (beads-rust CLI) installed — see [beads-rust](https://github.com/jeffreyemanuel/beads-rust)
+- Node.js (for `npx super-ralph` CLI) — run `bun install` at the repo root after cloning
 
 ## Installation
 
@@ -61,7 +63,7 @@ After installation, initialize any project by typing `/superralph:init` or sayin
 
 > "Initialize this project for super-ralph"
 
-This creates the project-local `.ralph-tui/config.toml`, `.super-ralph/` directory with AGENTS.md and templates, and a `tasks/` directory.
+This creates the project-local `.super-ralph/` directory with AGENTS.md and templates, and a `tasks/` directory.
 
 ### Available commands
 

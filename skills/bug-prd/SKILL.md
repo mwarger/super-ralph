@@ -16,7 +16,7 @@ description: "Self-contained Ralph TUI skill for bug fix workflows: focused inta
 2. Convert the intake into iteration-sized, phase-labeled fix stories
 3. Inject structural beads (REVIEW, BUGSCAN after fix; AUDIT-001, LEARN-001 at end)
 4. Output the PRD wrapped in `[PRD]...[/PRD]` markers
-5. Create beads via `bd` CLI with full dependency graph
+5. Create beads via `br` CLI with full dependency graph
 6. Offer to launch execution
 
 **Important:** Do NOT implement any fixes. This skill produces the plan and beads only.
@@ -30,7 +30,7 @@ description: "Self-contained Ralph TUI skill for bug fix workflows: focused inta
 Before asking any questions:
 
 1. Read `AGENTS.md` and `README.md` if they exist
-2. Read `.ralph-tui/progress.md` if it exists (learnings from past epics)
+2. Read `.super-ralph/progress.md` if it exists (learnings from past epics)
 3. Explore the codebase structure — what exists, what patterns are in use, what's the tech stack
 4. Read `.super-ralph/intake-checklist.md` if it exists (needed for Phase C)
 
@@ -194,23 +194,23 @@ These commands must pass for every fix story:
 
 ## Step 3: Create Beads
 
-Take the PRD and create beads in `.beads/beads.jsonl` using the `bd` CLI.
+Take the PRD and create beads in `.beads/beads.jsonl` using the `br` CLI.
 
 ### Command Reference
 
 ```bash
-bd create --type=epic --title="..." --description="$(cat <<'EOF'
+br create --type=epic --title="..." --description="$(cat <<'EOF'
 ...
 EOF
 )" --external-ref="prd:./tasks/prd-bugfix-<bug>.md"
 
-bd create --parent=<EPIC_ID> --title="..." --description="$(cat <<'EOF'
+br create --parent=<EPIC_ID> --title="..." --description="$(cat <<'EOF'
 ...
 EOF
 )" --priority=<1-4>
 
-bd dep add <issue-id> <depends-on-id>
-bd label add <issue-id> <label>
+br dep add <issue-id> <depends-on-id>
+br label add <issue-id> <label>
 ```
 
 > **CRITICAL:** Always use `<<'EOF'` (single-quoted) for HEREDOC delimiters. This prevents
@@ -223,7 +223,7 @@ Before creating any beads, run `git status`. If no git repo exists, initialize o
 ### Create Epic
 
 ```bash
-bd create --type=epic \
+br create --type=epic \
   --title="Bugfix: <Bug Name>" \
   --description="$(cat <<'EOF'
 <Bug summary from PRD>
@@ -241,7 +241,7 @@ Note the epic ID returned — all child beads reference it as `--parent`.
 For each `### US-XXX:` story in the PRD:
 
 1. Create the bead with acceptance criteria + quality gates appended
-2. Parse the phase label from `[phase:xxx]` and add via `bd label add`
+2. Parse the phase label from `[phase:xxx]` and add via `br label add`
 3. Add dependencies based on story ordering
 
 **Sizing check:** Each story must be completable in ONE Ralph TUI iteration. If you can't describe it in 2-3 sentences, split it.
@@ -251,7 +251,7 @@ For each `### US-XXX:` story in the PRD:
 **Example:**
 
 ```bash
-bd create --parent=<EPIC_ID> \
+br create --parent=<EPIC_ID> \
   --title="US-001: Fix null check in investor lookup" \
   --description="$(cat <<'EOF'
 Fix the null reference error in the investor lookup flow that crashes when an
@@ -272,7 +272,7 @@ EOF
 )" \
   --priority=1
 
-bd label add <BEAD_ID> phase:backend
+br label add <BEAD_ID> phase:backend
 ```
 
 ### Create Review Beads
@@ -307,22 +307,22 @@ The dependency graph for bug fixes is simpler than features:
 
 ```bash
 # Fix stories — root cause first, cascading fixes depend on it
-bd dep add <US-002> <US-001>
-bd dep add <US-003> <US-001>
+br dep add <US-002> <US-001>
+br dep add <US-003> <US-001>
 
 # Review depends on ALL fix stories
-bd dep add <REVIEW-001> <US-001>
-bd dep add <REVIEW-001> <US-002>
-bd dep add <REVIEW-001> <US-003>
+br dep add <REVIEW-001> <US-001>
+br dep add <REVIEW-001> <US-002>
+br dep add <REVIEW-001> <US-003>
 
 # Bug scan depends on review
-bd dep add <BUGSCAN-001> <REVIEW-001>
+br dep add <BUGSCAN-001> <REVIEW-001>
 
 # Audit depends on bug scan
-bd dep add <AUDIT-001> <BUGSCAN-001>
+br dep add <AUDIT-001> <BUGSCAN-001>
 
 # Learning depends on audit
-bd dep add <LEARN-001> <AUDIT-001>
+br dep add <LEARN-001> <AUDIT-001>
 ```
 
 **Result:** BV's PageRank will prioritize the root cause fix first (it unblocks everything), then cascading fixes, then review/audit/learn in order.
@@ -346,7 +346,7 @@ Specifically verify:
 - [ ] The root cause fix is the first thing that runs
 - [ ] The dependency graph enforces the correct execution order
 
-If anything is wrong, fix it with `bd update` or additional `bd dep add` commands.
+If anything is wrong, fix it with `br update` or additional `br dep add` commands.
 
 ---
 
@@ -376,31 +376,27 @@ PRD: tasks/prd-bugfix-<bug>.md
 Fix stories -> REVIEW-001 -> BUGSCAN-001 -> AUDIT-001 -> LEARN-001
 
 ### Run Command
-ralph-tui run --tracker beads-bv --epic <EPIC_ID> --iterations <N>
-> Setting --iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)
+npx super-ralph run --epic <EPIC_ID> --max-iterations <N>
+> Setting --max-iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)
 ```
 
 **Calculate recommended iterations:** total beads x 2 (accounts for retries and corrective beads).
-
-### Preflight Check
-
-Run `ralph-tui doctor` and verify healthy output before offering launch. If unhealthy, help the user resolve issues first.
 
 ### Launch Options
 
 Offer three options:
 
-1. **Run headless** — Ask about agent/model overrides, then run:
+1. **Run headless** — Ask about model overrides, then run:
    ```bash
-   ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --iterations <N> [--agent <agent>] [--model <model>]
+   npx super-ralph run --epic <EPIC_ID> --max-iterations <N> --headless [--model <model>]
    ```
-   After completion: remind about `ralph-tui status --json` and `ralph-tui resume`.
+   After completion: remind about `npx super-ralph status --epic <EPIC_ID>` and `npx super-ralph run --epic <EPIC_ID>` to resume.
 
-2. **Copy to clipboard** — Copy TUI command (without `--headless`) via `pbcopy`. Also display as fallback.
+2. **Copy to clipboard** — Copy run command (without `--headless`) via `pbcopy`. Also display as fallback.
 
 3. **Show command** — Display the full command for manual copy.
 
-Always explain: "Setting --iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"
+Always explain: "Setting --max-iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"
 
 ---
 
@@ -422,9 +418,9 @@ Before finishing, verify:
 - [ ] Git repository verified (or initialized)
 - [ ] Epic created with --external-ref to PRD
 - [ ] Each fix story converted to one self-documenting bead
-- [ ] Phase labels applied via bd label add
+- [ ] Phase labels applied via br label add
 - [ ] Quality gates appended to every fix bead's criteria
 - [ ] All dependencies wired correctly
 - [ ] Self-check round completed
-- [ ] Summary output provided with calculated --iterations
-- [ ] Preflight check passed and launch wizard presented
+- [ ] Summary output provided with calculated --max-iterations
+- [ ] Launch wizard presented

@@ -16,7 +16,7 @@ description: "Self-contained Ralph TUI skill for urgent production hotfix workfl
 2. Generate a minimal PRD (1-3 stories)
 3. Inject structural beads (REVIEW + LEARN only — no BUGSCAN, no AUDIT)
 4. Output the PRD wrapped in `[PRD]...[/PRD]` markers
-5. Create beads via `bd` CLI with a simple dependency chain
+5. Create beads via `br` CLI with a simple dependency chain
 6. Offer to launch execution
 
 **Important:** Do NOT implement anything. This skill produces the plan and beads only.
@@ -30,7 +30,7 @@ description: "Self-contained Ralph TUI skill for urgent production hotfix workfl
 Before asking questions, quickly ground yourself:
 
 1. Read `AGENTS.md` and `README.md` if they exist
-2. Read `.ralph-tui/progress.md` if it exists
+2. Read `.super-ralph/progress.md` if it exists
 3. Explore the broken area of the codebase — focus on what's relevant to the fix
 
 Speed matters. Don't explore broadly — zoom into the problem area.
@@ -121,18 +121,18 @@ Wrap in `[PRD]...[/PRD]` markers. Save to `tasks/prd-hotfix-<name>.md`.
 ### Command Reference
 
 ```bash
-bd create --type=epic --title="..." --description="$(cat <<'EOF'
+br create --type=epic --title="..." --description="$(cat <<'EOF'
 ...
 EOF
 )" --external-ref="prd:./tasks/prd-hotfix-<name>.md"
 
-bd create --parent=<EPIC_ID> --title="..." --description="$(cat <<'EOF'
+br create --parent=<EPIC_ID> --title="..." --description="$(cat <<'EOF'
 ...
 EOF
 )" --priority=<1-4>
 
-bd dep add <issue-id> <depends-on-id>
-bd label add <issue-id> <label>
+br dep add <issue-id> <depends-on-id>
+br label add <issue-id> <label>
 ```
 
 > **CRITICAL:** Always use `<<'EOF'` (single-quoted) for HEREDOC delimiters.
@@ -144,7 +144,7 @@ Run `git status`. If no repo exists, initialize: `git init && git add -A && git 
 ### Create Epic
 
 ```bash
-bd create --type=epic \
+br create --type=epic \
   --title="Hotfix: <Problem Summary>" \
   --description="$(cat <<'EOF'
 <What's broken and what the fix does>
@@ -157,14 +157,14 @@ EOF
 
 ### Create Implementation Beads
 
-For each `US-XXX` story: create bead with acceptance criteria + quality gates, parse phase label, add label via `bd label add`.
+For each `US-XXX` story: create bead with acceptance criteria + quality gates, parse phase label, add label via `br label add`.
 
 **Self-documenting beads:** Include problem context, symptoms, root cause (if known), and the specific fix so a fresh agent can execute without prior context.
 
 ### Create Review Bead
 
 ```bash
-bd create --parent=<EPIC_ID> \
+br create --parent=<EPIC_ID> \
   --title="REVIEW-001: Hotfix review" \
   --description="$(cat <<'EOF'
 Review the hotfix against the problem description.
@@ -172,8 +172,8 @@ Review the hotfix against the problem description.
 2. Diff all changes made by implementation beads
 3. Verify fix addresses the reported problem
 4. Run all quality gate commands, check for regressions and edge cases
-5. Document findings in .ralph-tui/progress.md
-6. If issues found: create corrective beads with bd create
+5. Document findings in .super-ralph/progress.md
+6. If issues found: create corrective beads with br create
 
 - [ ] Fix addresses reported problem
 - [ ] No regressions introduced
@@ -181,17 +181,17 @@ Review the hotfix against the problem description.
 - [ ] Findings documented in progress.md
 EOF
 )" --priority=1
-bd label add <REVIEW_ID> phase:review
+br label add <REVIEW_ID> phase:review
 ```
 
 ### Create Learning Bead
 
 ```bash
-bd create --parent=<EPIC_ID> \
+br create --parent=<EPIC_ID> \
   --title="LEARN-001: Learning extraction" \
   --description="$(cat <<'EOF'
 Extract learnings from this hotfix. Hotfixes are the best teachers.
-1. Document root cause in .ralph-tui/progress.md
+1. Document root cause in .super-ralph/progress.md
 2. Identify why this wasn't caught earlier (test gap? monitoring gap? design gap?)
 3. Document prevention strategy
 4. Update .super-ralph/intake-checklist.md with new questions if discovered
@@ -202,7 +202,7 @@ Extract learnings from this hotfix. Hotfixes are the best teachers.
 - [ ] .super-ralph/intake-checklist.md updated if new questions discovered
 EOF
 )" --priority=3
-bd label add <LEARN_ID> phase:learn
+br label add <LEARN_ID> phase:learn
 ```
 
 ---
@@ -213,16 +213,16 @@ Hotfix graphs are simple — mostly linear:
 
 ```bash
 # Chain implementation beads if sequential
-bd dep add <US-002> <US-001>          # if sequential
-bd dep add <US-003> <US-002>          # if sequential
+br dep add <US-002> <US-001>          # if sequential
+br dep add <US-003> <US-002>          # if sequential
 
 # REVIEW depends on ALL implementation beads
-bd dep add <REVIEW-001> <US-001>
-bd dep add <REVIEW-001> <US-002>      # if exists
-bd dep add <REVIEW-001> <US-003>      # if exists
+br dep add <REVIEW-001> <US-001>
+br dep add <REVIEW-001> <US-002>      # if exists
+br dep add <REVIEW-001> <US-003>      # if exists
 
 # LEARN depends on REVIEW
-bd dep add <LEARN-001> <REVIEW-001>
+br dep add <LEARN-001> <REVIEW-001>
 ```
 
 **Result:** fix → verify → learn.
@@ -240,7 +240,7 @@ Quick verify:
 - [ ] Quality gates in every implementation bead
 - [ ] Total is 3-5 beads (1-3 impl + REVIEW + LEARN)
 
-Fix issues with `bd update` or `bd dep add`.
+Fix issues with `br update` or `br dep add`.
 
 ---
 
@@ -252,22 +252,18 @@ Fix issues with `bd update` or `bd dep add`.
 Epic: <EPIC_ID> - Hotfix: <Problem Summary>  |  PRD: tasks/prd-hotfix-<name>.md
 Beads: <ID> US-001, [US-002, US-003,] <ID> REVIEW-001, <ID> LEARN-001
 Chain: US-001 -> [US-002 ->] REVIEW-001 -> LEARN-001
-Run:   ralph-tui run --tracker beads-bv --epic <EPIC_ID> --iterations <N>
-       (iterations = total beads x 2 buffer for retries/corrective beads)
+Run:   npx super-ralph run --epic <EPIC_ID> --max-iterations <N>
+       (max-iterations = total beads x 2 buffer for retries/corrective beads)
 ```
-
-### Preflight
-
-Run `ralph-tui doctor` — verify healthy before offering launch.
 
 ### Launch Options
 
 > "Beads are ready. How would you like to start?
-> 1. **Run headless** — `ralph-tui run --headless --tracker beads-bv --epic <ID> --iterations <N>`
+> 1. **Run headless** — `npx super-ralph run --epic <ID> --max-iterations <N> --headless`
 > 2. **Copy to clipboard** — I'll `pbcopy` the run command for a new terminal tab
 > 3. **Show command** — display for manual copy"
 
-For headless: ask about agent/model overrides first (use config defaults, override agent, model, or both).
+For headless: ask about model overrides first (use config defaults or override model).
 
 ---
 
@@ -286,6 +282,5 @@ For headless: ask about agent/model overrides first (use config defaults, overri
 - [ ] All beads self-contained and self-documenting
 - [ ] Dependencies wired (simple chain)
 - [ ] Self-check completed
-- [ ] Summary output with calculated --iterations
-- [ ] Preflight passed
+- [ ] Summary output with calculated --max-iterations
 - [ ] Launch wizard presented

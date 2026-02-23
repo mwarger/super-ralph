@@ -17,7 +17,7 @@ description: "Self-contained Ralph TUI skill for the full feature pipeline: rele
 3. Convert the design into iteration-sized, phase-labeled user stories
 4. Inject structural beads (REVIEW, BUGSCAN, AUDIT, LEARN)
 5. Output the PRD wrapped in `[PRD]...[/PRD]` markers
-6. Create beads via `bd` CLI with full dependency graph
+6. Create beads via `br` CLI with full dependency graph
 7. Offer to launch Phase 2 execution
 
 **Important:** Do NOT implement anything. This skill produces the plan and beads only.
@@ -31,7 +31,7 @@ description: "Self-contained Ralph TUI skill for the full feature pipeline: rele
 Before asking any questions:
 
 1. Read `AGENTS.md` and `README.md` if they exist
-2. Read `.ralph-tui/progress.md` if it exists (learnings from past epics)
+2. Read `.super-ralph/progress.md` if it exists (learnings from past epics)
 3. Explore the codebase structure — what exists, what patterns are in use, what's the tech stack
 4. Read `.super-ralph/intake-checklist.md` if it exists (needed for Phase C)
 
@@ -273,30 +273,30 @@ See: docs/plans/YYYY-MM-DD-<feature>-design.md
 
 ## Step 4: Create Beads
 
-Take the PRD and create beads in `.beads/beads.jsonl` using the `bd` CLI.
+Take the PRD and create beads in `.beads/beads.jsonl` using the `br` CLI.
 
 ### Command Reference
 
-All bead operations use the `bd` CLI (Beads). Key commands:
+All bead operations use the `br` CLI (beads_rust). Key commands:
 
 ```bash
 # Create an epic
-bd create --type=epic --title="..." --description="$(cat <<'EOF'
+br create --type=epic --title="..." --description="$(cat <<'EOF'
 ...
 EOF
 )" --external-ref="prd:./tasks/prd-feature.md"
 
 # Create a child bead
-bd create --parent=<EPIC_ID> --title="..." --description="$(cat <<'EOF'
+br create --parent=<EPIC_ID> --title="..." --description="$(cat <<'EOF'
 ...
 EOF
 )" --priority=<1-4>
 
 # Add dependency (issue depends on blocker)
-bd dep add <issue-id> <depends-on-id>
+br dep add <issue-id> <depends-on-id>
 
 # Add label
-bd label add <issue-id> <label>
+br label add <issue-id> <label>
 ```
 
 > **CRITICAL:** Always use `<<'EOF'` (single-quoted) for HEREDOC delimiters. This prevents
@@ -328,7 +328,7 @@ Look for the "Quality Gates" section in the PRD:
 Create the epic bead with `--external-ref` linking back to both the PRD file and the design document:
 
 ```bash
-bd create --type=epic \
+br create --type=epic \
   --title="<Feature Name>" \
   --description="$(cat <<'EOF'
 <Feature description from PRD overview>
@@ -348,7 +348,7 @@ For each `### US-XXX:` story in the PRD:
 
 1. Create the bead with acceptance criteria + quality gates appended
 2. Parse the phase label from `[phase:xxx]` in the title
-3. Add the phase label via `bd label add`
+3. Add the phase label via `br label add`
 4. Add dependencies based on phase ordering and explicit story dependencies
 
 **Sizing check:** Each story must be completable in ONE Ralph TUI iteration. If any story looks too large, split it before creating the bead. If you can't describe the change in 2-3 sentences, it's too big.
@@ -358,7 +358,7 @@ For each `### US-XXX:` story in the PRD:
 **Example implementation bead:**
 
 ```bash
-bd create --parent=<EPIC_ID> \
+br create --parent=<EPIC_ID> \
   --title="US-001: Add investorType field to investor table" \
   --description="$(cat <<'EOF'
 As a developer, I need to categorize investors as 'cold' or 'friend' to support
@@ -380,7 +380,7 @@ EOF
 )" \
   --priority=1
 
-bd label add <BEAD_ID> phase:schema
+br label add <BEAD_ID> phase:schema
 ```
 
 ### Create Review Beads
@@ -392,7 +392,7 @@ A "phase boundary" occurs when all implementation beads in a phase are created a
 **Review bead template:**
 
 ```bash
-bd create --parent=<EPIC_ID> \
+br create --parent=<EPIC_ID> \
   --title="REVIEW-001: Schema phase review" \
   --description="$(cat <<'EOF'
 Review all work from the schema phase against the design document.
@@ -404,8 +404,8 @@ Review all work from the schema phase against the design document.
 4. Run all quality gate commands
 5. Check for placeholder implementations and scope creep
 6. Look at remaining beads — do they still make sense?
-7. Document findings in .ralph-tui/progress.md
-8. If issues found: create corrective beads with bd create
+7. Document findings in .super-ralph/progress.md
+8. If issues found: create corrective beads with br create
 
 ## Acceptance Criteria
 - [ ] All schema changes match the approved design
@@ -418,13 +418,13 @@ EOF
 )" \
   --priority=1
 
-bd label add <REVIEW_ID> phase:review
+br label add <REVIEW_ID> phase:review
 ```
 
 **Bug scan bead template:**
 
 ```bash
-bd create --parent=<EPIC_ID> \
+br create --parent=<EPIC_ID> \
   --title="BUGSCAN-001: Schema fresh-eyes review" \
   --description="$(cat <<'EOF'
 Re-read all code from the schema phase with fresh eyes.
@@ -437,7 +437,7 @@ diagnose and fix all of them autonomously. I believe in you.
 Carefully read over all of the new code written in this phase with "fresh eyes"
 looking super carefully for any obvious bugs, errors, problems, issues, silly
 mistakes, etc. Carefully fix anything you uncover. Document all findings in
-.ralph-tui/progress.md.
+.super-ralph/progress.md.
 
 ## Acceptance Criteria
 - [ ] All new code from schema phase re-read carefully
@@ -448,7 +448,7 @@ EOF
 )" \
   --priority=1
 
-bd label add <BUGSCAN_ID> phase:review
+br label add <BUGSCAN_ID> phase:review
 ```
 
 ### Create Audit and Learning Beads
@@ -458,7 +458,7 @@ At the end of the epic (after all implementation phases), create:
 **AUDIT-001: Full code review**
 
 ```bash
-bd create --parent=<EPIC_ID> \
+br create --parent=<EPIC_ID> \
   --title="AUDIT-001: Full code review" \
   --description="$(cat <<'EOF'
 Review the entire implementation against the design document with fresh eyes.
@@ -492,13 +492,13 @@ EOF
 )" \
   --priority=2
 
-bd label add <AUDIT1_ID> phase:audit
+br label add <AUDIT1_ID> phase:audit
 ```
 
 **AUDIT-002: Test coverage verification**
 
 ```bash
-bd create --parent=<EPIC_ID> \
+br create --parent=<EPIC_ID> \
   --title="AUDIT-002: Test coverage verification" \
   --description="$(cat <<'EOF'
 Verify test coverage for all new and changed code.
@@ -518,19 +518,19 @@ EOF
 )" \
   --priority=2
 
-bd label add <AUDIT2_ID> phase:audit
+br label add <AUDIT2_ID> phase:audit
 ```
 
 **LEARN-001: Learning extraction**
 
 ```bash
-bd create --parent=<EPIC_ID> \
+br create --parent=<EPIC_ID> \
   --title="LEARN-001: Learning extraction" \
   --description="$(cat <<'EOF'
 Extract and persist learnings from this epic.
 
 ## What To Do
-1. Review all entries in .ralph-tui/progress.md from this epic
+1. Review all entries in .super-ralph/progress.md from this epic
 2. Extract reusable patterns and add to project documentation
 3. Identify intake questions that should have been asked — append them to
    .super-ralph/intake-checklist.md so future epics benefit
@@ -549,7 +549,7 @@ EOF
 )" \
   --priority=3
 
-bd label add <LEARN_ID> phase:learn
+br label add <LEARN_ID> phase:learn
 ```
 
 ---
@@ -572,43 +572,43 @@ For a typical feature with schema, backend, and UI phases:
 
 ```bash
 # Schema phase: US-001, US-002 (US-002 depends on US-001 if sequential)
-bd dep add <US-002> <US-001>
+br dep add <US-002> <US-001>
 
 # Schema review depends on ALL schema implementation beads
-bd dep add <REVIEW-001> <US-001>
-bd dep add <REVIEW-001> <US-002>
+br dep add <REVIEW-001> <US-001>
+br dep add <REVIEW-001> <US-002>
 
 # Schema bug scan depends on schema review
-bd dep add <BUGSCAN-001> <REVIEW-001>
+br dep add <BUGSCAN-001> <REVIEW-001>
 
 # Backend phase beads depend on schema bug scan (phase gate)
-bd dep add <US-003> <BUGSCAN-001>
-bd dep add <US-004> <BUGSCAN-001>
+br dep add <US-003> <BUGSCAN-001>
+br dep add <US-004> <BUGSCAN-001>
 
 # Backend review depends on ALL backend implementation beads
-bd dep add <REVIEW-002> <US-003>
-bd dep add <REVIEW-002> <US-004>
+br dep add <REVIEW-002> <US-003>
+br dep add <REVIEW-002> <US-004>
 
 # Backend bug scan depends on backend review
-bd dep add <BUGSCAN-002> <REVIEW-002>
+br dep add <BUGSCAN-002> <REVIEW-002>
 
 # UI phase beads depend on backend bug scan (phase gate)
-bd dep add <US-005> <BUGSCAN-002>
-bd dep add <US-006> <BUGSCAN-002>
+br dep add <US-005> <BUGSCAN-002>
+br dep add <US-006> <BUGSCAN-002>
 
 # UI review depends on ALL UI implementation beads
-bd dep add <REVIEW-003> <US-005>
-bd dep add <REVIEW-003> <US-006>
+br dep add <REVIEW-003> <US-005>
+br dep add <REVIEW-003> <US-006>
 
 # UI bug scan depends on UI review
-bd dep add <BUGSCAN-003> <REVIEW-003>
+br dep add <BUGSCAN-003> <REVIEW-003>
 
 # Audit beads depend on the last bug scan
-bd dep add <AUDIT-001> <BUGSCAN-003>
-bd dep add <AUDIT-002> <AUDIT-001>
+br dep add <AUDIT-001> <BUGSCAN-003>
+br dep add <AUDIT-002> <AUDIT-001>
 
 # Learning bead depends on last audit bead
-bd dep add <LEARN-001> <AUDIT-002>
+br dep add <LEARN-001> <AUDIT-002>
 ```
 
 **Result:** BV's PageRank will naturally prioritize beads that unblock the most downstream work — schema beads first (they unblock everything), then reviews at the right time, audits last.
@@ -633,7 +633,7 @@ Specifically verify:
 - [ ] Review beads cover the right scope
 - [ ] The dependency graph enforces the correct execution order
 
-If anything is wrong, fix it with `bd update` or additional `bd dep add` commands.
+If anything is wrong, fix it with `br update` or additional `br dep add` commands.
 
 ---
 
@@ -670,80 +670,64 @@ Design: docs/plans/YYYY-MM-DD-<feature>-design.md
 Schema -> REVIEW-001 -> BUGSCAN-001 -> Backend -> REVIEW-002 -> BUGSCAN-002 -> UI -> ...
 
 ### Run Command
-ralph-tui run --tracker beads-bv --epic <EPIC_ID> --iterations <RECOMMENDED>
+npx super-ralph run --epic <EPIC_ID> --max-iterations <RECOMMENDED>
 
-> Setting --iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)
+> Setting --max-iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)
 ```
 
-**Calculate recommended iterations:** Count the total beads created (implementation + review + audit + learn). Multiply by 2. This accounts for retries on failures and corrective beads that review beads may create. Example: 27 beads -> `--iterations 54`.
-
-### Preflight Check
-
-Before offering launch options, run `ralph-tui doctor` and verify the output is healthy. If unhealthy, stop and help the user resolve issues before launching. Common problems:
-
-- Agent CLI not in PATH
-- Agent not authenticated
-- Template resolution errors
+**Calculate recommended iterations:** Count the total beads created (implementation + review + audit + learn). Multiply by 2. This accounts for retries on failures and corrective beads that review beads may create. Example: 27 beads -> `--max-iterations 54`.
 
 ### Launch Options
 
-After the preflight passes, offer to launch execution immediately. Use `<ITERATIONS>` as the calculated value (total beads x 2).
+After creating beads, offer to launch execution immediately. Use `<ITERATIONS>` as the calculated value (total beads x 2).
 
 > "Beads are ready. How would you like to start execution?
 >
-> 1. **Run headless** — I'll run `ralph-tui run --headless` right here. Output streams to this session. You can check status from another terminal with `ralph-tui status --json`.
-> 2. **Copy command to clipboard** — I'll copy the full `ralph-tui run` command to your clipboard so you can paste it in a new terminal tab (TUI mode).
+> 1. **Run headless** — I'll run `npx super-ralph run --headless` right here. Output streams to this session. You can check status from another terminal with `npx super-ralph status --epic <EPIC_ID>`.
+> 2. **Copy command to clipboard** — I'll copy the full `npx super-ralph run` command to your clipboard so you can paste it in a new terminal tab.
 > 3. **Show command** — I'll display the command for you to copy manually."
 
 ### Option 1: Run headless
 
-Before running, ask about agent/model overrides:
+Before running, ask about model overrides:
 
-> "The project config will be used by default. Would you like to override agent or model for this run?
+> "The project config will be used by default. Would you like to override the model for this run?
 >
-> - **Use config defaults** *(recommended)* — whatever is in `.ralph-tui/config.toml`
-> - **Override agent** — e.g., `claude`, `opencode`
-> - **Override model** — e.g., `opus`, `sonnet`
-> - **Override both**"
+> - **Use config defaults** *(recommended)* — whatever is in `.super-ralph/config.toml`
+> - **Override model** — e.g., `opus`, `sonnet`"
 
-Construct the command based on their choices. **All commands include `--iterations`:**
+Construct the command based on their choices. **All commands include `--max-iterations`:**
 
 ```bash
 # Default (no overrides)
-ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --iterations <ITERATIONS>
-
-# With agent override
-ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --iterations <ITERATIONS> --agent <agent>
+npx super-ralph run --epic <EPIC_ID> --max-iterations <ITERATIONS> --headless
 
 # With model override
-ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --iterations <ITERATIONS> --model <model>
-
-# With both
-ralph-tui run --headless --tracker beads-bv --epic <EPIC_ID> --iterations <ITERATIONS> --agent <agent> --model <model>
+npx super-ralph run --epic <EPIC_ID> --max-iterations <ITERATIONS> --model <model>
 ```
 
 Tell the user why:
 
-> "Setting --iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"
+> "Setting --max-iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"
 
 Run the command via bash. The `--headless` flag streams structured logs to stdout instead of launching the TUI.
 
 After execution completes (or if it's interrupted), inform the user:
-- To check progress: `ralph-tui status --json`
-- To resume if interrupted: `ralph-tui resume --headless` (or `ralph-tui resume` for TUI mode)
+- To check progress: `npx super-ralph status --epic <EPIC_ID>`
+- To resume if interrupted: `npx super-ralph run --epic <EPIC_ID>`
 
 ### Option 2: Copy command to clipboard
 
 Construct the command **without** `--headless` (the user will want the TUI in their own terminal):
 
 ```bash
-ralph-tui run --tracker beads-bv --epic <EPIC_ID> --iterations <ITERATIONS>
+npx super-ralph run --epic <EPIC_ID> --max-iterations <ITERATIONS>
 ```
 
 Copy it to the clipboard using `pbcopy` (macOS). Tell the user:
 
-> "Copied to clipboard. Open a new terminal tab and paste to start the TUI.
-> Setting --iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"
+> "Copied to clipboard. Open a new terminal tab and paste to start.
+> Setting --max-iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"
 
 Always also display the command in the output as a fallback.
 
@@ -752,10 +736,10 @@ Always also display the command in the output as a fallback.
 Display the full command:
 
 ```
-ralph-tui run --tracker beads-bv --epic <EPIC_ID> --iterations <ITERATIONS>
+npx super-ralph run --epic <EPIC_ID> --max-iterations <ITERATIONS>
 ```
 
-> "Setting --iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"
+> "Setting --max-iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"
 
 No clipboard, no execution — the user copies it themselves.
 
@@ -784,7 +768,7 @@ Before finishing, verify:
 - [ ] Git repository verified (or initialized)
 - [ ] Epic created with --external-ref to PRD and design doc
 - [ ] Each user story converted to one bead (iteration-sized)
-- [ ] Phase labels applied to every bead via bd label add
+- [ ] Phase labels applied to every bead via br label add
 - [ ] Quality gates appended to every implementation bead's criteria
 - [ ] UI beads have UI-specific gates (if applicable)
 - [ ] Review beads created at each phase boundary
@@ -793,6 +777,5 @@ Before finishing, verify:
 - [ ] LEARN-001 created as final bead
 - [ ] All dependencies wired correctly (phase gates enforced)
 - [ ] Self-check round completed
-- [ ] Summary output provided with run command and calculated --iterations
-- [ ] Preflight check (`ralph-tui doctor`) passed
+- [ ] Summary output provided with run command and calculated --max-iterations
 - [ ] Launch wizard presented (headless / clipboard / show command)

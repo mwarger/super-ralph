@@ -1,18 +1,28 @@
 ---
-description: "Resume an interrupted super-ralph epic"
+description: "Resume an interrupted super-ralph execution loop"
 ---
 
-This is an operational command — do NOT invoke the intake skill.
+## Resume Execution
 
-Steps:
-1. Run `ralph-tui status --json` to check the current epic's progress.
-2. Display a summary: how many beads total, how many completed, how many remaining, which bead is next.
-3. If there's an active/interrupted session, offer to resume:
+This is an operational command — skip intake.
 
-> "Epic **{epic_id}** has {completed}/{total} beads completed. {remaining} remaining. How would you like to resume?
->
-> 1. **Resume headless** — I'll run `ralph-tui resume --headless` right here.
-> 2. **Copy resume command to clipboard** — `ralph-tui resume` for TUI mode.
-> 3. **Show command** — Display the resume command."
+1. Find active epics: run `br list --type epic --json` and filter for open epics.
 
-4. If no active session is found, tell the user and suggest checking `ralph-tui status` manually.
+2. If no open epics found, tell the user there's nothing to resume.
+
+3. If multiple open epics, show them and ask which one to resume.
+
+4. Show current progress for the selected epic:
+   - Run `br list --parent <epicId> --json`
+   - Count beads by status (completed, open, in_progress)
+   - Show the next ready bead (run `br ready --parent <epicId> --json --limit 1`)
+
+5. Offer three options:
+   a. **Run now**: Execute `npx super-ralph run --epic <epicId>` in a terminal
+   b. **Copy to clipboard**: Copy the command for the user to run
+   c. **Display command**: Show the full command with options
+
+The recommended command format:
+```
+npx super-ralph run --epic <EPIC_ID> --max-iterations <remaining_beads * 2>
+```

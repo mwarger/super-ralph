@@ -54,7 +54,7 @@ We are implementing the following PRD:
 7. Self-review (see below).
 8. Commit with message: `feat: {{taskId}} - {{taskTitle}}`
 9. Document learnings in progress.md (see below).
-10. Signal completion.
+10. Signal completion by calling the `task_complete` tool.
 
 ## Self-Review (REQUIRED before committing)
 
@@ -65,7 +65,7 @@ Before committing your work, verify:
 - [ ] No code was written that goes beyond this task's scope.
 - [ ] If you found a bug unrelated to this task, document it in progress.md but do not fix it unless it blocks your work.
 
-If any criterion is NOT met, fix it before committing. If it cannot be fixed within this task's scope, document the gap in progress.md and signal completion with a note about what remains.
+If any criterion is NOT met, fix it before committing. If it cannot be fixed within this task's scope, document the gap in progress.md and call `task_complete` with `status: "complete"` and a note about what remains.
 
 ## Before Completing
 
@@ -83,7 +83,12 @@ If you discovered a reusable pattern, also add it to the `## Codebase Patterns` 
 
 ## Stop Condition
 
-If the work described in this task is already complete (implemented in a previous iteration or already exists in the codebase), verify it meets the acceptance criteria and signal completion immediately. Do not re-implement.
+If the work described in this task is already complete (implemented in a previous iteration or already exists in the codebase), verify it meets the acceptance criteria and call `task_complete` immediately. Do not re-implement.
 
-When finished (or if already complete), signal completion with:
-<promise>COMPLETE</promise>
+## Signaling Completion
+
+When finished, call the `task_complete` tool with the appropriate status:
+
+- **`status: "complete"`** — All acceptance criteria are met, quality gates pass, work is committed, and progress.md is updated.
+- **`status: "blocked"`** — The bead cannot proceed due to missing dependencies or blockers. Describe the blocker in the tool's `message` parameter.
+- **`status: "failed"`** — The bead has failed despite best efforts. Describe what went wrong in the tool's `message` parameter.

@@ -1,13 +1,13 @@
 ---
-description: "Fix a bug through the super-ralph pipeline with focused intake"
+description: "Fix a bug through the super-ralph pipeline"
 ---
 
 ## Pipeline: Bug Fix
 
-1. Run `ralph-tui doctor` to verify the project is ready. If it fails, tell the user to run `/superralph:init` first.
+1. Verify the project is initialized: check that `.super-ralph/AGENTS.md` exists.
+   If not, tell the user to run `/superralph:init` first.
 
-2. Run `ralph-tui run --skill bug-prd --tracker beads-bv`.
+2. Load and follow the skill at `skills/bug-prd/SKILL.md` exactly.
 
-3. The skill handles everything: focused intake, PRD, beads, and launch offer. No design doc for bugs.
-
-If the user provided a bug description after the command, pass it as context to the skill session.
+3. If the user provided a description after the command, use it as the initial context
+   for the intake phase.

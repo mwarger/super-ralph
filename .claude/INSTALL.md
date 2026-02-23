@@ -3,6 +3,7 @@
 ## Prerequisites
 
 - Git installed
+- `br` (beads-rust CLI) installed — see [beads-rust](https://github.com/jeffreyemanuel/beads-rust)
 
 ## Installation
 
@@ -55,7 +56,7 @@ After installation, initialize any project by running:
 
 Or say: "Initialize this project for super-ralph"
 
-This creates the project-local `.ralph-tui/config.toml`, `.super-ralph/` directory with AGENTS.md and templates, and a `tasks/` directory.
+This creates the project-local `.super-ralph/` directory with AGENTS.md and templates, and a `tasks/` directory.
 
 ### Available commands
 

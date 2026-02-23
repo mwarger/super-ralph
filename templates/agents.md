@@ -8,21 +8,19 @@
 This project uses the **super-ralph SDLC framework** — a unified pipeline for AI-assisted software development that combines:
 
 - **Superpowers** for rigorous intake, design, planning, TDD, and code review
-- **Ralph TUI** for autonomous execution loops
-- **Beads** (with BV) for dependency-aware task tracking
+- **OpenCode SDK** for autonomous execution loops (via `super-ralph run`)
+- **Beads** (via `br` CLI) for dependency-aware task tracking
 
 Every piece of work flows through the same pipeline: relentless intake, autonomous execution, embedded review, audited completion.
 
 ## Project Structure (super-ralph files)
 
 ```
-.ralph-tui/
-  config.toml                      # Ralph TUI configuration
-  progress.md                      # Cross-iteration learning (auto-managed by Ralph)
 .super-ralph/
   AGENTS.md                        # This file
-  prompt.hbs                       # Custom prompt template for Ralph TUI iterations
+  prompt.hbs                       # Custom prompt template for execution iterations
   intake-checklist.md              # Growing intake question checklist (learned over time)
+  progress.md                      # Cross-iteration learning
 tasks/                             # Generated PRDs
 ```
 
@@ -32,7 +30,7 @@ tasks/                             # Generated PRDs
 2. **No placeholders.** Every implementation must be complete. If something can't be finished in one iteration, document what remains in progress.md and create a follow-up bead.
 3. **Search before implementing.** Always search the codebase before writing code. Do not assume something doesn't exist or isn't already implemented.
 4. **Self-review before committing.** Check every acceptance criterion. Run all quality gates. No exceptions.
-5. **Leave notes for future iterations.** Append learnings, patterns, and gotchas to `.ralph-tui/progress.md` before signaling completion.
+5. **Leave notes for future iterations.** Append learnings, patterns, and gotchas to `.super-ralph/progress.md` before signaling completion.
 6. **Scope discipline.** Do only what the current bead asks. If you discover adjacent work, document it in progress.md. Do not fix unrelated bugs unless they block your task.
 
 ## Quality Gates
@@ -74,5 +72,5 @@ For corrective beads created during review: `fix: {{taskId}} - {{taskTitle}}`
 If your context window is compacted mid-iteration, re-read these files:
 1. This file (`.super-ralph/AGENTS.md`)
 2. The project's root `AGENTS.md` and `README.md` (if they exist)
-3. `.ralph-tui/progress.md` (for recent learnings)
+3. `.super-ralph/progress.md` (for recent learnings)
 4. The PRD referenced in the epic's `--external-ref`

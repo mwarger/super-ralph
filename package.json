@@ -1,0 +1,22 @@
+{
+  "name": "super-ralph",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "super-ralph": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "dev": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opencode-ai/sdk": "1.2.10",
+    "handlebars": "^4.7.8",
+    "@iarna/toml": "^2.2.5"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.8.0"
+  }
+}

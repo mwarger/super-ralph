@@ -1,16 +1,26 @@
 ---
-description: "Check progress on the current super-ralph epic"
+description: "Check the status of the current super-ralph execution"
 ---
 
-This is an operational command — do NOT invoke the intake skill.
+## Epic Status
 
-Steps:
-1. Run `ralph-tui status --json` to get the current state.
-2. Format the output as a readable summary:
-   - Epic name and ID
-   - Total beads / completed / in-progress / remaining
-   - Current phase (schema, backend, ui, integration, review, audit, learn)
-   - Next bead to be executed
-   - Any failed beads
-3. If there are failed beads, suggest running `bd reopen <id>` for each one.
-4. If all beads are completed, congratulate the user and suggest running the audit review.
+This is an operational command — skip intake.
+
+1. Find all epics: run `br list --type epic --json`.
+
+2. If no epics found, tell the user no work has been created yet.
+
+3. For each open epic:
+   - Run `br list --parent <epicId> --json`
+   - Count beads by status: completed, open, in_progress, blocked
+   - Identify the current phase by checking labels on in-progress/open beads
+   - Show the next ready bead
+
+4. Format a summary:
+   - Epic: [title] (ID)
+   - Progress: X/Y beads complete
+   - Current phase: [phase label]
+   - Next bead: [title] (ID)
+   - Blocked beads: [list with IDs, suggest `br reopen <id>` for stuck beads]
+
+5. If all beads are complete, congratulate the user and suggest reviewing the work.

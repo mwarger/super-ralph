@@ -3,6 +3,9 @@
 > **Note (2026-02-22):** The skill names in this document have changed. `superpowers-intake` and `super-ralph-create-beads`
 > have been replaced with type-specific skills: `feature-prd`, `bug-prd`, `hotfix-prd`, `refactor-prd`, `plan-prd`.
 > See `docs/plans/2026-02-22-two-phase-pipeline-design.md` for the current architecture.
+>
+> **Note (2026-02-23):** The ralph-tui dependency has been dropped entirely. Super-ralph now uses the OpenCode SDK
+> for execution. See `docs/plans/2026-02-23-opencode-sdk-loop-design.md` for the current architecture.
 
 > **For Claude:** This is a design document, not an implementation plan. Do not implement without explicit approval.
 

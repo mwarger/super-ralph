@@ -3,6 +3,9 @@
 > **Note (2026-02-22):** This design has been superseded by the two-phase pipeline architecture.
 > See `docs/plans/2026-02-22-two-phase-pipeline-design.md` for the current design.
 > The skill-chaining approach described below has been replaced with self-contained ralph-tui skills.
+>
+> **Note (2026-02-23):** The ralph-tui dependency has been dropped entirely. Super-ralph now uses the OpenCode SDK
+> for execution. See `docs/plans/2026-02-23-opencode-sdk-loop-design.md` for the current architecture.
 
 > **For Claude:** This is a design document, not an implementation plan. Do not implement without explicit approval.
 

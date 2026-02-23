@@ -28,7 +28,7 @@ description: "Self-contained Ralph TUI skill for planning only: relentless intak
 Before asking any questions:
 
 1. Read `AGENTS.md` and `README.md` if they exist
-2. Read `.ralph-tui/progress.md` if it exists (learnings from past epics)
+2. Read `.super-ralph/progress.md` if it exists (learnings from past epics)
 3. Explore the codebase structure — what exists, what patterns are in use, what's the tech stack
 4. Read `.super-ralph/intake-checklist.md` if it exists (needed for Phase C)
 

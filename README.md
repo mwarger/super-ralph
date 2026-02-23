@@ -1,6 +1,6 @@
 # Super-Ralph
 
-A unified SDLC framework for AI-assisted software development. Combines [Superpowers](https://github.com/obra/superpowers) (rigorous intake, design, review), [Ralph TUI](https://github.com/subsy/ralph-tui) (autonomous execution loops), and [Beads](https://jeffreyemanuel.com) (dependency-aware task tracking with PageRank prioritization).
+A unified SDLC framework for AI-assisted software development. Combines [Superpowers](https://github.com/obra/superpowers) (rigorous intake, design, review), the [OpenCode SDK](https://opencode.ai) (autonomous execution loops), and [Beads](https://jeffreyemanuel.com) (dependency-aware task tracking with PageRank prioritization via `br` CLI).
 
 Every piece of work — feature, bug, refactor, hotfix — flows through the same pipeline: relentless intake, autonomous execution, embedded review, audited completion.
 
@@ -41,7 +41,6 @@ After installing globally, initialize any project:
 Or say: "Initialize this project for super-ralph"
 
 This creates:
-- `.ralph-tui/config.toml` — Ralph TUI configuration (agent-specific)
 - `.super-ralph/AGENTS.md` — Framework agent instructions
 - `.super-ralph/prompt.hbs` — Custom prompt template
 - `.super-ralph/intake-checklist.md` — Growing intake checklist
@@ -64,23 +63,23 @@ All pipeline commands accept an optional inline description (e.g., `/superralph:
 
 ## The Pipeline
 
-### Phase 1: Planning (one ralph-tui session)
+### Phase 1: Planning (slash commands invoke skills directly)
 
-Type `/superralph:feature` (or `:bug`, `:hotfix`, `:refactor`). This launches `ralph-tui run --skill <type>-prd` — a self-contained skill that handles everything in one session:
+Type `/superralph:feature` (or `:bug`, `:hotfix`, `:refactor`). This invokes the corresponding skill directly in your current agent session — no external tool required:
 
 1. **Intake** — Relentless interrogation: business context, technical deep-dive, learned questions. Depth scales to work type (feature: 10-15 questions, hotfix: 1-3).
 2. **Design doc** — For features and refactors, produces a design document with user approval.
-3. **PRD** — Generates phase-labeled user stories sized for single Ralph TUI iterations.
-4. **Beads** — Creates an epic with implementation beads, review beads at phase boundaries, bug scan beads, audit beads, and a learning extraction bead — all wired into a dependency graph.
+3. **PRD** — Generates phase-labeled user stories sized for single execution iterations.
+4. **Beads** — Creates an epic with implementation beads, review beads at phase boundaries, bug scan beads, audit beads, and a learning extraction bead — all wired into a dependency graph (using `br` CLI).
 5. **Launch offer** — Asks whether to start Phase 2 now or later.
 
-### Phase 2: Execution (vanilla ralph-tui)
+### Phase 2: Execution (OpenCode SDK loop)
 
 ```bash
-ralph-tui run --tracker beads-bv --epic <epic-id> --iterations <beads x 2> [--headless]
+npx super-ralph run --epic <epic-id>
 ```
 
-Ralph TUI runs the loop: select (PageRank-optimized) → prompt → execute → evaluate. Review beads execute automatically at phase boundaries. Audit beads review the entire implementation at the end. The learning bead extracts lessons and updates the intake checklist for next time.
+The `super-ralph` CLI uses the OpenCode SDK to run the execution loop: select (PageRank-optimized) → prompt → execute → evaluate. Review beads execute automatically at phase boundaries. Audit beads review the entire implementation at the end. The learning bead extracts lessons and updates the intake checklist for next time.
 
 ## Skills
 
@@ -103,7 +102,7 @@ Skills update instantly through symlinks.
 
 ## Design Documentation
 
-- [Two-Phase Pipeline Design](docs/plans/2026-02-22-two-phase-pipeline-design.md) — Current architecture (two sequential ralph-tui invocations)
+- [Two-Phase Pipeline Design](docs/plans/2026-02-22-two-phase-pipeline-design.md) — Current architecture (planning via skills, execution via OpenCode SDK)
 - [Distribution Design](docs/plans/2026-02-21-super-ralph-distribution-design.md) — How global install works
 - [Original SDLC Design](docs/plans/2026-02-21-superpowers-ralph-sdlc-design.md) — Historical (superseded by two-phase pipeline)
 

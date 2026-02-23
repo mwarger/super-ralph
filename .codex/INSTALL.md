@@ -2,6 +2,7 @@
 
 ## Prerequisites
 - Git installed
+- `br` (beads-rust CLI) installed — see [beads-rust](https://github.com/jeffreyemanuel/beads-rust)
 
 ## Installation
 

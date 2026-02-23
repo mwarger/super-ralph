@@ -1,5 +1,9 @@
 # Two-Phase Ralph TUI Pipeline — Design Document
 
+> **Note (2026-02-23):** The ralph-tui dependency has been dropped. Phase 1 now uses direct skill injection
+> (no external tool). Phase 2 uses the OpenCode SDK execution loop (`super-ralph run`).
+> See `docs/plans/2026-02-23-opencode-sdk-loop-design.md` for the current architecture.
+
 ## Overview
 
 Restructure the super-ralph SDLC framework from a skill-chaining architecture to a two-phase Ralph TUI CLI architecture. Skills become thin dispatchers that launch `ralph-tui run` with the appropriate skill. Superpowers principles are baked into ralph-tui skills at authoring time, not invoked at runtime.
