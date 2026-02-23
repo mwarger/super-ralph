@@ -1,5 +1,9 @@
 # Super-Ralph: Global Distribution Design
 
+> **Note (2026-02-22):** The skill names in this document have changed. `superpowers-intake` and `super-ralph-create-beads`
+> have been replaced with type-specific skills: `feature-prd`, `bug-prd`, `hotfix-prd`, `refactor-prd`, `plan-prd`.
+> See `docs/plans/2026-02-22-two-phase-pipeline-design.md` for the current architecture.
+
 > **For Claude:** This is a design document, not an implementation plan. Do not implement without explicit approval.
 
 **Goal:** Make the Superpowers + Ralph TUI SDLC framework installable globally and usable in any project, following the same distribution pattern as Superpowers (obra/superpowers).

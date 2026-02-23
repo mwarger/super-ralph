@@ -23,7 +23,7 @@
 ls -la ~/.agents/skills/super-ralph
 ```
 
-You should see symlinked entries for `superpowers-intake`, `super-ralph-create-beads`, and `super-ralph-init`.
+You should see entries for `feature-prd`, `bug-prd`, `hotfix-prd`, `refactor-prd`, `plan-prd`, and `super-ralph-init`.
 
 ## Updating
 ```bash

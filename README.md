@@ -52,11 +52,11 @@ This creates:
 | Command | Purpose |
 |---------|---------|
 | `/superralph:init` | Initialize project for the framework |
-| `/superralph:feature [desc]` | New feature — full pipeline (intake → design → refinement → PRD → beads → launch) |
-| `/superralph:bug [desc]` | Fix a bug — focused intake, skip design doc |
-| `/superralph:hotfix [desc]` | Urgent fix — minimal intake, 1-3 beads |
-| `/superralph:refactor [desc]` | Restructure code — design doc, skip refinement |
-| `/superralph:plan [desc]` | Plan only — stops after design doc |
+| `/superralph:feature [desc]` | New feature — full intake → design doc → PRD → beads → launch |
+| `/superralph:bug [desc]` | Fix a bug — focused intake → PRD → beads → launch |
+| `/superralph:hotfix [desc]` | Urgent fix — minimal intake, 1-3 beads → launch |
+| `/superralph:refactor [desc]` | Restructure code — architecture intake → design doc → PRD → beads → launch |
+| `/superralph:plan [desc]` | Plan only — full intake → design doc → STOP |
 | `/superralph:resume` | Resume an interrupted epic |
 | `/superralph:status` | Check progress on current epic |
 
@@ -64,42 +64,34 @@ All pipeline commands accept an optional inline description (e.g., `/superralph:
 
 ## The Pipeline
 
-### 1. Intake + Design + Plan
+### Phase 1: Planning (one ralph-tui session)
 
-Type `/superralph:feature` (or `/superralph:bug`, `/superralph:hotfix`, `/superralph:refactor`). The intake skill runs a relentless interrogation — business context, technical deep-dive, learned questions from past projects. Depth adjusts automatically based on work type. For features and refactors, it produces a design document and runs an optional iterative refinement loop (automated via `opencode run` or manual). Then generates a PRD with user stories sized for single Ralph TUI iterations.
+Type `/superralph:feature` (or `:bug`, `:hotfix`, `:refactor`). This launches `ralph-tui run --skill <type>-prd` — a self-contained skill that handles everything in one session:
 
-### 2. Bead Conversion
+1. **Intake** — Relentless interrogation: business context, technical deep-dive, learned questions. Depth scales to work type (feature: 10-15 questions, hotfix: 1-3).
+2. **Design doc** — For features and refactors, produces a design document with user approval.
+3. **PRD** — Generates phase-labeled user stories sized for single Ralph TUI iterations.
+4. **Beads** — Creates an epic with implementation beads, review beads at phase boundaries, bug scan beads, audit beads, and a learning extraction bead — all wired into a dependency graph.
+5. **Launch offer** — Asks whether to start Phase 2 now or later.
 
-The `super-ralph-create-beads` skill converts the PRD to beads with:
-- Implementation beads with phase labels
-- Review beads at phase boundaries
-- Fresh-eyes bug scan beads
-- Post-completion audit beads
-- Learning extraction bead
-
-All wired into a dependency graph that enforces correct execution order.
-
-### 3. Autonomous Execution
-
-The launch wizard offers to run Ralph TUI headless, copy the command to clipboard, or display it:
+### Phase 2: Execution (vanilla ralph-tui)
 
 ```bash
-ralph-tui run --tracker beads-bv --epic <epic-id> --iterations <beads x 2>
+ralph-tui run --tracker beads-bv --epic <epic-id> --iterations <beads x 2> [--headless]
 ```
 
-Ralph TUI runs the loop: select (PageRank-optimized) → prompt → execute → evaluate. Review beads execute automatically at phase boundaries — no manual pausing.
-
-### 4. Audit + Finish
-
-Audit beads review the entire implementation. The learning bead extracts lessons and updates the intake checklist for next time. The system gets better with every epic.
+Ralph TUI runs the loop: select (PageRank-optimized) → prompt → execute → evaluate. Review beads execute automatically at phase boundaries. Audit beads review the entire implementation at the end. The learning bead extracts lessons and updates the intake checklist for next time.
 
 ## Skills
 
 | Skill | Purpose |
 |---|---|
 | `super-ralph-init` | Initialize a project for the framework |
-| `superpowers-intake` | Relentless intake protocol + PRD generation (work-type aware) |
-| `super-ralph-create-beads` | Convert PRDs to beads with review/audit structure + launch wizard |
+| `feature-prd` | Full feature pipeline: intake → design doc → PRD → beads → launch |
+| `bug-prd` | Bug fix pipeline: focused intake → PRD → beads → launch |
+| `hotfix-prd` | Urgent fix pipeline: minimal intake → PRD (1-3 stories) → beads → launch |
+| `refactor-prd` | Refactoring pipeline: architecture intake → design doc → PRD → beads → launch |
+| `plan-prd` | Planning only: full intake → design doc → STOP |
 
 ## Updating
 
@@ -111,8 +103,9 @@ Skills update instantly through symlinks.
 
 ## Design Documentation
 
-- [SDLC Framework Design](docs/plans/2026-02-21-superpowers-ralph-sdlc-design.md) — The complete framework design
+- [Two-Phase Pipeline Design](docs/plans/2026-02-22-two-phase-pipeline-design.md) — Current architecture (two sequential ralph-tui invocations)
 - [Distribution Design](docs/plans/2026-02-21-super-ralph-distribution-design.md) — How global install works
+- [Original SDLC Design](docs/plans/2026-02-21-superpowers-ralph-sdlc-design.md) — Historical (superseded by two-phase pipeline)
 
 ## License
 
