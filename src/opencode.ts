@@ -1,7 +1,14 @@
-import { createOpencodeClient, type OpencodeClient } from "@opencode-ai/sdk";
+import { createOpencodeClient, type OpencodeClient, type Part } from "@opencode-ai/sdk";
 import type { CompletionResult } from "./types.js";
 
 export type { OpencodeClient };
+
+export interface PromptResult {
+  completion: CompletionResult;
+  cost: number;
+  tokens: { input: number; output: number; reasoning: number };
+  filesChanged: string[];
+}
 
 // Connect to an existing OpenCode server
 export async function connectToServer(url: string): Promise<OpencodeClient> {
@@ -30,100 +37,131 @@ export async function createSession(
   return response.data.id;
 }
 
-// Send a prompt to a session (fire and forget via async endpoint)
-export async function sendPrompt(
+// Send a prompt and wait for the complete response (synchronous API).
+// session.prompt() blocks until the agent finishes all turns and returns the
+// final assistant message. We then scan all session messages for task_complete.
+export async function runPrompt(
   client: OpencodeClient,
   sessionId: string,
   prompt: string,
   model: { providerID: string; modelID: string },
-): Promise<void> {
-  await client.session.promptAsync({
+): Promise<PromptResult> {
+  const response = await client.session.prompt({
     path: { id: sessionId },
     body: {
       model,
       parts: [{ type: "text" as const, text: prompt }],
     },
   });
+
+  if (!response.data) {
+    return {
+      completion: { status: "error", reason: "No response data from prompt" },
+      cost: 0,
+      tokens: { input: 0, output: 0, reasoning: 0 },
+      filesChanged: [],
+    };
+  }
+
+  const { info, parts } = response.data;
+
+  // Check for errors in the assistant message
+  if (info.role === "assistant" && info.error) {
+    const errorName = (info.error as Record<string, unknown>).name as string || "unknown";
+    const errorMsg = (info.error as Record<string, unknown>).message as string || "unknown error";
+    return {
+      completion: { status: "error", reason: `${errorName}: ${errorMsg}` },
+      cost: info.cost || 0,
+      tokens: {
+        input: info.tokens?.input || 0,
+        output: info.tokens?.output || 0,
+        reasoning: info.tokens?.reasoning || 0,
+      },
+      filesChanged: [],
+    };
+  }
+
+  // The synchronous prompt() returns only the final assistant message.
+  // But task_complete may have been called in an earlier turn (multi-step agent).
+  // First check the returned parts, then fall back to scanning all session messages.
+  let completion = extractCompletion(parts);
+  if (completion.status === "stalled") {
+    const allMessages = await client.session.messages({
+      path: { id: sessionId },
+    });
+    if (allMessages.data) {
+      for (const msg of allMessages.data) {
+        const found = extractCompletion(msg.parts);
+        if (found.status !== "stalled") {
+          completion = found;
+          break;
+        }
+      }
+    }
+  }
+
+  // Sum cost/tokens across ALL assistant messages in the session
+  let totalCost = 0;
+  let totalInput = 0;
+  let totalOutput = 0;
+  let totalReasoning = 0;
+  const allMsgs = await client.session.messages({ path: { id: sessionId } });
+  if (allMsgs.data) {
+    for (const msg of allMsgs.data) {
+      if (msg.info.role === "assistant") {
+        totalCost += (msg.info as Record<string, unknown>).cost as number || 0;
+        const tok = (msg.info as Record<string, unknown>).tokens as Record<string, number> | undefined;
+        if (tok) {
+          totalInput += tok.input || 0;
+          totalOutput += tok.output || 0;
+          totalReasoning += tok.reasoning || 0;
+        }
+      }
+    }
+  }
+
+  // Get files changed from session diff
+  let filesChanged: string[] = [];
+  try {
+    const diffResponse = await client.session.diff({
+      path: { id: sessionId },
+    });
+    if (diffResponse.data) {
+      filesChanged = diffResponse.data.map((d) => d.file);
+    }
+  } catch {
+    // Diffs might not be available
+  }
+
+  return {
+    completion,
+    cost: totalCost,
+    tokens: { input: totalInput, output: totalOutput, reasoning: totalReasoning },
+    filesChanged,
+  };
 }
 
-// Wait for a session to complete, watching for task_complete tool call
-export async function waitForCompletion(
-  client: OpencodeClient,
-  sessionId: string,
-  timeoutMs: number,
-): Promise<CompletionResult> {
-  return new Promise<CompletionResult>((resolve) => {
-    let resolved = false;
+// Extract completion status from message parts
+function extractCompletion(parts: Part[]): CompletionResult {
+  for (const part of parts) {
+    if (
+      part.type === "tool" &&
+      part.tool === "task_complete" &&
+      part.state.status === "completed"
+    ) {
+      const input = part.state.input as Record<string, unknown>;
+      return {
+        status: (input.status as CompletionResult["status"]) || "complete",
+        reason: input.reason as string | undefined,
+      };
+    }
+  }
 
-    const safeResolve = (result: CompletionResult) => {
-      if (resolved) return;
-      resolved = true;
-      clearTimeout(timer);
-      clearInterval(pollInterval);
-      resolve(result);
-    };
-
-    // Timeout handler
-    const timer = setTimeout(async () => {
-      try {
-        await client.session.abort({ path: { id: sessionId } });
-      } catch {
-        // Ignore abort errors
-      }
-      safeResolve({
-        status: "timeout",
-        reason: `Session timed out after ${timeoutMs / 1000}s`,
-      });
-    }, timeoutMs);
-
-    // Poll for completion by checking session status and messages
-    const pollInterval = setInterval(async () => {
-      try {
-        // Check session status
-        const statusResponse = await client.session.status();
-        if (statusResponse.data) {
-          const sessionStatus = statusResponse.data[sessionId];
-          if (sessionStatus && sessionStatus.type === "idle") {
-            // Session is idle — check the session messages for a task_complete tool call
-            const messagesResponse = await client.session.messages({
-              path: { id: sessionId },
-            });
-
-            if (messagesResponse.data) {
-              for (const msg of messagesResponse.data) {
-                for (const part of msg.parts) {
-                  if (
-                    part.type === "tool" &&
-                    part.tool === "task_complete" &&
-                    part.state.status === "completed"
-                  ) {
-                    const input = part.state.input as Record<string, unknown>;
-                    safeResolve({
-                      status:
-                        (input.status as CompletionResult["status"]) ||
-                        "complete",
-                      reason: input.reason as string | undefined,
-                    });
-                    return;
-                  }
-                }
-              }
-            }
-
-            // No task_complete found — session stalled
-            safeResolve({
-              status: "stalled",
-              reason: "Session went idle without calling task_complete",
-            });
-          }
-          // If busy or retry, keep polling
-        }
-      } catch (err) {
-        // Network errors during polling — just keep trying
-        console.error(`Poll error: ${(err as Error).message}`);
-      }
-    }, 3000); // Poll every 3 seconds
-  });
+  // No task_complete found — session completed without calling it
+  return {
+    status: "stalled",
+    reason: "Session completed without calling task_complete",
+  };
 }
 
 // Show a toast notification in the OpenCode TUI
@@ -156,58 +194,4 @@ export async function abortSession(
   sessionId: string,
 ): Promise<void> {
   await client.session.abort({ path: { id: sessionId } });
-}
-
-// Get session summary (cost, tokens, diffs) after completion
-export async function getSessionSummary(
-  client: OpencodeClient,
-  sessionId: string,
-): Promise<{
-  cost: number;
-  tokens: { input: number; output: number; reasoning: number };
-  filesChanged: string[];
-}> {
-  // Get session messages to sum up costs
-  const messagesResponse = await client.session.messages({
-    path: { id: sessionId },
-  });
-
-  let totalCost = 0;
-  let totalInput = 0;
-  let totalOutput = 0;
-  let totalReasoning = 0;
-
-  if (messagesResponse.data) {
-    for (const msg of messagesResponse.data) {
-      if (msg.info.role === "assistant") {
-        totalCost += msg.info.cost;
-        totalInput += msg.info.tokens.input;
-        totalOutput += msg.info.tokens.output;
-        totalReasoning += msg.info.tokens.reasoning;
-      }
-    }
-  }
-
-  // Get diffs for files changed
-  let filesChanged: string[] = [];
-  try {
-    const diffResponse = await client.session.diff({
-      path: { id: sessionId },
-    });
-    if (diffResponse.data) {
-      filesChanged = diffResponse.data.map((d) => d.file);
-    }
-  } catch {
-    // Diffs might not be available
-  }
-
-  return {
-    cost: totalCost,
-    tokens: {
-      input: totalInput,
-      output: totalOutput,
-      reasoning: totalReasoning,
-    },
-    filesChanged,
-  };
 }

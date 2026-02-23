@@ -5,10 +5,8 @@ import { readRecentProgress, appendProgress } from "./progress.js";
 import {
   connectToServer,
   createSession,
-  sendPrompt,
-  waitForCompletion,
+  runPrompt,
   showToast,
-  getSessionSummary,
 } from "./opencode.js";
 import type { LoopConfig, EngineFlags, LoopResult, IterationResult, CompletionResult } from "./types.js";
 
@@ -102,20 +100,16 @@ export async function runLoop(
     const templateVars = buildTemplateVars(bead, recentProgress);
     const prompt = renderPrompt(template, templateVars);
 
-    // Create session and send prompt
+    // Create session and run prompt (synchronous — blocks until agent finishes)
     const iterStartTime = Date.now();
     let result: CompletionResult;
 
     try {
       const sessionId = await createSession(client, `${bead.id}: ${bead.title}`);
-      await sendPrompt(client, sessionId, prompt, model);
+      console.log(`Session: ${sessionId} — sending prompt...`);
 
-      // Wait for completion
-      const timeoutMs = config.engine.timeout_minutes * 60 * 1000;
-      result = await waitForCompletion(client, sessionId, timeoutMs);
-
-      // Get session summary for progress tracking
-      const summary = await getSessionSummary(client, sessionId);
+      const promptResult = await runPrompt(client, sessionId, prompt, model);
+      result = promptResult.completion;
       const iterDuration = Date.now() - iterStartTime;
 
       // Record iteration in progress.md
@@ -126,9 +120,9 @@ export async function runLoop(
         reason: result.reason,
         model: modelString,
         duration: iterDuration,
-        cost: summary.cost,
-        tokens: summary.tokens,
-        filesChanged: summary.filesChanged,
+        cost: promptResult.cost,
+        tokens: promptResult.tokens,
+        filesChanged: promptResult.filesChanged,
       };
 
       appendProgress(projectDir, iteration, iterResult);
