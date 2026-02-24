@@ -38,20 +38,11 @@ tasks/                             # Generated PRDs
 These commands must pass before any commit. If a command doesn't apply to the current project yet (e.g., no tests exist), note it in progress.md but don't fail the bead.
 
 ```bash
-# Typecheck (if applicable)
-# npm run typecheck / tsc --noEmit / pyright / etc.
-
-# Lint (if applicable)
-# npm run lint / ruff check / etc.
-
-# Test (if applicable)
-# npm test / pytest / etc.
-
-# Build (if applicable)
-# npm run build / cargo build / etc.
+# Typecheck
+bun run typecheck
 ```
 
-Quality gate commands should be defined in the PRD's Quality Gates section and are project-specific. The above are placeholders — replace them with actual commands once the project's tech stack is established.
+Additional quality gates (lint, test, build) will be added as the project grows. If a gate doesn't apply yet, note it in progress.md but don't fail the bead.
 
 ## Bead Types You May Encounter
 
