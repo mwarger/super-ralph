@@ -4,6 +4,12 @@ A unified SDLC framework for AI-assisted software development. Combines [Superpo
 
 Every piece of work — feature, bug, refactor, hotfix — flows through the same pipeline: relentless intake, autonomous execution, embedded review, audited completion.
 
+## Prerequisites
+
+- [OpenCode](https://opencode.ai) — AI coding agent
+- [bun](https://bun.sh) — JavaScript runtime
+- [br](https://github.com/Dicklesworthstone/beads_rust) — beads CLI for task tracking
+
 ## Installation
 
 ### Claude Code
@@ -40,11 +46,16 @@ After installing globally, initialize any project:
 
 Or say: "Initialize this project for super-ralph"
 
-This creates:
-- `.super-ralph/AGENTS.md` — Framework agent instructions
-- `.super-ralph/prompt.hbs` — Custom prompt template
-- `.super-ralph/intake-checklist.md` — Growing intake checklist
-- `tasks/` — Directory for generated PRDs
+Init will:
+1. **Validate prerequisites** — checks that `bun` and `br` are installed, offers install commands if missing
+2. **Create project files:**
+   - `.super-ralph/AGENTS.md` — Framework agent instructions
+   - `.super-ralph/prompt.hbs` — Custom prompt template
+   - `.super-ralph/intake-checklist.md` — Growing intake checklist
+   - `.super-ralph/config.toml` — Project config with auto-detected `cli_path`
+   - `tasks/` — Directory for generated PRDs
+3. **Auto-detect `cli_path`** — resolves the absolute path to the super-ralph CLI and records it in `.super-ralph/config.toml`
+4. **Initialize `.beads/` workspace** — runs `br init` if no beads workspace exists yet
 
 ## Commands
 
@@ -73,13 +84,19 @@ Type `/superralph:feature` (or `:bug`, `:hotfix`, `:refactor`). This invokes the
 4. **Beads** — Creates an epic with implementation beads, review beads at phase boundaries, bug scan beads, audit beads, and a learning extraction bead — all wired into a dependency graph (using `br` CLI).
 5. **Launch offer** — Asks whether to start Phase 2 now or later.
 
-### Phase 2: Execution (OpenCode SDK loop)
+### Phase 2: Execution (from inside OpenCode)
+
+Execution launches from inside your agent session — no second terminal needed. At the end of Phase 1, the launch wizard offers to start execution immediately. To resume a previously started epic, use `/superralph:resume`.
+
+The super-ralph CLI uses the OpenCode SDK to run the execution loop: select (PageRank-optimized) → prompt → execute → evaluate. Review beads execute automatically at phase boundaries. Audit beads review the entire implementation at the end. The learning bead extracts lessons and updates the intake checklist for next time.
+
+**Advanced — manual CLI invocation:**
 
 ```bash
-npx super-ralph run --epic <epic-id>
+bun run <cli_path> run --epic <epic-id>
 ```
 
-The `super-ralph` CLI uses the OpenCode SDK to run the execution loop: select (PageRank-optimized) → prompt → execute → evaluate. Review beads execute automatically at phase boundaries. Audit beads review the entire implementation at the end. The learning bead extracts lessons and updates the intake checklist for next time.
+Where `<cli_path>` is the absolute path stored in `.super-ralph/config.toml` under `[cli] path`.
 
 ## Skills
 
@@ -98,7 +115,7 @@ The `super-ralph` CLI uses the OpenCode SDK to run the execution loop: select (P
 cd ~/.agents/super-ralph && git pull
 ```
 
-Skills update instantly through symlinks.
+Skills update instantly through symlinks. The `cli_path` in `.super-ralph/config.toml` points to the global install directory, so it stays stable across `git pull` — no need to re-run init after updating.
 
 ## Design Documentation
 
