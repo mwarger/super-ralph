@@ -51,7 +51,7 @@ Both should show symlinks pointing into `~/.agents/super-ralph/`.
 After installation, initialize any project by running:
 
 ```
-/superralph:init
+/super-ralph:init
 ```
 
 Or say: "Initialize this project for super-ralph"
@@ -62,14 +62,13 @@ This creates the project-local `.super-ralph/` directory with AGENTS.md and temp
 
 | Command | Purpose |
 |---------|---------|
-| `/superralph:init` | Initialize project |
-| `/superralph:feature [desc]` | New feature (full pipeline) |
-| `/superralph:bug [desc]` | Fix a bug (focused intake) |
-| `/superralph:hotfix [desc]` | Urgent fix (minimal intake) |
-| `/superralph:refactor [desc]` | Restructure code |
-| `/superralph:plan [desc]` | Plan only (stops after design doc) |
-| `/superralph:resume` | Resume interrupted epic |
-| `/superralph:status` | Check epic progress |
+| `/super-ralph:init` | Initialize project |
+| `/super-ralph:feature [desc]` | New feature (deep intake -> spec) |
+| `/super-ralph:bug [desc]` | Fix a bug (intake -> fix spec) |
+| `/super-ralph:hotfix [desc]` | Urgent fix (fast intake -> spec) |
+| `/super-ralph:refactor [desc]` | Restructure code (intake -> design doc -> spec) |
+| `/super-ralph:plan [desc]` | Plan only (stops after design doc) |
+| `/super-ralph:status` | Check epic progress |
 
 ## Updating
 

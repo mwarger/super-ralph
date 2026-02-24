@@ -51,7 +51,7 @@ Restart OpenCode to pick up the new skills and plugin.
 
 ```bash
 ls -la ~/.config/opencode/skills/super-ralph
-ls -la ~/.config/opencode/commands/superralph:*.md
+ls -la ~/.config/opencode/commands/super-ralph:*.md
 ls -la ~/.config/opencode/plugins/super-ralph.js
 ```
 
@@ -59,7 +59,7 @@ All should show symlinks pointing into `~/.agents/super-ralph/`.
 
 ## Per-Project Setup
 
-After installation, initialize any project by typing `/superralph:init` or saying:
+After installation, initialize any project by typing `/super-ralph:init` or saying:
 
 > "Initialize this project for super-ralph"
 
@@ -69,14 +69,13 @@ This creates the project-local `.super-ralph/` directory with AGENTS.md and temp
 
 | Command | Purpose |
 |---------|---------|
-| `/superralph:init` | Initialize project |
-| `/superralph:feature [desc]` | New feature (full pipeline) |
-| `/superralph:bug [desc]` | Fix a bug (focused intake) |
-| `/superralph:hotfix [desc]` | Urgent fix (minimal intake) |
-| `/superralph:refactor [desc]` | Restructure code |
-| `/superralph:plan [desc]` | Plan only (stops after design doc) |
-| `/superralph:resume` | Resume interrupted epic |
-| `/superralph:status` | Check epic progress |
+| `/super-ralph:init` | Initialize project |
+| `/super-ralph:feature [desc]` | New feature (deep intake -> spec) |
+| `/super-ralph:bug [desc]` | Fix a bug (intake -> fix spec) |
+| `/super-ralph:hotfix [desc]` | Urgent fix (fast intake -> spec) |
+| `/super-ralph:refactor [desc]` | Restructure code (intake -> design doc -> spec) |
+| `/super-ralph:plan [desc]` | Plan only (stops after design doc) |
+| `/super-ralph:status` | Check epic progress |
 
 ## Updating
 
@@ -90,7 +89,7 @@ Because skills and plugins are symlinked, the update takes effect immediately. R
 
 ```bash
 rm ~/.config/opencode/skills/super-ralph
-rm ~/.config/opencode/commands/superralph:*.md
+rm ~/.config/opencode/commands/super-ralph:*.md
 rm ~/.config/opencode/plugins/super-ralph.js
 rm -rf ~/.agents/super-ralph
 ```
