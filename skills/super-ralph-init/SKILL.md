@@ -45,7 +45,51 @@ Check whether `.super-ralph/AGENTS.md` exists in the project root.
 
 ---
 
-## Step 2: Locate Templates
+## Step 2: Validate Prerequisites
+
+Check that required CLI tools are installed. Both are required for the super-ralph pipeline.
+
+**Check `bun`:**
+
+```bash
+bun --version
+```
+
+- **If present:** Note the version and continue.
+- **If missing:** Tell the user:
+
+  > "`bun` is required but not found. Install it with:"
+  > ```
+  > curl -fsSL https://bun.sh/install | bash
+  > ```
+  > "Install now, or abort init?"
+
+  If the user declines, **stop here**.
+  If the user agrees, run the install command, then verify `bun --version` succeeds before continuing.
+
+**Check `br` (beads-rust CLI):**
+
+```bash
+br --version
+```
+
+- **If present:** Note the version and continue.
+- **If missing:** Tell the user:
+
+  > "`br` (beads-rust) is required but not found. Install it with:"
+  > ```
+  > curl -fsSL "https://raw.githubusercontent.com/Dicklesworthstone/beads_rust/main/install.sh?$(date +%s)" | bash
+  > ```
+  > "Install now, or abort init?"
+
+  If the user declines, **stop here**.
+  If the user agrees, run the install command, then verify `br --version` succeeds before continuing.
+
+**Both must be present to proceed.** If either is missing and the user declines to install, stop and report what's needed.
+
+---
+
+## Step 3: Locate Templates
 
 Check that the global super-ralph install exists at `~/.agents/super-ralph/templates/`.
 
@@ -63,7 +107,7 @@ Do NOT proceed without the templates.
 
 ---
 
-## Step 3: Select Model
+## Step 4: Select Model
 
 **Auto-detection:** Detect the current agent environment:
 
@@ -75,22 +119,33 @@ Confirm with the user:
 
 > "Detected **{agent}** environment. Default model: `{model}`. Use this, or specify a different model?"
 
-Store the selected model for Step 4.
+Store the selected model for Step 5.
 
 ---
 
-## Step 4: Create `.super-ralph/config.toml`
+## Step 5: Create `.super-ralph/config.toml`
 
 1. Create the `.super-ralph/` directory if it doesn't exist
 2. Copy `~/.agents/super-ralph/templates/config.toml` to `.super-ralph/config.toml`
-3. **Edit the copied file** to set the correct model value from Step 3:
+3. **Edit the copied file** to set the correct model value from Step 4:
    - Replace the `model = "..."` line under `[agentOptions]` with the selected model
+4. **Detect and record `cli_path`:**
+   - Resolve `~/.agents/super-ralph/src/index.ts` to an absolute path (e.g. `/Users/mat/.agents/super-ralph/src/index.ts`)
+   - Verify the file exists at that path
+   - Confirm with the user:
+     > "Detected super-ralph CLI at `{resolved_path}`. Use this path, or specify a different one?"
+   - If the user provides a different path, use that instead (verify it exists)
+   - **Add a `[cli]` section** to the config file:
+     ```toml
+     [cli]
+     path = "/Users/mat/.agents/super-ralph/src/index.ts"
+     ```
 
 If re-initializing (user said yes in Step 1), overwrite the existing file.
 
 ---
 
-## Step 5: Create `.super-ralph/` Agent Files
+## Step 6: Create `.super-ralph/` Agent Files
 
 Copy each template file, **but only if the target does not already exist** — don't overwrite customizations.
 
@@ -106,7 +161,7 @@ For each file:
 
 ---
 
-## Step 6: Create `tasks/` Directory
+## Step 7: Create `tasks/` Directory
 
 Create the `tasks/` directory if it doesn't exist. This is where generated PRDs will be saved.
 
@@ -118,7 +173,24 @@ This is inherently idempotent — if it already exists, nothing happens.
 
 ---
 
-## Step 7: Update Project Root `AGENTS.md`
+## Step 8: Initialize Beads Workspace
+
+Check whether `.beads/` exists in the project root.
+
+- **If `.beads/` already exists:** Skip this step. Note that the beads workspace was already initialized.
+- **If `.beads/` does not exist:** Run:
+
+  ```bash
+  br init
+  ```
+
+  This creates the `.beads/` directory with the beads-rust workspace structure. Verify the command succeeds and `.beads/` exists afterward.
+
+  If `br init` fails, report the error but continue with the rest of init — the user can run `br init` manually later.
+
+---
+
+## Step 9: Update Project Root `AGENTS.md`
 
 The reference line to add is:
 
@@ -152,22 +224,30 @@ Also read .super-ralph/AGENTS.md for SDLC framework instructions.
 
 ---
 
-## Step 8: Report Results
+## Step 10: Report Results
 
 Output a summary of everything that was done. Use this format:
 
 ```
 ## Super-Ralph Init Complete
 
+### Prerequisites
+- bun: {bun_version}
+- br: {br_version}
+
 ### Model Configuration
 - Model: {model}
+- CLI path: {cli_path}
 
 ### Files Created
-- .super-ralph/config.toml ← copied from template, configured with model
+- .super-ralph/config.toml ← copied from template, configured with model and cli_path
 - .super-ralph/AGENTS.md ← copied from template
 - .super-ralph/prompt.hbs ← copied from template
 - .super-ralph/intake-checklist.md ← copied from template
 - tasks/ ← directory created
+
+### Beads Workspace
+- .beads/ ← {initialized | already existed | failed (run `br init` manually)}
 
 ### Files Modified
 - AGENTS.md ← appended super-ralph reference
@@ -189,11 +269,15 @@ Adjust the lists based on what actually happened — only show sections that hav
 
 | Resource | Behavior |
 |---|---|
+| `bun` | Check version; offer install if missing (Step 2) |
+| `br` | Check version; offer install if missing (Step 2) |
 | `.super-ralph/config.toml` | Ask before overwriting (Step 1 gate) |
+| `.super-ralph/config.toml` `[cli] path` | Detect, confirm with user, write to config (Step 5) |
 | `.super-ralph/AGENTS.md` | Skip if exists (preserve customizations) |
 | `.super-ralph/prompt.hbs` | Skip if exists (preserve customizations) |
 | `.super-ralph/intake-checklist.md` | Skip if exists (preserve customizations) |
 | `tasks/` | `mkdir -p` (inherently idempotent) |
+| `.beads/` | Run `br init` only if missing (Step 8) |
 | Root `AGENTS.md` reference line | Check before appending (don't duplicate) |
 
 ---
@@ -203,12 +287,16 @@ Adjust the lists based on what actually happened — only show sections that hav
 Before reporting completion:
 
 - [ ] Checked for existing `.super-ralph/AGENTS.md` and asked user if re-initializing
+- [ ] Validated `bun` is installed (or installed it)
+- [ ] Validated `br` is installed (or installed it)
 - [ ] Verified templates exist at `~/.agents/super-ralph/templates/`
 - [ ] Detected environment and confirmed model selection with user
-- [ ] `.super-ralph/config.toml` created with correct model value (or confirmed overwrite)
+- [ ] `cli_path` detected and confirmed with user
+- [ ] `.super-ralph/config.toml` created with correct model value and `[cli] path` (or confirmed overwrite)
 - [ ] `.super-ralph/AGENTS.md` created or skipped (already exists)
 - [ ] `.super-ralph/prompt.hbs` created or skipped (already exists)
 - [ ] `.super-ralph/intake-checklist.md` created or skipped (already exists)
 - [ ] `tasks/` directory exists
+- [ ] `.beads/` workspace initialized (or already existed)
 - [ ] Root `AGENTS.md` has reference to `.super-ralph/AGENTS.md` (not duplicated)
-- [ ] Summary report output with model configuration and all created/modified/skipped files listed
+- [ ] Summary report output with prerequisites, model configuration, cli_path, beads status, and all created/modified/skipped files listed
