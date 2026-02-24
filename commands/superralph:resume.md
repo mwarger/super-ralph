@@ -21,8 +21,8 @@ This is an operational command — skip intake.
 
 6. Ask which phase to resume with:
    a. **Forward** (default): Execute beads in sequence — the main execution phase
-   b. **Decompose**: Break down remaining beads into smaller sub-tasks
-   c. **Reverse**: Verify and validate completed work against acceptance criteria
+   b. **Decompose**: Break down a spec/PRD into beads (task items)
+   c. **Reverse**: Generate a spec from input (files, URLs, descriptions)
 
 7. Offer three options:
    a. **Run now**: Execute the chosen phase command in a terminal
@@ -32,6 +32,6 @@ This is an operational command — skip intake.
 The recommended command formats:
 ```
 bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <remaining_beads * 2>
-bun run <cli_path> decompose --epic <EPIC_ID> --max-iterations <remaining_beads * 2>
-bun run <cli_path> reverse --epic <EPIC_ID> --max-iterations <remaining_beads * 2>
+bun run <cli_path> decompose --spec <path-to-spec> --max-iterations <remaining_beads * 2>
+bun run <cli_path> reverse --input <path> --max-iterations <remaining_beads * 2>
 ```

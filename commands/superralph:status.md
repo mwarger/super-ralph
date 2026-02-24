@@ -11,7 +11,7 @@ This is an operational command — skip intake.
 2. If no epics found, tell the user no work has been created yet.
 
 3. For each open epic:
-   - Run `br list --parent <epicId> --json`
+   - Run `super-ralph status --epic <epicId>` (which handles fetching children internally), or alternatively run `br show <epicId> --json` and get children from the `dependents` array
    - Count beads by status: completed, open, in_progress, blocked
    - Identify the current phase by checking labels on in-progress/open beads
    - Show the next ready bead
