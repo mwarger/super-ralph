@@ -1,6 +1,6 @@
 # Super-Ralph
 
-A unified SDLC framework for AI-assisted software development. Combines [Superpowers](https://github.com/obra/superpowers) (rigorous intake, design, review), the [OpenCode SDK](https://opencode.ai) (autonomous agent sessions), and [Beads](https://jeffreyemanuel.com) (dependency-aware task tracking with PageRank prioritization via `br` CLI).
+A unified SDLC framework for AI-assisted software development. Combines [Superpowers](https://github.com/obra/superpowers) (rigorous intake, design, review), the [OpenCode SDK](https://opencode.ai) (autonomous agent sessions), and [Beads](https://jeffreyemanuel.com) (dependency-aware task tracking with dependency-aware prioritization via `br` CLI).
 
 Every piece of work — feature, bug, refactor, hotfix — flows through the same pipeline: relentless intake, three-phase autonomous execution, embedded review, audited completion.
 
@@ -56,9 +56,9 @@ Init will:
    - `.super-ralph/decompose.hbs` — Prompt template for decompose phase (spec -> beads)
    - `.super-ralph/reverse.hbs` — Prompt template for reverse phase (input -> spec)
    - `.super-ralph/intake-checklist.md` — Growing intake checklist
-   - `.super-ralph/config.toml` — Project config with auto-detected `cli_path`
+   - `.super-ralph/config.toml` — Project config with auto-detected `cli.path`
    - `tasks/` — Directory for generated PRDs
-3. **Auto-detect `cli_path`** — resolves the absolute path to the super-ralph CLI and records it in `.super-ralph/config.toml`
+3. **Auto-detect `cli.path`** — resolves the absolute path to the super-ralph CLI and records it in `.super-ralph/config.toml`
 4. **Initialize `.beads/` workspace** — runs `br init` if no beads workspace exists yet
 
 ## Commands
@@ -80,7 +80,7 @@ All pipeline commands accept an optional inline description (e.g., `/superralph:
 
 - `super-ralph forward --epic <ID>` — Beads -> code. Agent picks the next ready bead, implements it, tests, commits, loops.
 - `super-ralph decompose --spec <path>` — Spec -> beads. Agent reads the spec, creates one bead per iteration via `br`, loops until fully decomposed.
-- `super-ralph reverse --input <path>` — Input -> spec. Agent analyzes input (code, docs, URLs), produces/refines a spec iteratively.
+- `super-ralph reverse --input <path> [--output <dir>]` — Input -> spec. Agent analyzes input (code, docs, URLs), produces/refines a spec iteratively. `--input` is repeatable.
 - `super-ralph status --epic <ID>` — Show epic progress.
 - `super-ralph doctor` — Preflight checks (bun, br, templates, config).
 - `super-ralph help` — Show usage.
@@ -103,7 +103,7 @@ Super-ralph is a pure Ralph loop engine with three composable phases. Each phase
 super-ralph reverse --input <path|url> [--output <dir>]
 ```
 
-Takes any input (source code, documentation, URLs, descriptions) and iteratively produces a specification. The agent reviews the current spec draft for gaps, expands or refines it, then signals `task_complete` or `phase_done`. Output goes to `docs/specs/` by default.
+Takes any input (source code, documentation, URLs, descriptions) and iteratively produces a specification. The agent reviews the current spec draft for gaps, expands or refines it, then signals `task_complete` with status `complete` or `phase_done`. Output goes to `docs/specs/` by default.
 
 ### Decompose: spec -> beads
 
@@ -135,11 +135,13 @@ Or enter at any point — have a PRD already? Skip to decompose. Have beads? Ski
 
 ### Completion Signaling
 
-All phases use the same `task_complete` tool with two statuses:
+All phases use the same `task_complete` tool with four statuses:
 - `{ status: "complete" }` — this iteration is done, loop back for the next one
 - `{ status: "phase_done" }` — the entire phase is finished, exit the loop
+- `{ status: "blocked" }` — this bead is blocked, skip and continue
+- `{ status: "failed" }` — this iteration failed, exit the loop
 
-For forward, there's a third exit condition: no ready beads and no in-progress beads means the epic is complete.
+For forward, there's a third exit condition: no ready beads means the epic is complete.
 
 ## Model Selection
 
@@ -180,7 +182,7 @@ Type `/superralph:feature` (or `:bug`, `:hotfix`, `:refactor`). This invokes the
 
 Execution launches from inside your agent session — no second terminal needed. At the end of Phase 1, the launch wizard offers to start execution immediately. To resume a previously started epic, use `/superralph:resume`.
 
-The super-ralph CLI runs the three-phase loop engine via the OpenCode SDK. For the common case (beads already exist from Phase 1), the `forward` command handles execution: select (PageRank-optimized) -> prompt -> execute -> evaluate. Review beads execute automatically at phase boundaries. Audit beads review the entire implementation at the end. The learning bead extracts lessons and updates the intake checklist for next time.
+The super-ralph CLI runs the three-phase loop engine via the OpenCode SDK. For the common case (beads already exist from Phase 1), the `forward` command handles execution: select (priority-sorted) -> prompt -> execute -> evaluate. Review beads execute automatically at phase boundaries. Audit beads review the entire implementation at the end. The learning bead extracts lessons and updates the intake checklist for next time.
 
 For advanced workflows, chain all three phases: `reverse` (input -> spec), `decompose` (spec -> beads), `forward` (beads -> code).
 
@@ -207,7 +209,7 @@ Where `<cli_path>` is the absolute path stored in `.super-ralph/config.toml` und
 cd ~/.agents/super-ralph && git pull
 ```
 
-Skills update instantly through symlinks. The `cli_path` in `.super-ralph/config.toml` points to the global install directory, so it stays stable across `git pull` — no need to re-run init after updating.
+Skills update instantly through symlinks. The `cli.path` in `.super-ralph/config.toml` points to the global install directory, so it stays stable across `git pull` — no need to re-run init after updating.
 
 ## Design Documentation
 
