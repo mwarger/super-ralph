@@ -1,3 +1,2 @@
 # Agent Instructions
-
-Also read .super-ralph/AGENTS.md for SDLC framework instructions.
+See README.md for project documentation.
