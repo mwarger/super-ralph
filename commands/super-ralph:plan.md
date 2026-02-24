@@ -5,7 +5,7 @@ description: "Create a design document through the super-ralph planning phase on
 ## Pipeline: Plan Only
 
 1. Verify the project is initialized: check that `.super-ralph/AGENTS.md` exists.
-   If not, tell the user to run `/superralph:init` first.
+   If not, tell the user to run `/super-ralph:init` first.
 
 2. Load and follow the skill at `skills/plan-prd/SKILL.md` exactly.
 

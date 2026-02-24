@@ -5,7 +5,7 @@ description: "Plan and execute a refactoring through the super-ralph pipeline"
 ## Pipeline: Refactor
 
 1. Verify the project is initialized: check that `.super-ralph/AGENTS.md` exists.
-   If not, tell the user to run `/superralph:init` first.
+   If not, tell the user to run `/super-ralph:init` first.
 
 2. Load and follow the skill at `skills/refactor-prd/SKILL.md` exactly.
 
