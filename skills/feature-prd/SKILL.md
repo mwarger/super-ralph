@@ -273,7 +273,7 @@ See: docs/plans/YYYY-MM-DD-<feature>-design.md
 
 ## Step 4: Create Beads
 
-Take the PRD and create beads in `.beads/beads.jsonl` using the `br` CLI.
+Take the PRD and create beads in `.beads/issues.jsonl` using the `br` CLI.
 
 ### Command Reference
 
@@ -611,7 +611,7 @@ br dep add <AUDIT-002> <AUDIT-001>
 br dep add <LEARN-001> <AUDIT-002>
 ```
 
-**Result:** BV's PageRank will naturally prioritize beads that unblock the most downstream work — schema beads first (they unblock everything), then reviews at the right time, audits last.
+**Result:** Dependency ordering will naturally prioritize beads that unblock the most downstream work — schema beads first (they unblock everything), then reviews at the right time, audits last.
 
 ---
 
@@ -685,7 +685,7 @@ After creating beads, offer to launch execution immediately. Use `<ITERATIONS>` 
 
 > "Beads are ready. How would you like to start execution?
 >
-> 1. **Run now** — I'll run `bun run <cli_path> forward --headless` right here. Output streams to this session. You can check status from another terminal with `bun run <cli_path> status --epic <EPIC_ID>`.
+> 1. **Run now** — I'll run `bun run <cli_path> forward` right here. You can check status from another terminal with `bun run <cli_path> status --epic <EPIC_ID>`.
 > 2. **Copy command to clipboard** — I'll copy the full `bun run <cli_path> forward` command to your clipboard so you can paste it in a new terminal tab.
 > 3. **Show command** — I'll display the command for you to copy manually."
 
@@ -696,13 +696,13 @@ Before running, ask about model overrides:
 > "The project config will be used by default. Would you like to override the model for this run?
 >
 > - **Use config defaults** *(recommended)* — whatever is in `.super-ralph/config.toml`
-> - **Override model** — e.g., `opus`, `sonnet`"
+> - **Override model** — e.g., `anthropic/claude-opus-4-6`, `anthropic/claude-sonnet-4-6`"
 
 Construct the command based on their choices. **All commands include `--max-iterations`:**
 
 ```bash
 # Default (no overrides)
-bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <ITERATIONS> --headless
+bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <ITERATIONS>
 
 # With model override
 bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <ITERATIONS> --model <model>
@@ -712,7 +712,7 @@ Tell the user why:
 
 > "Setting --max-iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"
 
-Run the command via bash. The `--headless` flag streams structured logs to stdout instead of launching the TUI.
+Run the command via bash.
 
 After execution completes (or if it's interrupted), inform the user:
 - To check progress: `bun run <cli_path> status --epic <EPIC_ID>`
@@ -720,7 +720,7 @@ After execution completes (or if it's interrupted), inform the user:
 
 ### Option 2: Copy command to clipboard
 
-Construct the command **without** `--headless` (the user will want the TUI in their own terminal):
+Construct the command for the user to run in their own terminal:
 
 ```bash
 bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <ITERATIONS>
@@ -780,4 +780,4 @@ Before finishing, verify:
 - [ ] All dependencies wired correctly (phase gates enforced)
 - [ ] Self-check round completed
 - [ ] Summary output provided with run command and calculated --max-iterations
-- [ ] Launch wizard presented (headless / clipboard / show command)
+- [ ] Launch wizard presented (run now / clipboard / show command)

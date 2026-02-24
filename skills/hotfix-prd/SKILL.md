@@ -261,7 +261,7 @@ Run:   bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <N>
 Read `cli_path` from `.super-ralph/config.toml` (the `[cli] path` field). If not set, error and tell the user to run `/superralph:init`.
 
 > "Beads are ready. How would you like to start?
-> 1. **Run now** — `bun run <cli_path> forward --epic <ID> --max-iterations <N> --headless`
+> 1. **Run now** — `bun run <cli_path> forward --epic <ID> --max-iterations <N>`
 > 2. **Copy to clipboard** — I'll `pbcopy` the forward command for a new terminal tab
 > 3. **Show command** — display for manual copy"
 

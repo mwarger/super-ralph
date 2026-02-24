@@ -194,7 +194,7 @@ These commands must pass for every fix story:
 
 ## Step 3: Create Beads
 
-Take the PRD and create beads in `.beads/beads.jsonl` using the `br` CLI.
+Take the PRD and create beads in `.beads/issues.jsonl` using the `br` CLI.
 
 ### Command Reference
 
@@ -325,7 +325,7 @@ br dep add <AUDIT-001> <BUGSCAN-001>
 br dep add <LEARN-001> <AUDIT-001>
 ```
 
-**Result:** BV's PageRank will prioritize the root cause fix first (it unblocks everything), then cascading fixes, then review/audit/learn in order.
+**Result:** Dependency ordering will prioritize the root cause fix first (it unblocks everything), then cascading fixes, then review/audit/learn in order.
 
 ---
 
@@ -390,11 +390,11 @@ Offer three options:
 
 1. **Run now** — Ask about model overrides, then run:
    ```bash
-   bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <N> --headless [--model <model>]
+   bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <N> [--model <model>]
    ```
    After completion: remind about `bun run <cli_path> status --epic <EPIC_ID>` and `/superralph:resume` to resume.
 
-2. **Copy to clipboard** — Copy forward command (without `--headless`) via `pbcopy`. Also display as fallback.
+2. **Copy to clipboard** — Copy forward command via `pbcopy`. Also display as fallback.
 
 3. **Show command** — Display the full command for manual copy.
 
