@@ -43,7 +43,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/mwarger/sup
 After installing globally, initialize any project:
 
 ```
-/superralph:init
+/super-ralph:init
 ```
 
 Or say: "Initialize this project for super-ralph"
@@ -65,16 +65,15 @@ Init will:
 
 ### Slash Commands (Planning — Phase 1)
 
-- `/superralph:init` — Initialize project for the framework
-- `/superralph:feature [desc]` — New feature: full intake -> design doc -> PRD -> beads -> launch
-- `/superralph:bug [desc]` — Fix a bug: focused intake -> PRD -> beads -> launch
-- `/superralph:hotfix [desc]` — Urgent fix: minimal intake, 1-3 beads -> launch
-- `/superralph:refactor [desc]` — Restructure code: architecture intake -> design doc -> PRD -> beads -> launch
-- `/superralph:plan [desc]` — Plan only: full intake -> design doc -> STOP
-- `/superralph:resume` — Resume an interrupted epic
-- `/superralph:status` — Check progress on current epic
+- `/super-ralph:init` — Initialize project for the framework
+- `/super-ralph:feature [desc]` — New feature: deep intake -> design doc -> spec
+- `/super-ralph:bug [desc]` — Fix a bug: focused intake -> fix spec
+- `/super-ralph:hotfix [desc]` — Urgent fix: fast intake -> fix spec
+- `/super-ralph:refactor [desc]` — Restructure code: architecture intake -> design doc -> spec
+- `/super-ralph:plan [desc]` — Plan only: full intake -> design doc -> STOP
+- `/super-ralph:status` — Check progress on current epic
 
-All pipeline commands accept an optional inline description (e.g., `/superralph:feature add dark mode toggle`).
+All pipeline commands accept an optional inline description (e.g., `/super-ralph:feature add dark mode toggle`).
 
 ### CLI Commands (Execution — Phase 2)
 
@@ -119,7 +118,7 @@ Takes a spec/PRD file and creates beads one at a time. Each iteration, the agent
 super-ralph forward --epic <ID>
 ```
 
-Takes an epic ID and implements beads. Each iteration, the agent sees all ready beads, picks the most important one, implements it, runs quality gates, commits, and closes the bead. The loop exits when no ready beads remain. Review and audit beads execute automatically at their dependency-defined points.
+Takes an epic ID and implements beads. Each iteration, the orchestrator selects the highest-priority ready bead, routes it to the appropriate model, and the agent implements it, runs quality gates, commits, and closes the bead. The loop exits when no ready beads remain. Review and audit beads execute automatically at their dependency-defined points.
 
 ### Composability
 
@@ -168,19 +167,20 @@ The orchestrator picks the highest-priority ready bead before creating the sessi
 
 ## The Pipeline (End-to-End)
 
-### Phase 1: Planning (slash commands invoke skills directly)
+### Phase 1: Planning (slash commands produce specs)
 
-Type `/superralph:feature` (or `:bug`, `:hotfix`, `:refactor`). This invokes the corresponding skill directly in your current agent session — no external tool required:
+Type `/super-ralph:feature` (or `:bug`, `:hotfix`, `:refactor`). This runs the intake and design workflow in your current agent session:
 
 1. **Intake** — Relentless interrogation: business context, technical deep-dive, learned questions. Depth scales to work type (feature: 10-15 questions, hotfix: 1-3).
 2. **Design doc** — For features and refactors, produces a design document with user approval.
-3. **PRD** — Generates phase-labeled user stories sized for single execution iterations.
-4. **Beads** — Creates an epic with implementation beads, review beads at phase boundaries, bug scan beads, audit beads, and a learning extraction bead — all wired into a dependency graph (using `br` CLI).
-5. **Launch offer** — Asks whether to start Phase 2 now or later.
+3. **Spec output** — Saves the spec to `tasks/<name>-spec.md` and prints the decompose command.
 
 ### Phase 2: Execution (three-phase loop engine)
 
-Execution launches from inside your agent session — no second terminal needed. At the end of Phase 1, the launch wizard offers to start execution immediately. To resume a previously started epic, use `/superralph:resume`.
+Run the three-phase engine from your terminal — no agent session needed:
+
+1. `super-ralph decompose --spec tasks/<name>-spec.md` — reads the spec, autonomously creates beads
+2. `super-ralph forward --epic <ID>` — implements beads one at a time
 
 The super-ralph CLI runs the three-phase loop engine via the OpenCode SDK. For the common case (beads already exist from Phase 1), the `forward` command handles execution: select (priority-sorted) -> prompt -> execute -> evaluate. Review beads execute automatically at phase boundaries. Audit beads review the entire implementation at the end. The learning bead extracts lessons and updates the intake checklist for next time.
 
@@ -197,10 +197,10 @@ Where `<cli_path>` is the absolute path stored in `.super-ralph/config.toml` und
 ## Skills
 
 - `super-ralph-init` — Initialize a project for the framework
-- `feature-prd` — Full feature pipeline: intake -> design doc -> PRD -> beads -> launch
-- `bug-prd` — Bug fix pipeline: focused intake -> PRD -> beads -> launch
-- `hotfix-prd` — Urgent fix pipeline: minimal intake -> PRD (1-3 stories) -> beads -> launch
-- `refactor-prd` — Refactoring pipeline: architecture intake -> design doc -> PRD -> beads -> launch
+- `feature-prd` — Full feature pipeline: deep intake -> design doc -> spec
+- `bug-prd` — Bug fix pipeline: focused intake -> fix spec
+- `hotfix-prd` — Urgent fix pipeline: fast intake -> fix spec
+- `refactor-prd` — Refactoring pipeline: architecture intake -> design doc -> spec
 - `plan-prd` — Planning only: full intake -> design doc -> STOP
 
 ## Updating
