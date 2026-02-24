@@ -61,15 +61,6 @@ function mapStatus(status: string): BeadInfo["status"] {
       return "open";
   }
 }
-
-// Get the next ready (unblocked) bead in an epic
-export async function getNextReady(epicId: string): Promise<BeadInfo | null> {
-  const result = await runBr(["ready", "--parent", epicId, "--json", "--limit", "1", "--sort", "hybrid"]);
-  const beads = result as Record<string, unknown>[];
-  if (!beads || beads.length === 0) return null;
-  return mapBead(beads[0]);
-}
-
 // Get ALL ready (unblocked) beads in an epic — agent picks from these
 export async function getAllReady(epicId: string): Promise<BeadInfo[]> {
   const result = await runBr(["ready", "--parent", epicId, "--json", "--sort", "hybrid"]);

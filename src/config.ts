@@ -124,18 +124,3 @@ export function resolveModel(
     modelID: modelString.slice(slashIndex + 1),
   };
 }
-
-export function mergeCliFlags(
-  config: LoopConfig,
-  flags: Record<string, unknown>
-): LoopConfig {
-  return {
-    ...config,
-    engine: {
-      ...config.engine,
-      ...(flags.timeout !== undefined && { timeout_minutes: flags.timeout as number }),
-      ...(flags.strategy !== undefined && { strategy: flags.strategy as ErrorStrategy }),
-      ...(flags.maxRetries !== undefined && { max_retries: flags.maxRetries as number }),
-    },
-  };
-}
