@@ -287,9 +287,9 @@ Output a summary of everything that was done. Use this format:
 - (list any files that were skipped)
 
 ### Next Steps
-1. Run `/superralph:feature` (or `:bug`, `:hotfix`, `:refactor`) to start the pipeline
+1. Run `/super-ralph:feature` (or `:bug`, `:hotfix`, `:refactor`) to start the pipeline
 2. The skill handles intake, PRD, beads, and launch in one session
-3. Or run `/superralph:plan` to plan without executing
+3. Or run `/super-ralph:plan` to plan without executing
 ```
 
 Adjust the lists based on what actually happened — only show sections that have entries.
