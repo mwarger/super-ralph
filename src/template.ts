@@ -15,8 +15,8 @@ export interface TemplateVars {
   selectionReason: string;
 }
 
-export function loadTemplate(projectDir: string): HandlebarsTemplateDelegate {
-  const templatePath = join(projectDir, ".super-ralph", "prompt.hbs");
+export function loadTemplate(projectDir: string, filename: string = "forward.hbs"): HandlebarsTemplateDelegate {
+  const templatePath = join(projectDir, ".super-ralph", filename);
   if (!existsSync(templatePath)) {
     throw new Error(`Prompt template not found at ${templatePath}. Run 'super-ralph init' first.`);
   }
@@ -24,7 +24,7 @@ export function loadTemplate(projectDir: string): HandlebarsTemplateDelegate {
   return Handlebars.compile(source);
 }
 
-export function renderPrompt(template: HandlebarsTemplateDelegate, vars: TemplateVars): string {
+export function renderPrompt(template: HandlebarsTemplateDelegate, vars: Record<string, unknown>): string {
   return template(vars);
 }
 

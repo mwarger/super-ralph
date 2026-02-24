@@ -16,10 +16,10 @@ export const SuperRalphPlugin = async ({ client, directory }) => {
     },
     tool: {
       task_complete: tool({
-        description: "Signal that the current bead/task is complete, blocked, or failed. Call this ONLY after you have finished all acceptance criteria, run quality gates, committed your work, and updated progress.md.",
+        description: "Signal task/iteration completion. complete = done with this iteration; phase_done = entire phase is finished (all specs written, all beads created, etc.); blocked = can't proceed; failed = error.",
         args: {
-          status: tool.schema.enum(["complete", "blocked", "failed"])
-            .describe("complete = all criteria met; blocked = can't proceed due to dependency/issue; failed = error or unable to complete"),
+          status: tool.schema.enum(["complete", "phase_done", "blocked", "failed"])
+            .describe("complete = done with this iteration (loop continues); phase_done = entire phase finished (loop ends); blocked = can't proceed; failed = error"),
           reason: tool.schema.string().optional()
             .describe("Brief explanation of the outcome"),
         },

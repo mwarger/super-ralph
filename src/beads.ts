@@ -1,7 +1,7 @@
 import type { BeadInfo } from "./types.js";
 
 // Run a br CLI command and return parsed JSON
-async function runBr(args: string[], cwd?: string): Promise<unknown> {
+export async function runBr(args: string[], cwd?: string): Promise<unknown> {
   const proc = Bun.spawn(["br", ...args], {
     cwd: cwd || process.cwd(),
     stdout: "pipe",
@@ -68,6 +68,14 @@ export async function getNextReady(epicId: string): Promise<BeadInfo | null> {
   const beads = result as Record<string, unknown>[];
   if (!beads || beads.length === 0) return null;
   return mapBead(beads[0]);
+}
+
+// Get ALL ready (unblocked) beads in an epic — agent picks from these
+export async function getAllReady(epicId: string): Promise<BeadInfo[]> {
+  const result = await runBr(["ready", "--parent", epicId, "--json", "--sort", "hybrid"]);
+  const beads = result as Record<string, unknown>[];
+  if (!beads || beads.length === 0) return [];
+  return beads.map(mapBead);
 }
 
 // Get full details for a specific bead
