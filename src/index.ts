@@ -210,7 +210,7 @@ async function cmdDoctor(): Promise<void> {
     console.log("✓ Project initialized (.super-ralph/AGENTS.md)");
   } else {
     console.log("✗ Project not initialized");
-    console.log("  Fix: /superralph:init");
+    console.log("  Fix: /super-ralph:init");
     allGood = false;
   }
 
@@ -221,7 +221,7 @@ async function cmdDoctor(): Promise<void> {
       console.log(`✓ Template: .super-ralph/${tmpl}`);
     } else {
       console.log(`✗ Template missing: .super-ralph/${tmpl}`);
-      console.log("  Fix: /superralph:init");
+      console.log("  Fix: /super-ralph:init");
       allGood = false;
     }
   }
@@ -230,7 +230,7 @@ async function cmdDoctor(): Promise<void> {
     console.log("✓ Config (.super-ralph/config.toml)");
   } else {
     console.log("✗ Config not found");
-    console.log("  Fix: /superralph:init");
+    console.log("  Fix: /super-ralph:init");
     allGood = false;
   }
 
@@ -239,7 +239,7 @@ async function cmdDoctor(): Promise<void> {
     console.log("✓ OpenCode plugin (.opencode/plugins/super-ralph.js)");
   } else {
     console.log("✗ OpenCode plugin missing");
-    console.log("  Fix: /superralph:init");
+    console.log("  Fix: /super-ralph:init");
     allGood = false;
   }
 
@@ -258,11 +258,11 @@ async function cmdDoctor(): Promise<void> {
     console.log(`✓ CLI path: ${config.cli.path}`);
   } else if (config.cli.path) {
     console.log(`✗ CLI path not found: ${config.cli.path}`);
-    console.log("  Fix: /superralph:init to re-detect");
+    console.log("  Fix: /super-ralph:init to re-detect");
     allGood = false;
   } else {
     console.log("⚠ CLI path not set in config");
-    console.log("  Fix: /superralph:init to set [cli] path");
+    console.log("  Fix: /super-ralph:init to set [cli] path");
   }
 
   if (allGood) {
