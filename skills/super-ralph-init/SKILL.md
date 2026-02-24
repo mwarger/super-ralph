@@ -23,7 +23,8 @@ Set up the project directory with the super-ralph scaffolding:
 5. `.super-ralph/reverse.hbs` — Prompt template for reverse (verification) phase
 6. `.super-ralph/intake-checklist.md` — Growing intake question checklist
 7. `tasks/` — Directory for generated PRDs
-8. Root `AGENTS.md` — Updated to reference `.super-ralph/AGENTS.md`
+8. `.opencode/plugins/super-ralph.js` — OpenCode plugin for super-ralph commands
+9. Root `AGENTS.md` — Updated to reference `.super-ralph/AGENTS.md`
 
 All templates come from `~/.agents/super-ralph/templates/`.
 
@@ -96,7 +97,7 @@ br --version
 Check that the global super-ralph install exists at `~/.agents/super-ralph/templates/`.
 
 Verify these files are present:
-- `~/.agents/super-ralph/templates/config.toml`
+- `~/.agents/super-ralph/templates/super-ralph-config.toml`
 - `~/.agents/super-ralph/templates/agents.md`
 - `~/.agents/super-ralph/templates/forward.hbs`
 - `~/.agents/super-ralph/templates/decompose.hbs`
@@ -116,7 +117,7 @@ Do NOT proceed without the templates.
 **Auto-detection:** Detect the current agent environment:
 
 - If running inside OpenCode (check `OPENCODE` env var): pre-select **opencode** with model `anthropic/claude-sonnet-4-6`
-- If running inside Claude Code (check `CLAUDE_CODE` env var or self-identify as Claude Code): pre-select **claude** with model `claude-sonnet-4-6`
+- If running inside Claude Code (check `CLAUDE_CODE` env var or self-identify as Claude Code): pre-select **claude** with model `anthropic/claude-sonnet-4-6`
 - If neither detected: default to **opencode** with model `anthropic/claude-sonnet-4-6`
 
 Confirm with the user:
@@ -130,9 +131,9 @@ Store the selected model for Step 5.
 ## Step 5: Create `.super-ralph/config.toml`
 
 1. Create the `.super-ralph/` directory if it doesn't exist
-2. Copy `~/.agents/super-ralph/templates/config.toml` to `.super-ralph/config.toml`
+2. Copy `~/.agents/super-ralph/templates/super-ralph-config.toml` to `.super-ralph/config.toml`
 3. **Edit the copied file** to set the correct model value from Step 4:
-   - Replace the `model = "..."` line under `[agentOptions]` with the selected model
+   - Replace the `model = "..."` line under `[models]` with the selected model
 4. **Detect and record `cli_path`:**
    - Resolve `~/.agents/super-ralph/src/index.ts` to an absolute path (e.g. `/Users/mat/.agents/super-ralph/src/index.ts`)
    - Verify the file exists at that path
@@ -179,7 +180,28 @@ This is inherently idempotent — if it already exists, nothing happens.
 
 ---
 
-## Step 8: Initialize Beads Workspace
+## Step 8: Copy Plugin File
+
+The `doctor` command checks for `.opencode/plugins/super-ralph.js`. Copy it from the super-ralph installation.
+
+1. Create `.opencode/plugins/` if it doesn't exist:
+
+   ```bash
+   mkdir -p .opencode/plugins
+   ```
+
+2. Copy the plugin file:
+
+   ```bash
+   cp ~/.agents/super-ralph/.opencode/plugins/super-ralph.js .opencode/plugins/super-ralph.js
+   ```
+
+- **If the destination already exists:** Skip it and note that it was preserved.
+- **If the source does not exist:** Warn the user that the plugin file was not found at `~/.agents/super-ralph/.opencode/plugins/super-ralph.js` and they may need to copy it manually.
+
+---
+
+## Step 9: Initialize Beads Workspace
 
 Check whether `.beads/` exists in the project root.
 
@@ -196,7 +218,7 @@ Check whether `.beads/` exists in the project root.
 
 ---
 
-## Step 9: Update Project Root `AGENTS.md`
+## Step 10: Update Project Root `AGENTS.md`
 
 The reference line to add is:
 
@@ -230,7 +252,7 @@ Also read .super-ralph/AGENTS.md for SDLC framework instructions.
 
 ---
 
-## Step 10: Report Results
+## Step 11: Report Results
 
 Output a summary of everything that was done. Use this format:
 
@@ -253,6 +275,7 @@ Output a summary of everything that was done. Use this format:
 - .super-ralph/reverse.hbs ← copied from template
 - .super-ralph/intake-checklist.md ← copied from template
 - tasks/ ← directory created
+- .opencode/plugins/super-ralph.js ← copied from super-ralph install
 
 ### Beads Workspace
 - .beads/ ← {initialized | already existed | failed (run `br init` manually)}
@@ -287,7 +310,8 @@ Adjust the lists based on what actually happened — only show sections that hav
 | `.super-ralph/reverse.hbs` | Skip if exists (preserve customizations) |
 | `.super-ralph/intake-checklist.md` | Skip if exists (preserve customizations) |
 | `tasks/` | `mkdir -p` (inherently idempotent) |
-| `.beads/` | Run `br init` only if missing (Step 8) |
+| `.opencode/plugins/super-ralph.js` | Skip if exists (preserve customizations) (Step 8) |
+| `.beads/` | Run `br init` only if missing (Step 9) |
 | Root `AGENTS.md` reference line | Check before appending (don't duplicate) |
 
 ---
@@ -309,6 +333,7 @@ Before reporting completion:
 - [ ] `.super-ralph/reverse.hbs` created or skipped (already exists)
 - [ ] `.super-ralph/intake-checklist.md` created or skipped (already exists)
 - [ ] `tasks/` directory exists
+- [ ] `.opencode/plugins/super-ralph.js` created or skipped (already exists)
 - [ ] `.beads/` workspace initialized (or already existed)
 - [ ] Root `AGENTS.md` has reference to `.super-ralph/AGENTS.md` (not duplicated)
 - [ ] Summary report output with prerequisites, model configuration, cli_path, beads status, and all created/modified/skipped files listed
