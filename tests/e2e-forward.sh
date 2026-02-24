@@ -191,7 +191,7 @@ else
   fail "Dry-run output missing [dry-run] marker" "$DRY_OUTPUT"
 fi
 
-if echo "$DRY_OUTPUT" | grep -q "forward"; then
+if echo "$DRY_OUTPUT" | grep -qi "forward"; then
   pass "Dry-run output references forward loop"
 else
   fail "Dry-run output missing forward reference" "$DRY_OUTPUT"

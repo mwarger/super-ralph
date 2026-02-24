@@ -1,5 +1,5 @@
 import { runPhaseLoop, type PhaseCallbacks } from "./engine.js";
-import { getAllBeads, getAllReady, getEpicProgress } from "./beads.js";
+import { getAllBeads, getAllReady, getBeadDetails, getEpicProgress } from "./beads.js";
 import { loadTemplate, renderPrompt } from "./template.js";
 import { readRecentProgress } from "./progress.js";
 import { resolveModel } from "./config.js";
@@ -20,8 +20,8 @@ export async function runForward(projectDir: string, flags: ForwardFlags): Promi
     },
 
     async nextIteration(config, iteration) {
-      const readyCount = (await getAllReady(epicId)).length;
-      if (readyCount === 0) {
+      const readyBeads = await getAllReady(epicId);
+      if (readyBeads.length === 0) {
         const progress = await getEpicProgress(epicId);
         if (progress.remaining === 0) {
           console.log("All beads complete!");
@@ -31,21 +31,32 @@ export async function runForward(projectDir: string, flags: ForwardFlags): Promi
         return null;
       }
 
+      // Orchestrator picks the highest-priority ready bead
+      const picked = readyBeads[0];
+      const bead = await getBeadDetails(picked.id);
+      console.log(`Selected bead: ${bead.id} — ${bead.title}`);
+
       const recentProgress = readRecentProgress(projectDir, 5);
-      const model = resolveModel([], "", config, flags.modelOverride);
+      const model = resolveModel(bead.labels, bead.title, config, flags.modelOverride);
 
       const prompt = renderPrompt(template, {
         epicId,
+        beadId: bead.id,
+        beadTitle: bead.title,
+        beadDescription: bead.description || "",
+        beadLabels: bead.labels,
+        beadDependsOn: bead.dependsOn,
+        readyCount: readyBeads.length,
         recentProgress,
       });
 
       const systemPrompt = [
         "You are an autonomous coding agent in a super-ralph forward loop iteration.",
-        "Your job: pick one ready bead from the epic, implement it, close it.",
-        "Use `br ready`, `br show`, `br close` to interact with beads.",
+        "Your job: implement the assigned bead and close it.",
+        "Use `br show`, `br close` to interact with beads.",
         "Run `bun run typecheck` before committing. Fix any failures.",
         "Signal completion via the task_complete tool:",
-        '- status: "complete" — you implemented and closed one bead, loop continues',
+        '- status: "complete" — you implemented and closed the bead, loop continues',
         '- status: "phase_done" — all work is done, loop ends',
         '- status: "blocked" — you can\'t proceed, explain why',
         '- status: "failed" — something went wrong, explain what',
@@ -55,8 +66,9 @@ export async function runForward(projectDir: string, flags: ForwardFlags): Promi
         prompt,
         model,
         systemPrompt,
-        sessionTitle: `Forward: ${epicId} (iteration ${iteration})`,
-        iterationLabel: `${epicId}: forward iteration ${iteration} (${readyCount} ready)`,
+        beadId: bead.id,
+        sessionTitle: `Forward: ${bead.id} — ${bead.title}`,
+        iterationLabel: `${bead.id}: ${bead.title} (${readyBeads.length} ready)`,
       };
     },
 

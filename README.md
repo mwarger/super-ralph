@@ -164,7 +164,7 @@ Resolution order:
 
 Remap any area to any model/provider by editing `.super-ralph/config.toml` — no need to re-create beads.
 
-Note: In forward phase, the agent picks the bead after session creation (pure Ralph), so area-based routing doesn't apply — forward always uses `--model` or `models.default`.
+The orchestrator picks the highest-priority ready bead before creating the session, so area-based routing works in all phases including forward.
 
 ## The Pipeline (End-to-End)
 
