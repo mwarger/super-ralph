@@ -17,7 +17,7 @@ description: "Self-contained Ralph TUI skill for planning only: relentless intak
 2. Produce a design document with user approval
 3. **Stop.** Do not generate a PRD, create beads, or launch execution.
 
-**Important:** This skill produces the plan only. When you're ready to execute, run `/superralph:feature` to pick up from the design doc.
+**Important:** This skill produces the plan only. When you're ready to execute, run `super-ralph decompose --spec docs/plans/YYYY-MM-DD-<feature>-design.md` to create beads from the design, or run `/super-ralph:feature` to re-enter the feature pipeline with this design as context.
 
 **Announce at start:** "I'm using the plan-prd skill for relentless intake and design document generation. I'll stop after the design doc is saved — no PRD or beads will be created."
 
@@ -120,7 +120,13 @@ Once the intake is complete, produce a design document following the brainstormi
 
 After saving the design doc, output:
 
-> Design doc saved to `docs/plans/YYYY-MM-DD-<feature>-design.md`. Run `/superralph:feature` when you're ready to execute this plan.
+> Design doc saved to `docs/plans/YYYY-MM-DD-<feature>-design.md`.
+>
+> To create beads from this design, run in your terminal:
+> ```
+> super-ralph decompose --spec docs/plans/YYYY-MM-DD-<feature>-design.md
+> ```
+> Or run `/super-ralph:feature` to re-enter the feature pipeline with this design as context.
 
 Then **STOP**. Do not generate a PRD, create beads, wire dependencies, or launch execution. The planning phase is complete.
 
