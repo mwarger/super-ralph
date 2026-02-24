@@ -9,8 +9,8 @@ export const SuperRalphPlugin = async ({ client, directory }) => {
       const isInitialized = fs.existsSync(configPath);
 
       const message = isInitialized
-        ? 'This project uses super-ralph. Commands: /superralph:feature, /superralph:bug, /superralph:hotfix, /superralph:refactor, /superralph:plan, /superralph:resume, /superralph:status.'
-        : 'The super-ralph framework is available. Run /superralph:init to set up.';
+        ? 'This project uses super-ralph. Commands: /super-ralph:feature, /super-ralph:bug, /super-ralph:hotfix, /super-ralph:refactor, /super-ralph:plan, /super-ralph:status.'
+        : 'The super-ralph framework is available. Run /super-ralph:init to set up.';
 
       (output.system ||= []).push(message);
     },
