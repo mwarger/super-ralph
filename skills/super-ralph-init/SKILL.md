@@ -18,10 +18,12 @@ Set up the project directory with the super-ralph scaffolding:
 
 1. `.super-ralph/config.toml` — Super-ralph configuration
 2. `.super-ralph/AGENTS.md` — Agent instructions for the framework
-3. `.super-ralph/prompt.hbs` — Custom prompt template for super-ralph iterations
-4. `.super-ralph/intake-checklist.md` — Growing intake question checklist
-5. `tasks/` — Directory for generated PRDs
-6. Root `AGENTS.md` — Updated to reference `.super-ralph/AGENTS.md`
+3. `.super-ralph/forward.hbs` — Prompt template for forward (execution) phase
+4. `.super-ralph/decompose.hbs` — Prompt template for decompose (planning) phase
+5. `.super-ralph/reverse.hbs` — Prompt template for reverse (verification) phase
+6. `.super-ralph/intake-checklist.md` — Growing intake question checklist
+7. `tasks/` — Directory for generated PRDs
+8. Root `AGENTS.md` — Updated to reference `.super-ralph/AGENTS.md`
 
 All templates come from `~/.agents/super-ralph/templates/`.
 
@@ -96,7 +98,9 @@ Check that the global super-ralph install exists at `~/.agents/super-ralph/templ
 Verify these files are present:
 - `~/.agents/super-ralph/templates/config.toml`
 - `~/.agents/super-ralph/templates/agents.md`
-- `~/.agents/super-ralph/templates/prompt.hbs`
+- `~/.agents/super-ralph/templates/forward.hbs`
+- `~/.agents/super-ralph/templates/decompose.hbs`
+- `~/.agents/super-ralph/templates/reverse.hbs`
 - `~/.agents/super-ralph/templates/intake-checklist.md`
 
 **If the directory or any template is missing:** Stop and tell the user:
@@ -152,7 +156,9 @@ Copy each template file, **but only if the target does not already exist** — d
 | Source template | Destination | Skip if exists? |
 |---|---|---|
 | `~/.agents/super-ralph/templates/agents.md` | `.super-ralph/AGENTS.md` | Yes |
-| `~/.agents/super-ralph/templates/prompt.hbs` | `.super-ralph/prompt.hbs` | Yes |
+| `~/.agents/super-ralph/templates/forward.hbs` | `.super-ralph/forward.hbs` | Yes |
+| `~/.agents/super-ralph/templates/decompose.hbs` | `.super-ralph/decompose.hbs` | Yes |
+| `~/.agents/super-ralph/templates/reverse.hbs` | `.super-ralph/reverse.hbs` | Yes |
 | `~/.agents/super-ralph/templates/intake-checklist.md` | `.super-ralph/intake-checklist.md` | Yes |
 
 For each file:
@@ -242,7 +248,9 @@ Output a summary of everything that was done. Use this format:
 ### Files Created
 - .super-ralph/config.toml ← copied from template, configured with model and cli_path
 - .super-ralph/AGENTS.md ← copied from template
-- .super-ralph/prompt.hbs ← copied from template
+- .super-ralph/forward.hbs ← copied from template
+- .super-ralph/decompose.hbs ← copied from template
+- .super-ralph/reverse.hbs ← copied from template
 - .super-ralph/intake-checklist.md ← copied from template
 - tasks/ ← directory created
 
@@ -274,7 +282,9 @@ Adjust the lists based on what actually happened — only show sections that hav
 | `.super-ralph/config.toml` | Ask before overwriting (Step 1 gate) |
 | `.super-ralph/config.toml` `[cli] path` | Detect, confirm with user, write to config (Step 5) |
 | `.super-ralph/AGENTS.md` | Skip if exists (preserve customizations) |
-| `.super-ralph/prompt.hbs` | Skip if exists (preserve customizations) |
+| `.super-ralph/forward.hbs` | Skip if exists (preserve customizations) |
+| `.super-ralph/decompose.hbs` | Skip if exists (preserve customizations) |
+| `.super-ralph/reverse.hbs` | Skip if exists (preserve customizations) |
 | `.super-ralph/intake-checklist.md` | Skip if exists (preserve customizations) |
 | `tasks/` | `mkdir -p` (inherently idempotent) |
 | `.beads/` | Run `br init` only if missing (Step 8) |
@@ -294,7 +304,9 @@ Before reporting completion:
 - [ ] `cli_path` detected and confirmed with user
 - [ ] `.super-ralph/config.toml` created with correct model value and `[cli] path` (or confirmed overwrite)
 - [ ] `.super-ralph/AGENTS.md` created or skipped (already exists)
-- [ ] `.super-ralph/prompt.hbs` created or skipped (already exists)
+- [ ] `.super-ralph/forward.hbs` created or skipped (already exists)
+- [ ] `.super-ralph/decompose.hbs` created or skipped (already exists)
+- [ ] `.super-ralph/reverse.hbs` created or skipped (already exists)
 - [ ] `.super-ralph/intake-checklist.md` created or skipped (already exists)
 - [ ] `tasks/` directory exists
 - [ ] `.beads/` workspace initialized (or already existed)

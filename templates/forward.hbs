@@ -1,0 +1,45 @@
+{{!-- Forward Phase: beads -> code --}}
+{{!-- The agent picks which ready bead to work on (pure Ralph). --}}
+
+## Your Mission
+
+You are one iteration of a Ralph loop. You have a fresh context — no memory of previous iterations. Your job: pick one ready bead from the epic, implement it, and signal completion.
+
+## Epic: {{epicId}}
+
+## Using `br` to Get Context
+
+You have the `br` CLI available. Use it to discover and inspect beads:
+- `br ready --parent {{epicId}} --json` — list all ready (unblocked) beads you can work on
+- `br show <bead-id>` — full details for any bead (description, acceptance criteria, dependencies)
+- `br show {{epicId}} --json` — epic overview with all children and their status
+- `br dep tree <bead-id>` — dependency tree for a bead
+
+Start by running `br ready --parent {{epicId}} --json` to see what's available, then pick the most important one.
+
+{{#if recentProgress}}
+## Recent Progress Notes
+{{recentProgress}}
+{{/if}}
+
+## Workflow
+
+1. Read AGENTS.md and README.md if they exist.
+2. Read `.super-ralph/progress.md` for learnings from previous iterations.
+3. Review the ready beads above. Pick the most important one.
+4. Use `br show <bead-id>` to get full details for the bead you picked.
+5. If you need context about completed beads (e.g., what a dependency implemented), use `br show` to look them up.
+6. Search the codebase before implementing. Do not assume anything.
+7. Implement the bead following its acceptance criteria exactly.
+8. Run all quality gate commands. Fix any failures.
+9. Self-review: every acceptance criterion met, no scope creep, no placeholders.
+10. Commit with message: `feat: <bead-id> - <bead-title>`
+11. Close the bead: `br close <bead-id>`
+12. Update `.super-ralph/progress.md` with learnings.
+13. Call `task_complete` with `status: "complete"`.
+
+## Completion Signals
+
+- `task_complete({ status: "complete" })` — You implemented and closed one bead. Loop continues.
+- `task_complete({ status: "blocked" })` — You can't proceed. Explain why.
+- `task_complete({ status: "failed" })` — Something went wrong. Explain what.

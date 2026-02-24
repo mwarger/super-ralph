@@ -1,5 +1,5 @@
 ---
-description: "Resume an interrupted super-ralph execution loop"
+description: "Resume an interrupted super-ralph three-phase loop engine"
 ---
 
 ## Resume Execution
@@ -19,12 +19,19 @@ This is an operational command — skip intake.
    - Count beads by status (completed, open, in_progress)
    - Show the next ready bead (run `br ready --parent <epicId> --json --limit 1`)
 
-6. Offer three options:
-   a. **Run now**: Execute `bun run <cli_path> run --epic <epicId>` in a terminal
+6. Ask which phase to resume with:
+   a. **Forward** (default): Execute beads in sequence — the main execution phase
+   b. **Decompose**: Break down remaining beads into smaller sub-tasks
+   c. **Reverse**: Verify and validate completed work against acceptance criteria
+
+7. Offer three options:
+   a. **Run now**: Execute the chosen phase command in a terminal
    b. **Copy to clipboard**: Copy the command for the user to run
    c. **Display command**: Show the full command with options
 
-The recommended command format:
+The recommended command formats:
 ```
-bun run <cli_path> run --epic <EPIC_ID> --max-iterations <remaining_beads * 2>
+bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <remaining_beads * 2>
+bun run <cli_path> decompose --epic <EPIC_ID> --max-iterations <remaining_beads * 2>
+bun run <cli_path> reverse --epic <EPIC_ID> --max-iterations <remaining_beads * 2>
 ```

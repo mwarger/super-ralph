@@ -1,0 +1,66 @@
+{{!-- Reverse Phase: input -> spec (iterative refinement) --}}
+{{!-- Each iteration reads the current spec draft, identifies gaps, and expands/refines it. --}}
+
+## Your Mission
+
+You are one iteration of a reverse loop. You have a fresh context. Your job: analyze the input and {{#if isFirstIteration}}create an initial spec draft{{else}}expand and refine the existing spec{{/if}}.
+
+## Input
+
+{{#each inputs}}
+- `{{this}}`
+{{/each}}
+
+Use your tools to examine the input: read files, fetch URLs, view images, research products — whatever is appropriate.
+
+## Output Directory: {{outputDir}}
+
+{{#if currentSpec}}
+## Current Spec Draft: {{currentSpecFilename}}
+
+The spec below was written by previous iterations. Your job is to identify the most important gap or shallow area and expand/refine the spec. Rewrite the entire file with your improvements — do not append, replace.
+
+---
+{{{currentSpec}}}
+---
+{{else}}
+## No Spec Exists Yet
+
+This is the first iteration. Create an initial spec draft. Name it descriptively (e.g., `spec.md` or `<component-name>.md`). Focus on the highest-level purpose, behavior, and interfaces. Later iterations will refine and expand.
+{{/if}}
+
+## Spec Structure
+
+Write the spec to `{{outputDir}}/` using this structure:
+
+```
+# Component: [Name]
+
+## Purpose
+[What it does and why it exists]
+
+## Behavior
+[Observable behavior, user-facing functionality, key flows]
+
+## Interfaces
+[Public API, inputs, outputs, events, data formats]
+
+## Constraints
+[Performance requirements, security, limitations, compatibility]
+
+## Dependencies
+[What it depends on, what depends on it]
+```
+
+## Principles
+
+- Describe WHAT and WHY, not HOW (no implementation details).
+- This is a clean-room specification — describe behavior, not code structure.
+- Each iteration should meaningfully improve coverage or depth.
+- If the input is complex enough to warrant multiple specs, you may create additional spec files. But the default is one progressively refined spec.
+
+## Completion Signals
+
+- `task_complete({ status: "complete" })` — You expanded/refined the spec. Loop continues for further refinement.
+- `task_complete({ status: "phase_done" })` — The spec comprehensively covers the input. No significant gaps remain. Loop ends.
+- `task_complete({ status: "failed" })` — Something went wrong.

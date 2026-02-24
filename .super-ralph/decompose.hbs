@@ -1,0 +1,73 @@
+{{!-- Decompose Phase: spec -> beads --}}
+{{!-- The agent reads the spec + existing beads, creates ONE new bead per iteration. --}}
+
+## Your Mission
+
+You are one iteration of a decompose loop. You have a fresh context. Your job: read the spec and the beads created so far, then create ONE new bead for the most important missing piece.
+
+## The Spec
+
+{{!-- Triple-stache: spec content is markdown, must not be HTML-escaped.
+      If specs contain literal curly braces they'd be interpreted by Handlebars.
+      Acceptable risk since specs are authored by our own agents. --}}
+{{{specContent}}}
+
+## Epic ID: {{epicId}}
+
+## Beads Created So Far
+
+{{#each existingBeads}}
+- **{{this.id}}**: {{this.title}} [{{this.status}}]
+  Labels: {{#each this.labels}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+  Depends on: {{#each this.dependsOn}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+  {{#if this.description}}
+  {{this.description}}
+  {{/if}}
+{{else}}
+No beads created yet — this is the first iteration.
+{{/each}}
+
+## Your Job
+
+1. Read the spec carefully.
+2. Review the existing beads.
+3. Identify the most important piece of the spec NOT yet covered by a bead.
+4. Create ONE bead using the `br` CLI:
+   - `br create --parent {{epicId}} --title "US-NNN: <title>" --description "<description with acceptance criteria and quality gates>"`
+   - Wire dependencies: `br dep add <new-bead-id> <depends-on-bead-id>` for each dependency
+   - Add semantic area label: `br label add <new-bead-id> area:<category>` (e.g., area:frontend-design, area:backend, area:database, area:review)
+5. Signal completion.
+
+## Structuring Beads
+
+- **Structure into phases.** Group related implementation beads into phases.
+- **Right-size beads.** Each bead should be completable by a single agent in one context window.
+- **Include acceptance criteria** in the bead description with a `## Acceptance Criteria` section.
+- **Include quality gates** in the bead description with a `## Quality Gates` section.
+{{#if includeReview}}
+- **Add REVIEW beads** after each implementation phase. A REVIEW bead depends on all impl beads in its phase. Title format: `REVIEW-NNN: Review Phase N`.
+{{/if}}
+{{#if includeBugscan}}
+- **Add BUGSCAN beads** after each REVIEW bead. A BUGSCAN bead depends on the REVIEW bead. Title format: `BUGSCAN-NNN: Bugscan Phase N`.
+{{/if}}
+{{#if includeAudit}}
+- **Add an AUDIT bead** at the end that depends on all other beads. Title format: `AUDIT-001: Final audit`.
+{{/if}}
+
+## Area Labels
+
+Apply ONE `area:` label per bead to guide model selection:
+- `area:frontend-design` — UI/UX design, mockups, layout decisions
+- `area:frontend-ui` — React/HTML/CSS implementation
+- `area:backend` — API endpoints, business logic, server-side code
+- `area:database` — Schema design, migrations, queries
+- `area:infrastructure` — CI/CD, deployment, config
+- `area:review` — code review beads
+- `area:bugscan` — bug scanning beads
+- Or any other descriptive area name.
+
+## Completion Signals
+
+- `task_complete({ status: "complete" })` — You created one bead. Loop continues.
+- `task_complete({ status: "phase_done" })` — The spec is fully decomposed. All user stories, review, bugscan, and audit beads are created. Loop ends.
+- `task_complete({ status: "failed" })` — Something went wrong.
