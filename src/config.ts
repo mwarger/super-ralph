@@ -19,10 +19,14 @@ const DEFAULT_CONFIG: LoopConfig = {
   models: {
     default: "anthropic/claude-sonnet-4-6",
   },
-  modelsAuto: {
-    review: "default",
-    audit: "default",
-    bugscan: "default",
+  modelsAreas: {},
+  reverse: {
+    output_dir: "docs/specs",
+  },
+  decompose: {
+    include_review: true,
+    include_bugscan: true,
+    include_audit: true,
   },
 };
 
@@ -35,6 +39,18 @@ export function loadConfig(projectDir: string): LoopConfig {
   const raw = readFileSync(configPath, "utf-8");
   const parsed = parseTOML(raw);
   
+  // Extract models, separating the nested areas sub-object from flat model strings
+  const parsedModels = (parsed.models || {}) as Record<string, unknown>;
+  const parsedAreas = (parsedModels.areas || {}) as Record<string, string>;
+
+  // Build models without the areas sub-object (only flat string values)
+  const flatModels: Record<string, string> = {};
+  for (const [key, value] of Object.entries(parsedModels)) {
+    if (key !== "areas" && typeof value === "string") {
+      flatModels[key] = value;
+    }
+  }
+
   // Deep merge with defaults
   return {
     engine: {
@@ -52,11 +68,18 @@ export function loadConfig(projectDir: string): LoopConfig {
     },
     models: {
       ...DEFAULT_CONFIG.models,
-      ...(parsed.models as Record<string, string> || {}),
+      ...flatModels,
     },
-    modelsAuto: {
-      ...DEFAULT_CONFIG.modelsAuto,
-      ...((parsed.models as Record<string, unknown>)?.auto as Record<string, string> || {}),
+    modelsAreas: {
+      ...parsedAreas,
+    },
+    reverse: {
+      ...DEFAULT_CONFIG.reverse,
+      ...((parsed.reverse as Record<string, unknown>) || {}),
+    },
+    decompose: {
+      ...DEFAULT_CONFIG.decompose,
+      ...((parsed.decompose as Record<string, unknown>) || {}),
     },
   };
 }
@@ -73,35 +96,21 @@ export function resolveModel(
   if (cliOverride) {
     modelString = cliOverride;
   } else {
-    // Priority 2: Bead label (model:alias or model:provider/model)
-    const modelLabel = beadLabels.find((l) => l.startsWith("model:"));
-    if (modelLabel) {
-      const alias = modelLabel.slice(6); // strip "model:"
-      modelString = config.models[alias] || alias;
-    } else {
-      // Priority 3: Auto-assignment by bead type
-      const titleLower = beadTitle.toLowerCase();
-      if (titleLower.startsWith("review")) {
-        modelString = config.models[config.modelsAuto.review] || config.modelsAuto.review;
-      } else if (titleLower.startsWith("audit")) {
-        modelString = config.models[config.modelsAuto.audit] || config.modelsAuto.audit;
-      } else if (titleLower.startsWith("bugscan")) {
-        modelString = config.models[config.modelsAuto.bugscan] || config.modelsAuto.bugscan;
+    // Priority 2: Bead area label -> models.areas mapping
+    const areaLabel = beadLabels.find((l) => l.startsWith("area:"));
+    if (areaLabel) {
+      const area = areaLabel.slice(5); // strip "area:"
+      const areaModel = config.modelsAreas[area];
+      if (areaModel) {
+        modelString = areaModel;
       } else {
-        // Priority 4: Default
+        // Fall through to default
         modelString = config.models.default;
       }
+    } else {
+      // Priority 3: Default
+      modelString = config.models.default;
     }
-  }
-  
-  // Resolve "default" alias
-  if (modelString === "default") {
-    modelString = config.models.default;
-  }
-  
-  // Also resolve other aliases (e.g., "opus" -> "anthropic/claude-opus-4-6")
-  if (config.models[modelString]) {
-    modelString = config.models[modelString];
   }
   
   // Parse provider/model format

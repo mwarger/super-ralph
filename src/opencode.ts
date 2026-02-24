@@ -1,4 +1,4 @@
-import { createOpencodeClient, type OpencodeClient, type Part } from "@opencode-ai/sdk";
+import { createOpencode, createOpencodeClient, type OpencodeClient, type Part } from "@opencode-ai/sdk";
 import type { CompletionResult } from "./types.js";
 
 export type { OpencodeClient };
@@ -10,19 +10,49 @@ export interface PromptResult {
   filesChanged: string[];
 }
 
-// Connect to an existing OpenCode server
-export async function connectToServer(url: string): Promise<OpencodeClient> {
+export interface ServerHandle {
+  client: OpencodeClient;
+  url: string;
+  close: () => void;
+}
+
+// Start an ephemeral OpenCode server and return a client + handle
+export async function startServer(): Promise<ServerHandle> {
+  const { client, server } = await createOpencode({ port: 0 });
+
+  // Verify server is ready
+  try {
+    await client.session.list();
+  } catch (err) {
+    server.close();
+    throw new Error(`OpenCode server started but not responding: ${(err as Error).message}`);
+  }
+
+  return {
+    client,
+    url: server.url,
+    close: () => server.close(),
+  };
+}
+
+// Connect to an existing OpenCode server (for --attach mode)
+export async function connectToServer(url: string): Promise<ServerHandle> {
   const client = createOpencodeClient({ baseUrl: url });
 
   // Verify server is reachable by listing sessions
   try {
     await client.session.list();
-    return client;
   } catch (err) {
     throw new Error(
       `Cannot connect to OpenCode server at ${url}: ${(err as Error).message}`,
     );
   }
+
+  return {
+    client,
+    url,
+    close: () => {}, // External server — don't close it
+  };
 }
 
 // Create a new session for a bead

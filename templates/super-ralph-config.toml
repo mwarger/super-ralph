@@ -14,7 +14,17 @@ default = "anthropic/claude-sonnet-4-6"
 # Absolute path to the super-ralph CLI entry point (set by /superralph:init)
 path = ""
 
-[models.auto]
-review = "default"
-audit = "default"
-bugscan = "default"
+[models.areas]
+# Map semantic area labels to models
+# frontend-design = "google/gemini-2.5-pro"
+# frontend-ui = "anthropic/claude-sonnet-4-6"
+# backend = "anthropic/claude-sonnet-4-6"
+# review = "anthropic/claude-sonnet-4-6"
+
+[reverse]
+output_dir = "docs/specs"
+
+[decompose]
+include_review = true
+include_bugscan = true
+include_audit = true

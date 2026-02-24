@@ -30,11 +30,16 @@ export interface LoopConfig {
     default: string;
     [key: string]: string; // alias -> provider/model
   };
-  modelsAuto: {
-    review: string;
-    audit: string;
-    bugscan: string;
-    [key: string]: string;
+  modelsAreas: {
+    [key: string]: string; // area name -> provider/model
+  };
+  reverse: {
+    output_dir: string;
+  };
+  decompose: {
+    include_review: boolean;
+    include_bugscan: boolean;
+    include_audit: boolean;
   };
 }
 
@@ -53,7 +58,7 @@ export interface IterationResult {
 
 // Completion result from OpenCode session
 export interface CompletionResult {
-  status: "complete" | "blocked" | "failed" | "stalled" | "timeout" | "error";
+  status: "complete" | "phase_done" | "blocked" | "failed" | "stalled" | "timeout" | "error";
   reason?: string;
 }
 
@@ -65,12 +70,26 @@ export interface LoopResult {
   totalTime: number; // milliseconds
 }
 
-// CLI flags for the engine
-export interface EngineFlags {
+// Common flags shared by all three phases
+export interface PhaseFlags {
   dryRun: boolean;
-  headless: boolean;
   maxIterations?: number;
   modelOverride?: string;
+  attach?: string; // URL to attach to existing OpenCode server instead of spawning one
+}
+
+export interface ForwardFlags extends PhaseFlags {
+  epicId: string;
+}
+
+export interface DecomposeFlags extends PhaseFlags {
+  specPath: string;
+  epicTitle?: string;
+}
+
+export interface ReverseFlags extends PhaseFlags {
+  inputs: string[]; // paths, URLs, descriptions — anything
+  outputDir?: string;
 }
 
 export type ErrorStrategy = "retry" | "skip" | "abort";
