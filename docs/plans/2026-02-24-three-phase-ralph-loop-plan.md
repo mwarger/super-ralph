@@ -10,6 +10,21 @@
 
 ---
 
+### Breaking Change: `model:alias` labels replaced by `area:` labels
+
+The current implementation supports `model:opus`, `model:sonnet` etc. labels on beads for model selection. This plan replaces that with semantic `area:frontend-design`, `area:backend` etc. labels mapped to models in config.
+
+**Migration for existing beads with `model:` labels:**
+1. For each bead with a `model:X` label, add the appropriate `area:Y` label instead
+2. Update `.super-ralph/config.toml` `[models.areas]` to map areas to models
+3. Remove old `model:` labels (optional — they'll just be ignored)
+
+Example: `model:opus` on a design bead -> `area:frontend-design` + config `frontend-design = "anthropic/claude-opus-4-6"`
+
+This is a one-time migration. New beads created by the decompose phase will use `area:` labels automatically.
+
+---
+
 ### Task 1: Update types for three-phase model
 
 **Files:**
@@ -64,27 +79,29 @@ export interface LoopConfig {
 
 **Step 3: Add phase-specific flag types**
 
-After `EngineFlags`, add:
+Replace `EngineFlags` with a common `PhaseFlags` base that all three phases extend. Remove `headless` (no longer used — the new engine is always headless, with optional TUI attachment via `--attach`):
 
 ```typescript
-export interface ForwardFlags extends EngineFlags {
+// Common flags shared by all three phases
+export interface PhaseFlags {
+  dryRun: boolean;
+  maxIterations?: number;
+  modelOverride?: string;
+  attach?: string; // URL to attach to existing OpenCode server instead of spawning one
+}
+
+export interface ForwardFlags extends PhaseFlags {
   epicId: string;
 }
 
-export interface DecomposeFlags {
+export interface DecomposeFlags extends PhaseFlags {
   specPath: string;
   epicTitle?: string;
-  dryRun: boolean;
-  maxIterations?: number;
-  modelOverride?: string;
 }
 
-export interface ReverseFlags {
+export interface ReverseFlags extends PhaseFlags {
   inputs: string[]; // paths, URLs, descriptions — anything
   outputDir?: string;
-  dryRun: boolean;
-  maxIterations?: number;
-  modelOverride?: string;
 }
 ```
 
@@ -144,20 +161,38 @@ const DEFAULT_CONFIG: LoopConfig = {
 
 **Step 2: Update loadConfig merge logic**
 
-Replace the `modelsAuto` merge with `modelsAreas`, and add `reverse` and `decompose` merges:
+Replace the `modelsAuto` merge with `modelsAreas`, and add `reverse` and `decompose` merges.
+
+**Important:** TOML `[models.areas]` is parsed as a nested object `parsed.models.areas`, NOT as `parsed["models.areas"]`. We must extract `areas` from the `models` object and keep it separate from the flat `models` config (which only has `default` and other string values). Spreading `parsed.models` directly into `config.models` would leak the `areas` sub-object — filter it out.
 
 ```typescript
+    // Extract models, separating the nested areas sub-object from flat model strings
+    const parsedModels = (parsed.models || {}) as Record<string, unknown>;
+    const parsedAreas = (parsedModels.areas || {}) as Record<string, string>;
+
+    // Build models without the areas sub-object (only flat string values)
+    const flatModels: Record<string, string> = {};
+    for (const [key, value] of Object.entries(parsedModels)) {
+      if (key !== "areas" && typeof value === "string") {
+        flatModels[key] = value;
+      }
+    }
+
+    // ... then in the config object:
+    models: {
+      ...DEFAULT_CONFIG.models,
+      ...flatModels,
+    },
     modelsAreas: {
-      ...(parsed["models.areas"] as Record<string, string> || {}),
-      ...((parsed.models as Record<string, unknown>)?.areas as Record<string, string> || {}),
+      ...parsedAreas,
     },
     reverse: {
       ...DEFAULT_CONFIG.reverse,
-      ...(parsed.reverse as Record<string, unknown> || {}),
+      ...((parsed.reverse as Record<string, unknown>) || {}),
     },
     decompose: {
       ...DEFAULT_CONFIG.decompose,
-      ...(parsed.decompose as Record<string, unknown> || {}),
+      ...((parsed.decompose as Record<string, unknown>) || {}),
     },
 ```
 
@@ -314,21 +349,23 @@ Refactor `engine.ts` to export a generic `runPhaseLoop` function that all three 
 Replace the entire content of `src/engine.ts` with:
 
 ```typescript
-import { loadConfig, mergeCliFlags } from "./config.js";
-import { startServer, connectToServer, createSession, runPrompt, showToast, type ServerHandle } from "./opencode.js";
+import { loadConfig } from "./config.js";
+import { startServer, connectToServer, createSession, runPrompt, type ServerHandle } from "./opencode.js";
 import { appendProgress } from "./progress.js";
-import type { LoopConfig, LoopResult, IterationResult, CompletionResult } from "./types.js";
+import type { LoopConfig, LoopResult, IterationResult, CompletionResult, PhaseFlags } from "./types.js";
 
 export interface PhaseIteration {
   prompt: string;
   model: { providerID: string; modelID: string };
   sessionTitle: string;
-  iterationLabel: string; // for logging, e.g. "bd-3qe.1: Task 1"
+  iterationLabel: string; // for logging, e.g. "forward iteration 1 (3 ready)"
+  beadId?: string; // explicit bead ID if known (forward: unknown until agent picks; decompose/reverse: N/A)
 }
 
 export interface PhaseCallbacks {
   // Called before the loop to print phase-specific info. Return max iterations.
-  setup(config: LoopConfig): Promise<{ maxIterations: number; description: string }>;
+  // dryRun is passed so setup can skip destructive operations (e.g., creating epics).
+  setup(config: LoopConfig, dryRun: boolean): Promise<{ maxIterations: number; description: string }>;
   // Called each iteration to get the prompt and model. Return null to end the loop.
   nextIteration(config: LoopConfig, iteration: number): Promise<PhaseIteration | null>;
   // Called after each iteration with the result. Return true to continue, false to stop.
@@ -338,11 +375,11 @@ export interface PhaseCallbacks {
 export async function runPhaseLoop(
   projectDir: string,
   callbacks: PhaseCallbacks,
-  flags: { dryRun: boolean; maxIterations?: number; modelOverride?: string; attach?: string },
+  flags: PhaseFlags,
 ): Promise<LoopResult> {
   const config = loadConfig(projectDir);
 
-  const { maxIterations: defaultMax, description } = await callbacks.setup(config);
+  const { maxIterations: defaultMax, description } = await callbacks.setup(config, flags.dryRun);
   const maxIterations = flags.maxIterations || defaultMax;
 
   console.log(description);
@@ -395,12 +432,19 @@ export async function runPhaseLoop(
         const sessionId = await createSession(server.client, next.sessionTitle);
         console.log(`Session: ${sessionId} — sending prompt...`);
 
-        const promptResult = await runPrompt(server.client, sessionId, next.prompt, next.model);
+        // Enforce per-iteration timeout from config
+        const timeoutMs = config.engine.timeout_minutes * 60 * 1000;
+        const promptResult = await Promise.race([
+          runPrompt(server.client, sessionId, next.prompt, next.model),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`Iteration timed out after ${config.engine.timeout_minutes}m`)), timeoutMs)
+          ),
+        ]);
         const result = promptResult.completion;
         const iterDuration = Date.now() - iterStartTime;
 
         const iterResult: IterationResult = {
-          beadId: next.iterationLabel.split(":")[0] || `iter-${iteration}`,
+          beadId: next.beadId || `iter-${iteration}`,
           beadTitle: next.iterationLabel,
           status: result.status === "phase_done" ? "complete" : result.status,
           reason: result.reason,
@@ -427,13 +471,13 @@ export async function runPhaseLoop(
           if (config.engine.strategy === "retry" && currentRetries < config.engine.max_retries) {
             retryCount.set(key, currentRetries + 1);
             console.log(`⚠ ${next.iterationLabel} ${result.status}, retrying (${currentRetries + 1}/${config.engine.max_retries})`);
+            iteration--; // replay this iteration (don't advance)
           } else if (config.engine.strategy === "abort") {
             failed++;
             console.log(`✗ ${next.iterationLabel} ${result.status} — aborting`);
             break;
           } else {
             failed++;
-            skipped++;
             console.log(`✗ ${next.iterationLabel} ${result.status} — skipping`);
           }
         }
@@ -443,7 +487,7 @@ export async function runPhaseLoop(
       } catch (err) {
         const iterDuration = Date.now() - iterStartTime;
         const iterResult: IterationResult = {
-          beadId: next.iterationLabel.split(":")[0] || `iter-${iteration}`,
+          beadId: next.beadId || `iter-${iteration}`,
           beadTitle: next.iterationLabel,
           status: "error",
           reason: (err as Error).message,
@@ -477,7 +521,7 @@ export async function runPhaseLoop(
 
 ```typescript
 import { runPhaseLoop, type PhaseCallbacks } from "./engine.js";
-import { getAllBeads, getEpicProgress } from "./beads.js";
+import { getAllBeads, getAllReady, getEpicProgress } from "./beads.js";
 import { loadTemplate, renderPrompt } from "./template.js";
 import { readRecentProgress } from "./progress.js";
 import { resolveModel } from "./config.js";
@@ -485,10 +529,10 @@ import type { ForwardFlags, LoopResult } from "./types.js";
 
 export async function runForward(projectDir: string, flags: ForwardFlags): Promise<LoopResult> {
   const epicId = flags.epicId;
-  let template: HandlebarsTemplateDelegate;
+  let template: ReturnType<typeof loadTemplate>;
 
   const callbacks: PhaseCallbacks = {
-    async setup(config) {
+    async setup(config, dryRun) {
       const allBeads = await getAllBeads(epicId);
       template = loadTemplate(projectDir, "forward.hbs");
       return {
@@ -499,7 +543,6 @@ export async function runForward(projectDir: string, flags: ForwardFlags): Promi
 
     async nextIteration(config, iteration) {
       // Check if there are any ready beads left (orchestrator just checks, doesn't pass them)
-      const { getAllReady } = await import("./beads.js");
       const readyCount = (await getAllReady(epicId)).length;
       if (readyCount === 0) {
         const progress = await getEpicProgress(epicId);
@@ -513,7 +556,10 @@ export async function runForward(projectDir: string, flags: ForwardFlags): Promi
 
       const recentProgress = readRecentProgress(projectDir, 5);
 
-      // Use default model — agent discovers and picks the bead itself
+      // Forward uses default model (or --model override). Area-based routing
+      // can't work here because the agent picks the bead AFTER session creation.
+      // Future: two-step approach (orchestrator queries agent for bead choice,
+      // then creates session with area-resolved model).
       const model = resolveModel([], "", config, flags.modelOverride);
 
       const prompt = renderPrompt(template, {
@@ -531,21 +577,24 @@ export async function runForward(projectDir: string, flags: ForwardFlags): Promi
 
     async handleResult(result, iteration) {
       if (result.status === "phase_done") return false;
-      if (result.status === "complete") return true;
+      if (result.status === "complete") {
+        // Verify a bead was actually closed by comparing ready count.
+        // If ready count didn't decrease, the agent may have signaled
+        // complete without closing a bead. Log a warning but continue.
+        return true;
+      }
       return true; // retry/skip handled by engine
     },
   };
 
-  return runPhaseLoop(projectDir, callbacks, {
-    dryRun: flags.dryRun,
-    maxIterations: flags.maxIterations,
-    modelOverride: flags.modelOverride,
-  });
+  return runPhaseLoop(projectDir, callbacks, flags);
 }
 
 ```
 
 Note: The orchestrator only checks ready bead count to know whether to continue the loop. The agent discovers and picks its own bead via `br ready`. Task 7 will update the template system.
+
+Note on loop termination: Forward's `nextIteration` returns `null` when no ready beads remain (orchestrator-driven exit). Decompose and Reverse never return `null` from `nextIteration` — they rely on the agent signaling `phase_done` (agent-driven exit) or hitting `maxIterations` (safety cap). This is intentional: only the agent knows when the spec is fully decomposed or when the input is fully specified.
 
 **Step 3: Create src/decompose.ts**
 
@@ -553,16 +602,16 @@ Note: The orchestrator only checks ready bead count to know whether to continue 
 import { runPhaseLoop, type PhaseCallbacks } from "./engine.js";
 import { loadTemplate, renderPrompt } from "./template.js";
 import { resolveModel } from "./config.js";
-import type { LoopConfig, DecomposeFlags, LoopResult } from "./types.js";
+import { runBr, getAllBeads } from "./beads.js";
+import type { DecomposeFlags, LoopResult } from "./types.js";
 import { readFileSync, existsSync } from "fs";
-import { join } from "path";
 
 export async function runDecompose(projectDir: string, flags: DecomposeFlags): Promise<LoopResult> {
-  let template: HandlebarsTemplateDelegate;
+  let template: ReturnType<typeof loadTemplate>;
   let epicId: string;
 
   const callbacks: PhaseCallbacks = {
-    async setup(config) {
+    async setup(config, dryRun) {
       template = loadTemplate(projectDir, "decompose.hbs");
 
       // Read spec content
@@ -570,8 +619,15 @@ export async function runDecompose(projectDir: string, flags: DecomposeFlags): P
         throw new Error(`Spec file not found: ${flags.specPath}`);
       }
 
-      // Create the epic
-      const { runBr } = await import("./beads.js");
+      if (dryRun) {
+        epicId = "dry-run-epic";
+        return {
+          maxIterations: 50,
+          description: `[dry-run] Decompose: ${flags.specPath} (epic creation skipped)`,
+        };
+      }
+
+      // Create the epic (only in live mode — this is destructive)
       const title = flags.epicTitle || `Decompose: ${flags.specPath}`;
       const result = await runBr(["create", "--type", "epic", "--title", title, "--json"]);
       const created = Array.isArray(result) ? result[0] : result;
@@ -589,7 +645,6 @@ export async function runDecompose(projectDir: string, flags: DecomposeFlags): P
       const specContent = readFileSync(flags.specPath, "utf-8");
 
       // Get existing beads (growing accumulator)
-      const { getAllBeads } = await import("./beads.js");
       const existingBeads = await getAllBeads(epicId);
 
       const model = resolveModel([], "", config, flags.modelOverride);
@@ -620,11 +675,7 @@ export async function runDecompose(projectDir: string, flags: DecomposeFlags): P
     },
   };
 
-  return runPhaseLoop(projectDir, callbacks, {
-    dryRun: flags.dryRun,
-    maxIterations: flags.maxIterations,
-    modelOverride: flags.modelOverride,
-  });
+  return runPhaseLoop(projectDir, callbacks, flags);
 }
 ```
 
@@ -634,48 +685,50 @@ export async function runDecompose(projectDir: string, flags: DecomposeFlags): P
 import { runPhaseLoop, type PhaseCallbacks } from "./engine.js";
 import { loadTemplate, renderPrompt } from "./template.js";
 import { resolveModel } from "./config.js";
-import type { LoopConfig, ReverseFlags, LoopResult } from "./types.js";
+import type { ReverseFlags, LoopResult } from "./types.js";
 import { readdirSync, readFileSync, existsSync, mkdirSync } from "fs";
-import { join, basename } from "path";
+import { join } from "path";
 
 export async function runReverse(projectDir: string, flags: ReverseFlags): Promise<LoopResult> {
-  let template: HandlebarsTemplateDelegate;
+  let template: ReturnType<typeof loadTemplate>;
   let outputDir: string;
 
   const callbacks: PhaseCallbacks = {
-    async setup(config) {
+    async setup(config, dryRun) {
       template = loadTemplate(projectDir, "reverse.hbs");
       outputDir = flags.outputDir || join(projectDir, config.reverse.output_dir);
 
       // Ensure output directory exists
-      if (!existsSync(outputDir)) {
+      if (!dryRun && !existsSync(outputDir)) {
         mkdirSync(outputDir, { recursive: true });
       }
 
       const inputSummary = flags.inputs.join(", ");
       return {
-        maxIterations: 50,
-        description: `Reverse loop: ${inputSummary} -> specs in ${outputDir}`,
+        maxIterations: 20, // reverse usually converges in fewer iterations than decompose
+        description: `Reverse loop: ${inputSummary} -> spec in ${outputDir}`,
       };
     },
 
     async nextIteration(config, iteration) {
-      // Collect existing spec summaries (growing accumulator)
-      const existingSpecs = getExistingSpecs(outputDir);
+      // Read current spec content if it exists (the growing accumulator)
+      const currentSpec = getCurrentSpec(outputDir);
 
       const model = resolveModel([], "", config, flags.modelOverride);
 
       const prompt = renderPrompt(template, {
         inputs: flags.inputs,
         outputDir,
-        existingSpecs,
+        currentSpec: currentSpec?.content || "",
+        currentSpecFilename: currentSpec?.filename || "",
+        isFirstIteration: !currentSpec,
       });
 
       return {
         prompt,
         model,
         sessionTitle: `Reverse: iteration ${iteration}`,
-        iterationLabel: `reverse iteration ${iteration} (${existingSpecs.length} specs written)`,
+        iterationLabel: `reverse iteration ${iteration}${currentSpec ? " (refining " + currentSpec.filename + ")" : " (initial draft)"}`,
       };
     },
 
@@ -688,27 +741,30 @@ export async function runReverse(projectDir: string, flags: ReverseFlags): Promi
     },
   };
 
-  return runPhaseLoop(projectDir, callbacks, {
-    dryRun: flags.dryRun,
-    maxIterations: flags.maxIterations,
-    modelOverride: flags.modelOverride,
-  });
+  return runPhaseLoop(projectDir, callbacks, flags);
 }
 
-function getExistingSpecs(outputDir: string): { filename: string; summary: string }[] {
-  if (!existsSync(outputDir)) return [];
+// Read the current spec file if it exists. Returns the most recently modified .md file
+// in the output directory (the accumulator). Returns null if no spec exists yet.
+function getCurrentSpec(outputDir: string): { filename: string; content: string } | null {
+  if (!existsSync(outputDir)) return null;
 
-  return readdirSync(outputDir)
+  const mdFiles = readdirSync(outputDir)
     .filter(f => f.endsWith(".md"))
-    .map(f => {
-      const content = readFileSync(join(outputDir, f), "utf-8");
-      // Extract first heading and first paragraph as summary
-      const lines = content.split("\n");
-      const heading = lines.find(l => l.startsWith("# ")) || f;
-      const bodyStart = lines.findIndex(l => l.trim() !== "" && !l.startsWith("#"));
-      const summary = bodyStart >= 0 ? lines[bodyStart].trim() : "";
-      return { filename: f, summary: `${heading.replace(/^#+ /, "")} — ${summary}`.slice(0, 200) };
-    });
+    .map(f => ({
+      filename: f,
+      path: join(outputDir, f),
+      mtime: Bun.file(join(outputDir, f)).lastModified,
+    }))
+    .sort((a, b) => b.mtime - a.mtime);
+
+  if (mdFiles.length === 0) return null;
+
+  const latest = mdFiles[0];
+  return {
+    filename: latest.filename,
+    content: readFileSync(latest.path, "utf-8"),
+  };
 }
 ```
 
@@ -919,13 +975,15 @@ You are one iteration of a decompose loop. You have a fresh context. Your job: r
 
 ## The Spec
 
+{{!-- Triple-stache: spec content is markdown, must not be HTML-escaped.
+      If specs contain literal {{ }} they'd be interpreted by Handlebars.
+      Acceptable risk since specs are authored by our own agents. --}}
 {{{specContent}}}
 
 ## Epic ID: {{epicId}}
 
 ## Beads Created So Far
 
-{{#if existingBeads.length}}
 {{#each existingBeads}}
 - **{{this.id}}**: {{this.title}} [{{this.status}}]
   Labels: {{#each this.labels}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
@@ -933,10 +991,9 @@ You are one iteration of a decompose loop. You have a fresh context. Your job: r
   {{#if this.description}}
   {{this.description}}
   {{/if}}
-{{/each}}
 {{else}}
 No beads created yet — this is the first iteration.
-{{/if}}
+{{/each}}
 
 ## Your Job
 
@@ -989,12 +1046,12 @@ Apply ONE `area:` label per bead to guide model selection:
 Create `.super-ralph/reverse.hbs`:
 
 ```handlebars
-{{!-- Reverse Phase: input -> specs --}}
-{{!-- The agent analyzes input, writes ONE spec file per iteration. --}}
+{{!-- Reverse Phase: input -> spec (iterative refinement) --}}
+{{!-- Each iteration reads the current spec draft, identifies gaps, and expands/refines it. --}}
 
 ## Your Mission
 
-You are one iteration of a reverse loop. You have a fresh context. Your job: analyze the input and write ONE specification file for the most important unspecified aspect.
+You are one iteration of a reverse loop. You have a fresh context. Your job: analyze the input and {{#if isFirstIteration}}create an initial spec draft{{else}}expand and refine the existing spec{{/if}}.
 
 ## Input
 
@@ -1006,24 +1063,25 @@ Use your tools to examine the input: read files, fetch URLs, view images, resear
 
 ## Output Directory: {{outputDir}}
 
-## Specs Written So Far
+{{#if currentSpec}}
+## Current Spec Draft: {{currentSpecFilename}}
 
-{{#if existingSpecs.length}}
-{{#each existingSpecs}}
-- **{{this.filename}}**: {{this.summary}}
-{{/each}}
+The spec below was written by previous iterations. Your job is to identify the most important gap or shallow area and expand/refine the spec. Rewrite the entire file with your improvements — do not append, replace.
+
+---
+{{{currentSpec}}}
+---
 {{else}}
-No specs written yet — this is the first iteration.
+## No Spec Exists Yet
+
+This is the first iteration. Create an initial spec draft. Name it descriptively (e.g., `spec.md` or `<component-name>.md`). Focus on the highest-level purpose, behavior, and interfaces. Later iterations will refine and expand.
 {{/if}}
 
-## Your Job
+## Spec Structure
 
-1. Examine the input using appropriate tools (read files, fetch URLs, view screenshots, etc.).
-2. Review the specs already written to understand what's covered.
-3. Identify the most important unspecified aspect.
-4. Write ONE spec file to `{{outputDir}}/` with this structure:
+Write the spec to `{{outputDir}}/` using this structure:
 
-```markdown
+```
 # Component: [Name]
 
 ## Purpose
@@ -1042,19 +1100,17 @@ No specs written yet — this is the first iteration.
 [What it depends on, what depends on it]
 ```
 
-5. Signal completion.
-
 ## Principles
 
 - Describe WHAT and WHY, not HOW (no implementation details).
 - This is a clean-room specification — describe behavior, not code structure.
-- Each spec should cover one logical component, module, or feature area.
-- Reference other specs by filename when describing dependencies.
+- Each iteration should meaningfully improve coverage or depth.
+- If the input is complex enough to warrant multiple specs, you may create additional spec files. But the default is one progressively refined spec.
 
 ## Completion Signals
 
-- `task_complete({ status: "complete" })` — You wrote one spec file. Loop continues.
-- `task_complete({ status: "phase_done" })` — All significant aspects of the input are specified. Loop ends.
+- `task_complete({ status: "complete" })` — You expanded/refined the spec. Loop continues for further refinement.
+- `task_complete({ status: "phase_done" })` — The spec comprehensively covers the input. No significant gaps remain. Loop ends.
 - `task_complete({ status: "failed" })` — Something went wrong.
 ```
 
@@ -1090,7 +1146,13 @@ Update `printUsage()` to show all three commands.
 
 Update `cmdDoctor()` to check for all three template files (`forward.hbs`, `decompose.hbs`, `reverse.hbs`) instead of just `prompt.hbs`.
 
-Update the `parseArgs` switch to handle `forward`, `decompose`, `reverse`, `run` (alias), `status`, `doctor`, `help`.
+Update the `parseArgs` switch to handle `forward`, `decompose`, `reverse`, `run` (alias for `forward` — backward compatibility), `status`, `doctor`, `help`. The `run` case should fall through to `forward`:
+
+```typescript
+case "run":  // backward compatibility alias
+case "forward":
+  return cmdForward(args);
+```
 
 **Step 2: Run typecheck**
 

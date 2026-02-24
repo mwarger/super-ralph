@@ -1,7 +1,7 @@
 # Three-Phase Ralph Loop Design
 
 > Super-ralph becomes a pure Ralph loop engine with three composable phases:
-> reverse (code -> specs), decompose (spec -> beads), forward (beads -> code).
+> reverse (input -> spec), decompose (spec -> beads), forward (beads -> code).
 
 ## 1. Conceptual Model
 
@@ -10,18 +10,18 @@ differing only in what they consume and produce.
 
 ```
 REVERSE                    DECOMPOSE                  FORWARD
-input -> specs             spec -> beads              beads -> code
+input -> spec              spec -> beads              beads -> code
 
 Input:  anything           Input:  spec/PRD file      Input:  epic ID
-Output: spec files         Output: beads (.beads/)    Output: code + commits
+Output: spec file(s)       Output: beads (.beads/)    Output: code + commits
 
-SELECT: agent picks        SELECT: agent picks        SELECT: agent picks
-        next unspecified            next missing               next ready bead
-        area                        bead to create             to implement
-PROMPT: input + existing   PROMPT: spec + existing    PROMPT: all ready beads +
-        specs so far                beads so far               spec + progress
-EXECUTE: agent writes      EXECUTE: agent creates     EXECUTE: agent implements,
-          spec file                  one bead via br            tests, commits
+SELECT: agent reviews      SELECT: agent picks        SELECT: agent picks
+        current spec                next missing               next ready bead
+        for gaps                    bead to create             to implement
+PROMPT: input + current    PROMPT: spec + existing    PROMPT: all ready beads +
+        spec draft                  beads so far               spec + progress
+EXECUTE: agent expands/    EXECUTE: agent creates     EXECUTE: agent implements,
+          refines spec               one bead via br            tests, commits
 EVALUATE: task_complete?   EVALUATE: task_complete?   EVALUATE: task_complete?
           complete->loop             complete->loop             complete->loop
           phase_done->exit           phase_done->exit           no more ready->exit
@@ -33,7 +33,7 @@ Each phase works standalone. They also chain:
 
 ```
 super-ralph reverse --input ./src --output docs/specs/
-super-ralph decompose --spec docs/specs/ --epic-title "Rebuild from specs"
+super-ralph decompose --spec docs/specs/spec.md --epic-title "Rebuild from spec"
 super-ralph forward --epic bd-xxx
 ```
 
@@ -142,6 +142,12 @@ Resolution order:
 
 The user controls model assignment by editing config — no need to re-create beads.
 Areas can be remapped to any model/provider at any time.
+
+**Forward phase limitation:** In forward, the agent picks the bead after session creation
+(pure Ralph). The orchestrator doesn't know which bead was picked at model resolution time,
+so area-based routing doesn't apply — forward always uses `--model` or `models.default`.
+Future enhancement: a two-step approach where the orchestrator asks the agent which bead
+it would pick, then creates the session with the area-resolved model.
 
 ## 5. Forward Phase (beads -> code)
 
@@ -263,7 +269,7 @@ The prompt template instructs the agent to:
 The orchestrator runs `br create --type epic --title <title>` before entering the loop.
 The epic ID is passed to every iteration so the agent uses `--parent <epic_id>` consistently.
 
-## 7. Reverse Phase (input -> specs)
+## 7. Reverse Phase (input -> spec)
 
 ### Command
 
@@ -287,43 +293,49 @@ with whatever it receives.
 
 ### Loop
 
-The accumulator pattern: the input is constant, the spec collection grows.
+The accumulator pattern: the input is constant, the spec grows richer each iteration.
+
+Unlike decompose (where each iteration creates a new discrete bead), reverse builds up
+a single spec file iteratively. The first iteration creates the initial draft. Subsequent
+iterations read the current spec, identify gaps or shallow areas, and expand/refine it.
+The agent may occasionally create additional spec files if the input genuinely covers
+multiple distinct components, but the default expectation is one progressively refined spec.
 
 ```
 while true:
-    existing_specs = list files in output_dir with summaries
+    current_spec = read spec file if it exists (the growing accumulator)
 
     prompt = render(reverse.hbs, {
         input: input description/path,
         output_dir: output directory,
-        existing_specs: existing_specs,
+        current_spec: current_spec content (or empty if first iteration),
     })
 
     session = createSession(client, "Reverse: <input summary>")
     result = runPrompt(client, session, prompt, model)
 
     if result.status == "complete":
-        // Agent wrote one spec file — loop back
+        // Agent refined/expanded the spec — loop back
         continue
     elif result.status == "phase_done":
-        // Agent determined input is fully specified
+        // Agent determined the spec is comprehensive
         break
 ```
 
 ### Agent's Job (per iteration)
 
-The agent receives: the input reference, the output directory, and summaries of all specs
-written so far.
+The agent receives: the input reference, the output directory, and the current spec
+content (if any exists from previous iterations).
 
-It examines the input (reads files, fetches URLs, views screenshots — whatever tools are
-appropriate), identifies the most important unspecified aspect, and writes one spec file
-to the output directory.
+- **Iteration 1:** Agent examines the input (reads files, fetches URLs, views screenshots),
+  creates an initial draft spec covering the highest-level purpose, behavior, and interfaces.
+- **Iteration 2+:** Agent re-reads the input, reviews the current spec, identifies the most
+  important gap or shallow area, and rewrites/expands the spec to address it.
+- **Final iteration:** Agent determines the spec comprehensively covers the input and signals
+  `task_complete({ status: "phase_done" })`.
 
-Each spec file describes WHAT something does and WHY — behavior, interfaces, constraints —
+Each spec describes WHAT something does and WHY — behavior, interfaces, constraints —
 not implementation details. This is the "clean room" principle from Huntley's reverse Ralph.
-
-When all significant aspects are specified, the agent signals
-`task_complete({ status: "phase_done" })`.
 
 ### Spec File Format
 
