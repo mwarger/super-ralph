@@ -376,7 +376,7 @@ PRD: tasks/prd-bugfix-<bug>.md
 Fix stories -> REVIEW-001 -> BUGSCAN-001 -> AUDIT-001 -> LEARN-001
 
 ### Run Command
-npx super-ralph run --epic <EPIC_ID> --max-iterations <N>
+bun run <cli_path> run --epic <EPIC_ID> --max-iterations <N>
 > Setting --max-iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)
 ```
 
@@ -384,13 +384,15 @@ npx super-ralph run --epic <EPIC_ID> --max-iterations <N>
 
 ### Launch Options
 
+Read `cli_path` from `.super-ralph/config.toml` (the `[cli] path` field). If not set, error and tell the user to run `/superralph:init`.
+
 Offer three options:
 
-1. **Run headless** — Ask about model overrides, then run:
+1. **Run now** — Ask about model overrides, then run:
    ```bash
-   npx super-ralph run --epic <EPIC_ID> --max-iterations <N> --headless [--model <model>]
+   bun run <cli_path> run --epic <EPIC_ID> --max-iterations <N> --headless [--model <model>]
    ```
-   After completion: remind about `npx super-ralph status --epic <EPIC_ID>` and `npx super-ralph run --epic <EPIC_ID>` to resume.
+   After completion: remind about `bun run <cli_path> status --epic <EPIC_ID>` and `/superralph:resume` to resume.
 
 2. **Copy to clipboard** — Copy run command (without `--headless`) via `pbcopy`. Also display as fallback.
 

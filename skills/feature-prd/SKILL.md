@@ -670,7 +670,7 @@ Design: docs/plans/YYYY-MM-DD-<feature>-design.md
 Schema -> REVIEW-001 -> BUGSCAN-001 -> Backend -> REVIEW-002 -> BUGSCAN-002 -> UI -> ...
 
 ### Run Command
-npx super-ralph run --epic <EPIC_ID> --max-iterations <RECOMMENDED>
+bun run <cli_path> run --epic <EPIC_ID> --max-iterations <RECOMMENDED>
 
 > Setting --max-iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)
 ```
@@ -679,15 +679,17 @@ npx super-ralph run --epic <EPIC_ID> --max-iterations <RECOMMENDED>
 
 ### Launch Options
 
+Read `cli_path` from `.super-ralph/config.toml` (the `[cli] path` field). If not set, error and tell the user to run `/superralph:init`.
+
 After creating beads, offer to launch execution immediately. Use `<ITERATIONS>` as the calculated value (total beads x 2).
 
 > "Beads are ready. How would you like to start execution?
 >
-> 1. **Run headless** — I'll run `npx super-ralph run --headless` right here. Output streams to this session. You can check status from another terminal with `npx super-ralph status --epic <EPIC_ID>`.
-> 2. **Copy command to clipboard** — I'll copy the full `npx super-ralph run` command to your clipboard so you can paste it in a new terminal tab.
+> 1. **Run now** — I'll run `bun run <cli_path> run --headless` right here. Output streams to this session. You can check status from another terminal with `bun run <cli_path> status --epic <EPIC_ID>`.
+> 2. **Copy command to clipboard** — I'll copy the full `bun run <cli_path> run` command to your clipboard so you can paste it in a new terminal tab.
 > 3. **Show command** — I'll display the command for you to copy manually."
 
-### Option 1: Run headless
+### Option 1: Run now
 
 Before running, ask about model overrides:
 
@@ -700,10 +702,10 @@ Construct the command based on their choices. **All commands include `--max-iter
 
 ```bash
 # Default (no overrides)
-npx super-ralph run --epic <EPIC_ID> --max-iterations <ITERATIONS> --headless
+bun run <cli_path> run --epic <EPIC_ID> --max-iterations <ITERATIONS> --headless
 
 # With model override
-npx super-ralph run --epic <EPIC_ID> --max-iterations <ITERATIONS> --model <model>
+bun run <cli_path> run --epic <EPIC_ID> --max-iterations <ITERATIONS> --model <model>
 ```
 
 Tell the user why:
@@ -713,15 +715,15 @@ Tell the user why:
 Run the command via bash. The `--headless` flag streams structured logs to stdout instead of launching the TUI.
 
 After execution completes (or if it's interrupted), inform the user:
-- To check progress: `npx super-ralph status --epic <EPIC_ID>`
-- To resume if interrupted: `npx super-ralph run --epic <EPIC_ID>`
+- To check progress: `bun run <cli_path> status --epic <EPIC_ID>`
+- To resume if interrupted: `/superralph:resume`
 
 ### Option 2: Copy command to clipboard
 
 Construct the command **without** `--headless` (the user will want the TUI in their own terminal):
 
 ```bash
-npx super-ralph run --epic <EPIC_ID> --max-iterations <ITERATIONS>
+bun run <cli_path> run --epic <EPIC_ID> --max-iterations <ITERATIONS>
 ```
 
 Copy it to the clipboard using `pbcopy` (macOS). Tell the user:
@@ -736,7 +738,7 @@ Always also display the command in the output as a fallback.
 Display the full command:
 
 ```
-npx super-ralph run --epic <EPIC_ID> --max-iterations <ITERATIONS>
+bun run <cli_path> run --epic <EPIC_ID> --max-iterations <ITERATIONS>
 ```
 
 > "Setting --max-iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"
