@@ -107,6 +107,21 @@ async function cmdDoctor(): Promise<void> {
   const projectDir = process.cwd();
   let allGood = true;
 
+  const { existsSync } = await import("fs");
+  const { join } = await import("path");
+
+  // Check bun
+  try {
+    const proc = Bun.spawn(["bun", "--version"], { stdout: "pipe", stderr: "pipe" });
+    const stdout = await new Response(proc.stdout).text();
+    await proc.exited;
+    console.log(`✓ bun: ${stdout.trim()}`);
+  } catch {
+    console.log("✗ bun: not found");
+    console.log('  Fix: curl -fsSL https://bun.sh/install | bash');
+    allGood = false;
+  }
+
   // Check br CLI
   try {
     const proc = Bun.spawn(["br", "--version"], { stdout: "pipe", stderr: "pipe" });
@@ -115,17 +130,16 @@ async function cmdDoctor(): Promise<void> {
     console.log(`✓ br CLI: ${stdout.trim()}`);
   } catch {
     console.log("✗ br CLI: not found");
+    console.log('  Fix: curl -fsSL "https://raw.githubusercontent.com/Dicklesworthstone/beads_rust/main/install.sh?$(date +%s)" | bash');
     allGood = false;
   }
 
   // Check .super-ralph directory
-  const { existsSync } = await import("fs");
-  const { join } = await import("path");
-
   if (existsSync(join(projectDir, ".super-ralph", "AGENTS.md"))) {
     console.log("✓ Project initialized (.super-ralph/AGENTS.md)");
   } else {
-    console.log("✗ Project not initialized — run 'super-ralph init' or '/superralph:init'");
+    console.log("✗ Project not initialized");
+    console.log("  Fix: /superralph:init");
     allGood = false;
   }
 
@@ -133,13 +147,16 @@ async function cmdDoctor(): Promise<void> {
     console.log("✓ Prompt template (.super-ralph/prompt.hbs)");
   } else {
     console.log("✗ Prompt template missing");
+    console.log("  Fix: /superralph:init");
     allGood = false;
   }
 
   if (existsSync(join(projectDir, ".super-ralph", "config.toml"))) {
     console.log("✓ Config (.super-ralph/config.toml)");
   } else {
-    console.log("⚠ Config not found — will use defaults");
+    console.log("✗ Config not found");
+    console.log("  Fix: /superralph:init");
+    allGood = false;
   }
 
   // Check OpenCode server
@@ -150,10 +167,12 @@ async function cmdDoctor(): Promise<void> {
       console.log(`✓ OpenCode server: ${config.opencode.url}`);
     } else {
       console.log(`✗ OpenCode server: responded with ${response.status}`);
+      console.log("  Fix: opencode serve --port 4096");
       allGood = false;
     }
   } catch {
     console.log(`✗ OpenCode server: not reachable at ${config.opencode.url}`);
+    console.log("  Fix: opencode serve --port 4096");
     allGood = false;
   }
 
@@ -162,13 +181,35 @@ async function cmdDoctor(): Promise<void> {
     console.log("✓ OpenCode plugin (.opencode/plugins/super-ralph.js)");
   } else {
     console.log("✗ OpenCode plugin missing");
+    console.log("  Fix: /superralph:init");
     allGood = false;
+  }
+
+  // Check .beads/ workspace
+  if (existsSync(join(projectDir, ".beads"))) {
+    console.log("✓ Beads workspace (.beads/)");
+  } else {
+    console.log("✗ Beads workspace not initialized");
+    console.log("  Fix: br init");
+    allGood = false;
+  }
+
+  // Check cli.path
+  if (config.cli.path && existsSync(config.cli.path)) {
+    console.log(`✓ CLI path: ${config.cli.path}`);
+  } else if (config.cli.path) {
+    console.log(`✗ CLI path not found: ${config.cli.path}`);
+    console.log("  Fix: /superralph:init to re-detect");
+    allGood = false;
+  } else {
+    console.log("⚠ CLI path not set in config");
+    console.log("  Fix: /superralph:init to set [cli] path");
   }
 
   if (allGood) {
     console.log("\nAll checks passed!");
   } else {
-    console.log("\nSome checks failed — fix issues before running.");
+    console.log("\nSome checks failed — fix issues above.");
     process.exit(1);
   }
 }
