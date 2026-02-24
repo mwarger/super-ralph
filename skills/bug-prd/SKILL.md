@@ -376,7 +376,7 @@ PRD: tasks/prd-bugfix-<bug>.md
 Fix stories -> REVIEW-001 -> BUGSCAN-001 -> AUDIT-001 -> LEARN-001
 
 ### Run Command
-bun run <cli_path> run --epic <EPIC_ID> --max-iterations <N>
+bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <N>
 > Setting --max-iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)
 ```
 
@@ -390,11 +390,11 @@ Offer three options:
 
 1. **Run now** — Ask about model overrides, then run:
    ```bash
-   bun run <cli_path> run --epic <EPIC_ID> --max-iterations <N> --headless [--model <model>]
+   bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <N> --headless [--model <model>]
    ```
    After completion: remind about `bun run <cli_path> status --epic <EPIC_ID>` and `/superralph:resume` to resume.
 
-2. **Copy to clipboard** — Copy run command (without `--headless`) via `pbcopy`. Also display as fallback.
+2. **Copy to clipboard** — Copy forward command (without `--headless`) via `pbcopy`. Also display as fallback.
 
 3. **Show command** — Display the full command for manual copy.
 

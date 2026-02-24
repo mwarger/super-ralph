@@ -39,7 +39,7 @@ export async function runDecompose(projectDir: string, flags: DecomposeFlags): P
 
     async nextIteration(config, iteration) {
       const specContent = readFileSync(flags.specPath, "utf-8");
-      const existingBeads = await getAllBeads(epicId);
+      const existingBeads = epicId === "dry-run-epic" ? [] : await getAllBeads(epicId);
       const model = resolveModel([], "", config, flags.modelOverride);
 
       const prompt = renderPrompt(template, {

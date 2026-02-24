@@ -8,17 +8,19 @@
 This project uses the **super-ralph SDLC framework** — a unified pipeline for AI-assisted software development that combines:
 
 - **Superpowers** for rigorous intake, design, planning, TDD, and code review
-- **OpenCode SDK** for autonomous execution loops (via `super-ralph run`)
+- **OpenCode SDK** for autonomous agent sessions via the three-phase loop engine (`super-ralph forward`, `decompose`, `reverse`)
 - **Beads** (via `br` CLI) for dependency-aware task tracking
 
-Every piece of work flows through the same pipeline: relentless intake, autonomous execution, embedded review, audited completion.
+Every piece of work flows through the same pipeline: relentless intake, three-phase autonomous execution (reverse: input -> spec, decompose: spec -> beads, forward: beads -> code), embedded review, audited completion.
 
 ## Project Structure (super-ralph files)
 
 ```
 .super-ralph/
   AGENTS.md                        # This file
-  prompt.hbs                       # Custom prompt template for execution iterations
+  forward.hbs                      # Prompt template for forward phase (beads -> code)
+  decompose.hbs                    # Prompt template for decompose phase (spec -> beads)
+  reverse.hbs                      # Prompt template for reverse phase (input -> spec)
   intake-checklist.md              # Growing intake question checklist (learned over time)
   progress.md                      # Cross-iteration learning
 tasks/                             # Generated PRDs
@@ -32,6 +34,15 @@ tasks/                             # Generated PRDs
 4. **Self-review before committing.** Check every acceptance criterion. Run all quality gates. No exceptions.
 5. **Leave notes for future iterations.** Append learnings, patterns, and gotchas to `.super-ralph/progress.md` before signaling completion.
 6. **Scope discipline.** Do only what the current bead asks. If you discover adjacent work, document it in progress.md. Do not fix unrelated bugs unless they block your task.
+
+## Completion Signaling
+
+When working inside a super-ralph loop iteration, signal completion via the `task_complete` tool:
+
+- `{ status: "complete" }` — this iteration's work is done. The orchestrator loops back for the next iteration.
+- `{ status: "phase_done" }` — the entire phase is finished. The orchestrator exits the loop.
+
+For forward phase: if no ready beads remain, the orchestrator exits automatically.
 
 ## Quality Gates
 

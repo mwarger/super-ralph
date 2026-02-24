@@ -670,7 +670,7 @@ Design: docs/plans/YYYY-MM-DD-<feature>-design.md
 Schema -> REVIEW-001 -> BUGSCAN-001 -> Backend -> REVIEW-002 -> BUGSCAN-002 -> UI -> ...
 
 ### Run Command
-bun run <cli_path> run --epic <EPIC_ID> --max-iterations <RECOMMENDED>
+bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <RECOMMENDED>
 
 > Setting --max-iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)
 ```
@@ -685,8 +685,8 @@ After creating beads, offer to launch execution immediately. Use `<ITERATIONS>` 
 
 > "Beads are ready. How would you like to start execution?
 >
-> 1. **Run now** — I'll run `bun run <cli_path> run --headless` right here. Output streams to this session. You can check status from another terminal with `bun run <cli_path> status --epic <EPIC_ID>`.
-> 2. **Copy command to clipboard** — I'll copy the full `bun run <cli_path> run` command to your clipboard so you can paste it in a new terminal tab.
+> 1. **Run now** — I'll run `bun run <cli_path> forward --headless` right here. Output streams to this session. You can check status from another terminal with `bun run <cli_path> status --epic <EPIC_ID>`.
+> 2. **Copy command to clipboard** — I'll copy the full `bun run <cli_path> forward` command to your clipboard so you can paste it in a new terminal tab.
 > 3. **Show command** — I'll display the command for you to copy manually."
 
 ### Option 1: Run now
@@ -702,10 +702,10 @@ Construct the command based on their choices. **All commands include `--max-iter
 
 ```bash
 # Default (no overrides)
-bun run <cli_path> run --epic <EPIC_ID> --max-iterations <ITERATIONS> --headless
+bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <ITERATIONS> --headless
 
 # With model override
-bun run <cli_path> run --epic <EPIC_ID> --max-iterations <ITERATIONS> --model <model>
+bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <ITERATIONS> --model <model>
 ```
 
 Tell the user why:
@@ -723,7 +723,7 @@ After execution completes (or if it's interrupted), inform the user:
 Construct the command **without** `--headless` (the user will want the TUI in their own terminal):
 
 ```bash
-bun run <cli_path> run --epic <EPIC_ID> --max-iterations <ITERATIONS>
+bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <ITERATIONS>
 ```
 
 Copy it to the clipboard using `pbcopy` (macOS). Tell the user:
@@ -738,7 +738,7 @@ Always also display the command in the output as a fallback.
 Display the full command:
 
 ```
-bun run <cli_path> run --epic <EPIC_ID> --max-iterations <ITERATIONS>
+bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <ITERATIONS>
 ```
 
 > "Setting --max-iterations to {N} ({total_beads} beads x 2 buffer for retries/corrective beads)"

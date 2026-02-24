@@ -252,7 +252,7 @@ Fix issues with `br update` or `br dep add`.
 Epic: <EPIC_ID> - Hotfix: <Problem Summary>  |  PRD: tasks/prd-hotfix-<name>.md
 Beads: <ID> US-001, [US-002, US-003,] <ID> REVIEW-001, <ID> LEARN-001
 Chain: US-001 -> [US-002 ->] REVIEW-001 -> LEARN-001
-Run:   bun run <cli_path> run --epic <EPIC_ID> --max-iterations <N>
+Run:   bun run <cli_path> forward --epic <EPIC_ID> --max-iterations <N>
        (max-iterations = total beads x 2 buffer for retries/corrective beads)
 ```
 
@@ -261,8 +261,8 @@ Run:   bun run <cli_path> run --epic <EPIC_ID> --max-iterations <N>
 Read `cli_path` from `.super-ralph/config.toml` (the `[cli] path` field). If not set, error and tell the user to run `/superralph:init`.
 
 > "Beads are ready. How would you like to start?
-> 1. **Run now** — `bun run <cli_path> run --epic <ID> --max-iterations <N> --headless`
-> 2. **Copy to clipboard** — I'll `pbcopy` the run command for a new terminal tab
+> 1. **Run now** — `bun run <cli_path> forward --epic <ID> --max-iterations <N> --headless`
+> 2. **Copy to clipboard** — I'll `pbcopy` the forward command for a new terminal tab
 > 3. **Show command** — display for manual copy"
 
 For Run now: ask about model overrides first (use config defaults or override model).
