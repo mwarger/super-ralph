@@ -52,12 +52,14 @@ export async function runDecompose(projectDir: string, flags: DecomposeFlags): P
       });
 
       const systemPrompt = [
-        "You are an autonomous coding agent in a super-ralph decompose loop iteration.",
-        "Your job: read the spec and existing beads, then create ONE new bead for the most important missing piece.",
-        "Use the `br` CLI to create beads, wire dependencies, and add area labels.",
+        "You are an autonomous planning agent in a super-ralph decompose loop iteration.",
+        "Your job: read the spec, assess what work remains, and create the next bead.",
+        "Create small, verifiable tasks. Each bead should be implementable in one forward iteration.",
+        "Add review/audit beads at natural boundaries based on spec complexity.",
+        "Use `br create` to make beads. Use `br show` to inspect existing ones.",
         "Signal completion via the task_complete tool:",
-        '- status: "complete" — you created one bead, loop continues',
-        '- status: "phase_done" — the spec is fully decomposed into beads, loop ends',
+        '- status: "complete" — you created a bead, loop continues',
+        '- status: "phase_done" — the spec is fully decomposed, loop ends',
         '- status: "blocked" — you can\'t proceed, explain why',
         '- status: "failed" — something went wrong, explain what',
       ].join("\n");
