@@ -1,68 +1,95 @@
 {{!-- Decompose Phase: spec -> beads --}}
-{{!-- The agent reads the spec + existing beads, creates ONE new bead per iteration. --}}
+{{!-- The agent autonomously discovers and creates beads from the spec. --}}
 
 ## Your Mission
 
-You are one iteration of a decompose loop. You have a fresh context. Your job: read the spec and the beads created so far, then create ONE new bead for the most important missing piece.
+You are one iteration of a decompose loop. You have a fresh context — no memory of previous iterations. Read the spec, assess what work remains to be covered, and create the next bead.
 
 ## The Spec
 
-{{!-- Triple-stache: spec content is markdown, must not be HTML-escaped.
-      If specs contain literal curly braces they'd be interpreted by Handlebars.
-      Acceptable risk since specs are authored by our own agents. --}}
 {{{specContent}}}
 
-## Epic ID: {{epicId}}
+## Epic: {{epicId}}
 
+{{#if existingBeads.length}}
 ## Beads Created So Far
 
 {{#each existingBeads}}
-- **{{this.id}}**: {{this.title}} [{{this.status}}]
-  Labels: {{#each this.labels}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
-  Depends on: {{#each this.dependsOn}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
-  {{#if this.description}}
-  {{this.description}}
-  {{/if}}
-{{else}}
-No beads created yet — this is the first iteration.
+- {{this.id}}: {{this.title}} ({{this.status}})
 {{/each}}
 
-## Your Job
+Review what exists. Identify gaps — what part of the spec isn't yet covered by a bead?
+{{else}}
+No beads created yet. Start with the foundational work — what needs to be built first?
+{{/if}}
 
-1. Read the spec carefully.
-2. Review the existing beads.
-3. Identify the most important piece of the spec NOT yet covered by a bead.
-4. Create ONE bead using the `br` CLI:
-   - `br create --parent {{epicId}} --title "US-NNN: <title>" --description "<description with acceptance criteria and quality gates>"`
-   - Wire dependencies: `br dep add <new-bead-id> <depends-on-bead-id>` for each dependency
-   - Add semantic area label: `br label add <new-bead-id> area:<category>` (e.g., area:frontend-design, area:backend, area:database, area:review)
-5. Signal completion.
+## Task Sizing
 
-## Structuring Beads
+Each bead should be:
+- **Small enough** to implement, test, and commit in a single forward iteration (5-15 minutes of agent work)
+- **Self-contained** — a fresh agent with no memory can pick it up and complete it
+- **Verifiable** — has clear acceptance criteria that can be mechanically checked
+- **Self-documenting** — description includes background, reasoning, and context so a fresh agent understands what to do and why
 
-- **Structure into phases.** Group related implementation beads into phases.
-- **Right-size beads.** Each bead should be completable by a single agent in one context window.
-- **Include acceptance criteria** in the bead description with a `## Acceptance Criteria` section.
-- **Include quality gates** in the bead description with a `## Quality Gates` section.
+If a task feels too large to describe in 2-3 sentences, split it into smaller beads.
+
+## Planning Guidance
+
+### Ordering and Dependencies
+- Create foundational beads first (schema, data models, core types)
+- Group related work into natural phases (core -> edge cases -> polish)
+- Wire `--depends-on` so beads unblock in a sensible order
+- Later beads should depend on the beads they need completed first
+
+### Review and Quality Checkpoints
 {{#if includeReview}}
-- **Add REVIEW beads** after each implementation phase. A REVIEW bead depends on all impl beads in its phase. Title format: `REVIEW-NNN: Review Phase N`.
+- Add **review beads** at natural phase boundaries (e.g., after core implementation, before moving to edge cases)
+- Review beads should diff all changes from their phase against the spec and check for drift
 {{/if}}
 {{#if includeBugscan}}
-- **Add BUGSCAN beads** after each REVIEW bead. A BUGSCAN bead depends on the REVIEW bead. Title format: `BUGSCAN-NNN: Bugscan Phase N`.
+- Add **bugscan beads** after review beads — a fresh-eyes pass looking for bugs, errors, silly mistakes
 {{/if}}
 {{#if includeAudit}}
-- **Add an AUDIT bead** at the end that depends on all other beads. Title format: `AUDIT-001: Final audit`.
+- Add an **audit bead** as one of the final beads — a comprehensive review of the entire implementation
 {{/if}}
+- Add a **learning extraction bead** as the very last bead — extract lessons, update intake checklist
+- Scale the number of checkpoints to complexity: a 3-bead hotfix needs no review beads, a 20-bead feature needs several
 
-## Area Labels
+### Area Labels for Model Routing
+Use `--label "area:<type>"` to enable model routing. Common areas:
+- `area:frontend-design` — UI components, pages, styling
+- `area:backend` — server logic, APIs, data processing
+- `area:schema` — database migrations, data model changes
+- `area:test` — test infrastructure, test utilities
+- `area:review` — review, bugscan, and audit beads
+- `area:docs` — documentation updates
 
-Apply ONE `area:` label per bead to guide model selection:
-- `area:frontend-design` — UI/UX design, mockups, layout decisions
-- `area:frontend-ui` — React/HTML/CSS implementation
-- `area:backend` — API endpoints, business logic, server-side code
-- `area:database` — Schema design, migrations, queries
-- `area:infrastructure` — CI/CD, deployment, config
-- `area:review` — code review beads
-- `area:bugscan` — bug scanning beads
-- Or any other descriptive area name.
+## Creating a Bead
 
+Use `br` CLI to create each bead:
+
+```bash
+br create --parent {{epicId}} \
+  --title "US-NNN: <Title>" \
+  --description "$(cat <<'EOF'
+<Self-contained description with context, reasoning, and acceptance criteria>
+
+## Acceptance Criteria
+- [ ] <specific, verifiable criterion>
+- [ ] <specific, verifiable criterion>
+- [ ] Quality gates pass
+EOF
+)" \
+  --label "area:<type>" \
+  --depends-on "<dependency-id>" \
+  --priority <1-4>
+```
+
+> **CRITICAL:** Always use `<<'EOF'` (single-quoted) for HEREDOC delimiters to prevent shell interpretation.
+
+## When to Stop
+
+- Signal `task_complete` with `status: "complete"` after creating a bead — the loop continues
+- Signal `task_complete` with `status: "phase_done"` when the spec is fully covered — every requirement has at least one bead
+- Don't over-decompose — if the spec is simple, 3-5 beads may be enough
+- Don't under-decompose — every requirement in the spec should be traceable to a bead
