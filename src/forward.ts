@@ -39,9 +39,22 @@ export async function runForward(projectDir: string, flags: ForwardFlags): Promi
         recentProgress,
       });
 
+      const systemPrompt = [
+        "You are an autonomous coding agent in a super-ralph forward loop iteration.",
+        "Your job: pick one ready bead from the epic, implement it, close it.",
+        "Use `br ready`, `br show`, `br close` to interact with beads.",
+        "Run `bun run typecheck` before committing. Fix any failures.",
+        "Signal completion via the task_complete tool:",
+        '- status: "complete" — you implemented and closed one bead, loop continues',
+        '- status: "phase_done" — all work is done, loop ends',
+        '- status: "blocked" — you can\'t proceed, explain why',
+        '- status: "failed" — something went wrong, explain what',
+      ].join("\n");
+
       return {
         prompt,
         model,
+        systemPrompt,
         sessionTitle: `Forward: ${epicId} (iteration ${iteration})`,
         iterationLabel: `${epicId}: forward iteration ${iteration} (${readyCount} ready)`,
       };

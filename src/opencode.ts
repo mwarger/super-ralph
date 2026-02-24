@@ -75,12 +75,14 @@ export async function runPrompt(
   sessionId: string,
   prompt: string,
   model: { providerID: string; modelID: string },
+  systemPrompt?: string,
 ): Promise<PromptResult> {
   const response = await client.session.prompt({
     path: { id: sessionId },
     body: {
       model,
       parts: [{ type: "text" as const, text: prompt }],
+      ...(systemPrompt && { system: systemPrompt }),
     },
   });
 

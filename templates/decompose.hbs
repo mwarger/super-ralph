@@ -66,8 +66,3 @@ Apply ONE `area:` label per bead to guide model selection:
 - `area:bugscan` — bug scanning beads
 - Or any other descriptive area name.
 
-## Completion Signals
-
-- `task_complete({ status: "complete" })` — You created one bead. Loop continues.
-- `task_complete({ status: "phase_done" })` — The spec is fully decomposed. All user stories, review, bugscan, and audit beads are created. Loop ends.
-- `task_complete({ status: "failed" })` — Something went wrong.

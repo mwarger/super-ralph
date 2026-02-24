@@ -51,9 +51,21 @@ export async function runDecompose(projectDir: string, flags: DecomposeFlags): P
         includeAudit: config.decompose.include_audit,
       });
 
+      const systemPrompt = [
+        "You are an autonomous coding agent in a super-ralph decompose loop iteration.",
+        "Your job: read the spec and existing beads, then create ONE new bead for the most important missing piece.",
+        "Use the `br` CLI to create beads, wire dependencies, and add area labels.",
+        "Signal completion via the task_complete tool:",
+        '- status: "complete" — you created one bead, loop continues',
+        '- status: "phase_done" — the spec is fully decomposed into beads, loop ends',
+        '- status: "blocked" — you can\'t proceed, explain why',
+        '- status: "failed" — something went wrong, explain what',
+      ].join("\n");
+
       return {
         prompt,
         model,
+        systemPrompt,
         sessionTitle: `Decompose: ${epicId} (iteration ${iteration})`,
         iterationLabel: `${epicId}: decompose iteration ${iteration} (${existingBeads.length} beads exist)`,
       };

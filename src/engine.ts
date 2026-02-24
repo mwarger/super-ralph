@@ -9,6 +9,7 @@ export interface PhaseIteration {
   sessionTitle: string;
   iterationLabel: string;
   beadId?: string;
+  systemPrompt?: string;
 }
 
 export interface PhaseCallbacks {
@@ -78,7 +79,7 @@ export async function runPhaseLoop(
 
         const timeoutMs = config.engine.timeout_minutes * 60 * 1000;
         const promptResult = await Promise.race([
-          runPrompt(server.client, sessionId, next.prompt, next.model),
+          runPrompt(server.client, sessionId, next.prompt, next.model, next.systemPrompt),
           new Promise<never>((_, reject) =>
             setTimeout(() => reject(new Error(`Iteration timed out after ${config.engine.timeout_minutes}m`)), timeoutMs)
           ),

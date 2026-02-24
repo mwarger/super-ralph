@@ -24,22 +24,15 @@ Start by running `br ready --parent {{epicId}} --json` to see what's available, 
 
 ## Workflow
 
-1. Read AGENTS.md and README.md if they exist.
-2. Read `.super-ralph/progress.md` for learnings from previous iterations.
-3. Review the ready beads above. Pick the most important one.
-4. Use `br show <bead-id>` to get full details for the bead you picked.
-5. If you need context about completed beads (e.g., what a dependency implemented), use `br show` to look them up.
-6. Search the codebase before implementing. Do not assume anything.
-7. Implement the bead following its acceptance criteria exactly.
-8. Run all quality gate commands. Fix any failures.
-9. Self-review: every acceptance criterion met, no scope creep, no placeholders.
-10. Commit with message: `feat: <bead-id> - <bead-title>`
-11. Close the bead: `br close <bead-id>`
-12. Update `.super-ralph/progress.md` with learnings.
-13. Call `task_complete` with `status: "complete"`.
-
-## Completion Signals
-
-- `task_complete({ status: "complete" })` — You implemented and closed one bead. Loop continues.
-- `task_complete({ status: "blocked" })` — You can't proceed. Explain why.
-- `task_complete({ status: "failed" })` — Something went wrong. Explain what.
+1. Read `.super-ralph/progress.md` for learnings from previous iterations.
+2. Review the ready beads. Pick the most important one.
+3. Use `br show <bead-id>` to get full details for the bead you picked.
+4. If you need context about completed beads (e.g., what a dependency implemented), use `br show` to look them up.
+5. Search the codebase before implementing. Do not assume anything.
+6. Implement the bead following its acceptance criteria exactly.
+7. Run all quality gate commands. Fix any failures.
+8. Self-review: every acceptance criterion met, no scope creep, no placeholders.
+9. Commit with message: `feat: <bead-id> - <bead-title>`
+10. Close the bead: `br close <bead-id>`
+11. Update `.super-ralph/progress.md` with learnings.
+12. Call `task_complete` with `status: "complete"`.

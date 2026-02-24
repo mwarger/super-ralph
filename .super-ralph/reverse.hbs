@@ -59,8 +59,3 @@ Write the spec to `{{outputDir}}/` using this structure:
 - Each iteration should meaningfully improve coverage or depth.
 - If the input is complex enough to warrant multiple specs, you may create additional spec files. But the default is one progressively refined spec.
 
-## Completion Signals
-
-- `task_complete({ status: "complete" })` — You expanded/refined the spec. Loop continues for further refinement.
-- `task_complete({ status: "phase_done" })` — The spec comprehensively covers the input. No significant gaps remain. Loop ends.
-- `task_complete({ status: "failed" })` — Something went wrong.

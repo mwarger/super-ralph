@@ -37,9 +37,21 @@ export async function runReverse(projectDir: string, flags: ReverseFlags): Promi
         isFirstIteration: !currentSpec,
       });
 
+      const systemPrompt = [
+        "You are an autonomous coding agent in a super-ralph reverse loop iteration.",
+        "Your job: analyze the input and create or refine a specification document.",
+        "Describe WHAT and WHY, not HOW. Write clean-room specs, not code descriptions.",
+        "Signal completion via the task_complete tool:",
+        '- status: "complete" — you expanded/refined the spec, loop continues for further refinement',
+        '- status: "phase_done" — the spec comprehensively covers the input, loop ends',
+        '- status: "blocked" — you can\'t proceed, explain why',
+        '- status: "failed" — something went wrong, explain what',
+      ].join("\n");
+
       return {
         prompt,
         model,
+        systemPrompt,
         sessionTitle: `Reverse: iteration ${iteration}`,
         iterationLabel: `reverse iteration ${iteration}${currentSpec ? " (refining " + currentSpec.filename + ")" : " (initial draft)"}`,
       };
