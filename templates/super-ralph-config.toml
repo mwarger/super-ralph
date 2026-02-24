@@ -10,6 +10,10 @@ url = "http://localhost:4096"
 [models]
 default = "anthropic/claude-sonnet-4-6"
 
+[cli]
+# Absolute path to the super-ralph CLI entry point (set by /superralph:init)
+path = ""
+
 [models.auto]
 review = "default"
 audit = "default"

@@ -10,6 +10,9 @@ url = "http://localhost:4096"
 [models]
 default = "anthropic/claude-sonnet-4-6"
 
+[cli]
+path = "/Users/mat/dev/farsight/agent-framework/src/index.ts"
+
 [models.auto]
 review = "default"
 audit = "default"

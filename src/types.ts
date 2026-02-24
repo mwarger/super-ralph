@@ -23,6 +23,9 @@ export interface LoopConfig {
   opencode: {
     url: string;
   };
+  cli: {
+    path: string;
+  };
   models: {
     default: string;
     [key: string]: string; // alias -> provider/model

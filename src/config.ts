@@ -13,6 +13,9 @@ const DEFAULT_CONFIG: LoopConfig = {
   opencode: {
     url: "http://localhost:4096",
   },
+  cli: {
+    path: "",
+  },
   models: {
     default: "anthropic/claude-sonnet-4-6",
   },
@@ -42,6 +45,10 @@ export function loadConfig(projectDir: string): LoopConfig {
     opencode: {
       ...DEFAULT_CONFIG.opencode,
       ...(parsed.opencode as Record<string, unknown> || {}),
+    },
+    cli: {
+      ...DEFAULT_CONFIG.cli,
+      ...(parsed.cli as Record<string, unknown> || {}),
     },
     models: {
       ...DEFAULT_CONFIG.models,
