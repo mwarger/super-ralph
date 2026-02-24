@@ -476,12 +476,12 @@ export async function runPhaseLoop(
 **Step 2: Create src/forward.ts**
 
 ```typescript
-import { runPhaseLoop, type PhaseCallbacks, type PhaseIteration } from "./engine.js";
-import { getAllBeads, getNextReady, getEpicProgress } from "./beads.js";
+import { runPhaseLoop, type PhaseCallbacks } from "./engine.js";
+import { getAllBeads, getEpicProgress } from "./beads.js";
 import { loadTemplate, renderPrompt } from "./template.js";
 import { readRecentProgress } from "./progress.js";
 import { resolveModel } from "./config.js";
-import type { LoopConfig, ForwardFlags, LoopResult } from "./types.js";
+import type { ForwardFlags, LoopResult } from "./types.js";
 
 export async function runForward(projectDir: string, flags: ForwardFlags): Promise<LoopResult> {
   const epicId = flags.epicId;
@@ -498,9 +498,10 @@ export async function runForward(projectDir: string, flags: ForwardFlags): Promi
     },
 
     async nextIteration(config, iteration) {
-      // Get all ready beads for the agent to choose from
-      const readyBeads = await getAllReadyBeads(epicId);
-      if (readyBeads.length === 0) {
+      // Check if there are any ready beads left (orchestrator just checks, doesn't pass them)
+      const { getAllReady } = await import("./beads.js");
+      const readyCount = (await getAllReady(epicId)).length;
+      if (readyCount === 0) {
         const progress = await getEpicProgress(epicId);
         if (progress.remaining === 0) {
           console.log("All beads complete!");
@@ -511,16 +512,12 @@ export async function runForward(projectDir: string, flags: ForwardFlags): Promi
       }
 
       const recentProgress = readRecentProgress(projectDir, 5);
-      const allBeads = await getAllBeads(epicId);
-      const closedBeads = allBeads.filter(b => b.status === "closed");
 
-      // Use default model — agent will work on whichever bead it picks
+      // Use default model — agent discovers and picks the bead itself
       const model = resolveModel([], "", config, flags.modelOverride);
 
       const prompt = renderPrompt(template, {
         epicId,
-        readyBeads,
-        closedBeads,
         recentProgress,
       });
 
@@ -528,7 +525,7 @@ export async function runForward(projectDir: string, flags: ForwardFlags): Promi
         prompt,
         model,
         sessionTitle: `Forward: ${epicId} (iteration ${iteration})`,
-        iterationLabel: `${epicId}: forward iteration ${iteration} (${readyBeads.length} ready)`,
+        iterationLabel: `${epicId}: forward iteration ${iteration} (${readyCount} ready)`,
       };
     },
 
@@ -546,15 +543,9 @@ export async function runForward(projectDir: string, flags: ForwardFlags): Promi
   });
 }
 
-// Get ALL ready beads (not just one) — agent picks from these
-async function getAllReadyBeads(epicId: string) {
-  // This needs a new beads.ts function — added in Task 5
-  const { getAllReady } = await import("./beads.js");
-  return getAllReady(epicId);
-}
 ```
 
-Note: This uses `renderPrompt` with a different template vars shape. Task 7 will update the template system.
+Note: The orchestrator only checks ready bead count to know whether to continue the loop. The agent discovers and picks its own bead via `br ready`. Task 7 will update the template system.
 
 **Step 3: Create src/decompose.ts**
 
@@ -872,27 +863,19 @@ The forward template now shows ALL ready beads and lets the agent pick. Replace 
 
 ## Your Mission
 
-You are one iteration of a Ralph loop. You have a fresh context — no memory of previous iterations. Your job: pick one ready bead, implement it, and signal completion.
+You are one iteration of a Ralph loop. You have a fresh context — no memory of previous iterations. Your job: pick one ready bead from the epic, implement it, and signal completion.
 
-## Ready Beads (pick ONE to implement)
+## Epic: {{epicId}}
 
-{{#each readyBeads}}
-### {{this.id}}: {{this.title}}
-Priority: {{this.priority}}
-Labels: {{#each this.labels}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+## Using `br` to Get Context
 
-{{#if this.description}}
-{{this.description}}
-{{/if}}
+You have the `br` CLI available. Use it to discover and inspect beads:
+- `br ready --parent {{epicId}} --json` — list all ready (unblocked) beads you can work on
+- `br show <bead-id>` — full details for any bead (description, acceptance criteria, dependencies)
+- `br show {{epicId}} --json` — epic overview with all children and their status
+- `br dep tree <bead-id>` — dependency tree for a bead
 
----
-{{/each}}
-
-## Already Completed (for context)
-
-{{#each closedBeads}}
-- {{this.id}}: {{this.title}}
-{{/each}}
+Start by running `br ready --parent {{epicId}} --json` to see what's available, then pick the most important one.
 
 {{#if recentProgress}}
 ## Recent Progress Notes
@@ -904,14 +887,16 @@ Labels: {{#each this.labels}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
 1. Read AGENTS.md and README.md if they exist.
 2. Read `.super-ralph/progress.md` for learnings from previous iterations.
 3. Review the ready beads above. Pick the most important one.
-4. Search the codebase before implementing. Do not assume anything.
-5. Implement the bead following its acceptance criteria exactly.
-6. Run all quality gate commands. Fix any failures.
-7. Self-review: every acceptance criterion met, no scope creep, no placeholders.
-8. Commit with message: `feat: <bead-id> - <bead-title>`
-9. Close the bead: `br close <bead-id>`
-10. Update `.super-ralph/progress.md` with learnings.
-11. Call `task_complete` with `status: "complete"`.
+4. Use `br show <bead-id>` to get full details for the bead you picked.
+5. If you need context about completed beads (e.g., what a dependency implemented), use `br show` to look them up.
+6. Search the codebase before implementing. Do not assume anything.
+7. Implement the bead following its acceptance criteria exactly.
+8. Run all quality gate commands. Fix any failures.
+9. Self-review: every acceptance criterion met, no scope creep, no placeholders.
+10. Commit with message: `feat: <bead-id> - <bead-title>`
+11. Close the bead: `br close <bead-id>`
+12. Update `.super-ralph/progress.md` with learnings.
+13. Call `task_complete` with `status: "complete"`.
 
 ## Completion Signals
 
