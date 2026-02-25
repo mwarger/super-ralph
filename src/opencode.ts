@@ -1,4 +1,5 @@
 import { createOpencode, createOpencodeClient, type OpencodeClient, type Part } from "@opencode-ai/sdk";
+import { createOpencodeClient as createV2Client } from "@opencode-ai/sdk/v2";
 import { existsSync, lstatSync, readdirSync, unlinkSync, readlinkSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
@@ -122,79 +123,113 @@ export async function createSession(
   return response.data.id;
 }
 
-// Send a prompt and wait for the complete response (synchronous API).
-// session.prompt() blocks until the agent finishes all turns and returns the
-// final assistant message. We then scan all session messages for task_complete.
+// Send a prompt and stream output to the terminal in real-time.
+// Uses promptAsync() to start non-blocking, then subscribes to SSE events
+// to display text deltas as they arrive. Returns when session goes idle.
 export async function runPrompt(
   client: OpencodeClient,
   sessionId: string,
   prompt: string,
   model: { providerID: string; modelID: string },
   systemPrompt?: string,
+  serverUrl?: string,
 ): Promise<PromptResult> {
-  const response = await client.session.prompt({
-    path: { id: sessionId },
-    body: {
-      model,
-      parts: [{ type: "text" as const, text: prompt }],
-      ...(systemPrompt && { system: systemPrompt }),
-    },
+  // Use v2 client for promptAsync + event streaming
+  const v2 = createV2Client({ baseUrl: serverUrl || "http://127.0.0.1:4096" });
+
+  // Subscribe to events BEFORE sending prompt so we don't miss anything
+  const { stream } = await v2.event.subscribe();
+
+  // Start the prompt asynchronously
+  await v2.session.promptAsync({
+    sessionID: sessionId,
+    model,
+    parts: [{ type: "text" as const, text: prompt }],
+    ...(systemPrompt && { system: systemPrompt }),
   });
 
-  if (!response.data) {
-    return {
-      completion: { status: "error", reason: "No response data from prompt" },
-      cost: 0,
-      tokens: { input: 0, output: 0, reasoning: 0 },
-      filesChanged: [],
-    };
-  }
+  // Track which parts we've seen content for, to avoid re-printing
+  let lastTextLength = 0;
+  let currentPartId: string | null = null;
 
-  const { info, parts } = response.data;
+  // Stream events until session goes idle
+  for await (const event of stream) {
+    const ev = event as Record<string, unknown>;
+    const eventType = ev.type as string;
 
-  // Check for errors in the assistant message
-  if (info.role === "assistant" && info.error) {
-    const errorName = (info.error as Record<string, unknown>).name as string || "unknown";
-    const errorMsg = (info.error as Record<string, unknown>).message as string || "unknown error";
-    return {
-      completion: { status: "error", reason: `${errorName}: ${errorMsg}` },
-      cost: info.cost || 0,
-      tokens: {
-        input: info.tokens?.input || 0,
-        output: info.tokens?.output || 0,
-        reasoning: info.tokens?.reasoning || 0,
-      },
-      filesChanged: [],
-    };
-  }
+    if (eventType === "message.part.updated") {
+      const props = ev.properties as Record<string, unknown>;
+      const part = props.part as Record<string, unknown> | undefined;
+      const eventSessionId = props.sessionID as string;
+      if (eventSessionId !== sessionId || !part) continue;
 
-  // The synchronous prompt() returns only the final assistant message.
-  // But task_complete may have been called in an earlier turn (multi-step agent).
-  // First check the returned parts, then fall back to scanning all session messages.
-  let completion = extractCompletion(parts);
-  if (completion.status === "stalled") {
-    const allMessages = await client.session.messages({
-      path: { id: sessionId },
-    });
-    if (allMessages.data) {
-      for (const msg of allMessages.data) {
-        const found = extractCompletion(msg.parts);
-        if (found.status !== "stalled") {
-          completion = found;
-          break;
+      const partType = part.type as string;
+      const partId = part.id as string;
+
+      if (partType === "text") {
+        const text = (part.content as string) || "";
+        // If this is a new part, reset tracking
+        if (partId !== currentPartId) {
+          currentPartId = partId;
+          lastTextLength = 0;
         }
+        // Print only the new content since last update
+        const newContent = text.slice(lastTextLength);
+        if (newContent) {
+          process.stdout.write(newContent);
+        }
+        lastTextLength = text.length;
+      } else if (partType === "tool") {
+        const toolName = part.tool as string;
+        const state = part.state as Record<string, unknown> | undefined;
+        const status = state?.status as string | undefined;
+
+        if (status === "running") {
+          process.stdout.write(`\n[tool: ${toolName}] `);
+        } else if (status === "completed") {
+          process.stdout.write(`done\n`);
+        } else if (status === "error") {
+          const error = state?.error as string | undefined;
+          process.stdout.write(`error: ${error || "unknown"}\n`);
+        }
+      }
+    } else if (eventType === "session.idle") {
+      const props = ev.properties as Record<string, unknown>;
+      if ((props.sessionID as string) === sessionId) {
+        process.stdout.write("\n");
+        break;
+      }
+    } else if (eventType === "session.error") {
+      const props = ev.properties as Record<string, unknown>;
+      if ((props.sessionID as string) === sessionId) {
+        const error = props.error as string || "unknown error";
+        process.stdout.write(`\n[session error: ${error}]\n`);
+        break;
       }
     }
   }
 
-  // Sum cost/tokens across ALL assistant messages in the session
+  // Session complete — gather results from v1 client (which has the right types)
+  let completion: CompletionResult = {
+    status: "stalled",
+    reason: "Session completed without calling task_complete",
+  };
+
+  const allMsgs = await client.session.messages({ path: { id: sessionId } });
   let totalCost = 0;
   let totalInput = 0;
   let totalOutput = 0;
   let totalReasoning = 0;
-  const allMsgs = await client.session.messages({ path: { id: sessionId } });
+
   if (allMsgs.data) {
     for (const msg of allMsgs.data) {
+      // Check for task_complete
+      const found = extractCompletion(msg.parts);
+      if (found.status !== "stalled") {
+        completion = found;
+      }
+
+      // Sum cost/tokens
       if (msg.info.role === "assistant") {
         totalCost += (msg.info as Record<string, unknown>).cost as number || 0;
         const tok = (msg.info as Record<string, unknown>).tokens as Record<string, number> | undefined;

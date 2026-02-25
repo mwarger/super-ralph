@@ -79,7 +79,7 @@ export async function runPhaseLoop(
 
         const timeoutMs = config.engine.timeout_minutes * 60 * 1000;
         const promptResult = await Promise.race([
-          runPrompt(server.client, sessionId, next.prompt, next.model, next.systemPrompt),
+          runPrompt(server.client, sessionId, next.prompt, next.model, next.systemPrompt, server.url),
           new Promise<never>((_, reject) =>
             setTimeout(() => reject(new Error(`Iteration timed out after ${config.engine.timeout_minutes}m`)), timeoutMs)
           ),
