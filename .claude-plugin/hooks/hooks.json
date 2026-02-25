@@ -1,9 +1,0 @@
-[
-  {
-    "hook": "SessionStart",
-    "script": "./hooks/session-start.sh",
-    "matcher": {
-      "event": "startup|resume|clear|compact"
-    }
-  }
-]
