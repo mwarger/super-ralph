@@ -14,39 +14,22 @@ The engine has three composable phases — **reverse**, **decompose**, and **for
 
 ## Installation
 
-### Claude Code
-
-Tell Claude Code:
-
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/mwarger/super-ralph/main/.claude/INSTALL.md
+```bash
+git clone https://github.com/mwarger/super-ralph.git ~/.super-ralph-cli
+cd ~/.super-ralph-cli && bun install
 ```
 
-### OpenCode
+Add to your PATH or alias:
 
-Tell OpenCode:
-
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/mwarger/super-ralph/main/.opencode/INSTALL.md
-```
-
-### Codex
-
-Tell Codex:
-
-```
-Fetch and follow instructions from https://raw.githubusercontent.com/mwarger/super-ralph/main/.codex/INSTALL.md
+```bash
+alias super-ralph="bun run ~/.super-ralph-cli/src/cli.ts"
 ```
 
 ## Per-Project Setup
 
-After installing globally, initialize any project:
-
+```bash
+super-ralph init
 ```
-/super-ralph:init
-```
-
-Or say: "Initialize this project for super-ralph"
 
 Init will:
 1. **Validate prerequisites** — checks that `bun` and `br` are installed, offers install commands if missing
@@ -63,34 +46,21 @@ Init will:
 
 ## Commands
 
-### Slash Commands (Planning — Phase 1)
+```
+super-ralph init                              Scaffold .super-ralph/ in current project
+super-ralph reverse [inputs...] [--skill ...] Input -> spec (interactive or autonomous)
+super-ralph decompose --spec <path>           Spec -> beads
+super-ralph forward --epic <ID>               Beads -> code
+super-ralph status --epic <ID>                Show progress
+super-ralph doctor                            Preflight checks
+super-ralph help                              Show all options
+```
 
-- `/super-ralph:init` — Initialize project for the framework
-- `/super-ralph:feature [desc]` — New feature: deep intake -> design doc -> spec
-- `/super-ralph:bug [desc]` — Fix a bug: focused intake -> fix spec
-- `/super-ralph:hotfix [desc]` — Urgent fix: fast intake -> fix spec
-- `/super-ralph:refactor [desc]` — Restructure code: architecture intake -> design doc -> spec
-- `/super-ralph:plan [desc]` — Plan only: full intake -> design doc -> STOP
-- `/super-ralph:status` — Check progress on current epic
-
-All pipeline commands accept an optional inline description (e.g., `/super-ralph:feature add dark mode toggle`).
-
-### CLI Commands (Execution — Phase 2)
-
-- `super-ralph forward --epic <ID>` — Beads -> code. Agent picks the next ready bead, implements it, tests, commits, loops.
-- `super-ralph decompose --spec <path>` — Spec -> beads. Agent reads the spec, creates one bead per iteration via `br`, loops until fully decomposed.
-- `super-ralph reverse --input <path> [--output <dir>]` — Input -> spec. Agent analyzes input (code, docs, URLs), produces/refines a spec iteratively. `--input` is repeatable.
-- `super-ralph status --epic <ID>` — Show epic progress.
-- `super-ralph doctor` — Preflight checks (bun, br, templates, config).
-- `super-ralph help` — Show usage.
-
-Common options for all phase commands:
+Common options for phase commands:
 - `--model <provider/model>` — Override default model for all iterations
 - `--max-iterations <n>` — Maximum iterations (default varies by phase)
 - `--dry-run` — Show what would run without executing
 - `--attach <url>` — Attach to existing OpenCode server instead of spawning one
-
-`run` is a backward-compatibility alias for `forward`.
 
 ## The Three-Phase Model
 
@@ -99,10 +69,20 @@ Super-ralph is a pure Ralph loop engine with three composable phases. Each phase
 ### Reverse: input -> spec
 
 ```
-super-ralph reverse --input <path|url> [--output <dir>]
+super-ralph reverse [inputs...] [--skill ...] [--interactive] [--output <dir>]
 ```
 
-Takes any input (source code, documentation, URLs, descriptions) and iteratively produces a specification. The agent reviews the current spec draft for gaps, expands or refines it, then signals `task_complete` with status `complete` or `phase_done`. Output goes to `docs/specs/` by default.
+Takes any combination of positional inputs (files, directories, descriptions, URLs) and produces a specification. Behavior depends on what you provide:
+
+```bash
+super-ralph reverse                                          # interactive interview
+super-ralph reverse --skill feature                          # interview with feature questions
+super-ralph reverse "build a calendly clone"                 # autonomous from description
+super-ralph reverse ./src/ "refactor auth to use JWT"        # autonomous from code + description
+super-ralph reverse mockup.png --interactive --skill feature # mixed: screenshot + interview
+```
+
+Without inputs, runs an interactive intake interview. With inputs, runs autonomously. Use `--interactive` to force an interview even with inputs. The `--skill` flag selects a question set (feature, bug, hotfix, refactor). Output goes to `tasks/` by default.
 
 ### Decompose: spec -> beads
 
@@ -125,7 +105,7 @@ Takes an epic ID and implements beads. Each iteration, the orchestrator selects 
 Each phase works standalone. They also chain:
 
 ```
-super-ralph reverse --input ./src --output docs/specs/
+super-ralph reverse ./src "rebuild auth layer" --output docs/specs/
 super-ralph decompose --spec docs/specs/spec.md --epic-title "Rebuild from spec"
 super-ralph forward --epic bd-xxx
 ```
@@ -167,49 +147,36 @@ The orchestrator picks the highest-priority ready bead before creating the sessi
 
 ## The Pipeline (End-to-End)
 
-### Phase 1: Planning (slash commands produce specs)
-
-Type `/super-ralph:feature` (or `:bug`, `:hotfix`, `:refactor`). This runs the intake and design workflow in your current agent session:
-
-1. **Intake** — Relentless interrogation: business context, technical deep-dive, learned questions. Depth scales to work type (feature: 10-15 questions, hotfix: 1-3).
-2. **Design doc** — For features and refactors, produces a design document with user approval.
-3. **Spec output** — Saves the spec to `tasks/<name>-spec.md` and prints the decompose command.
-
-### Phase 2: Execution (three-phase loop engine)
-
-Run the three-phase engine from your terminal — no agent session needed:
-
-1. `super-ralph decompose --spec tasks/<name>-spec.md` — reads the spec, autonomously creates beads
-2. `super-ralph forward --epic <ID>` — implements beads one at a time
-
-The super-ralph CLI runs the three-phase loop engine via the OpenCode SDK. For the common case (beads already exist from Phase 1), the `forward` command handles execution: select (priority-sorted) -> prompt -> execute -> evaluate. Review beads execute automatically at phase boundaries. Audit beads review the entire implementation at the end. The learning bead extracts lessons and updates the intake checklist for next time.
-
-For advanced workflows, chain all three phases: `reverse` (input -> spec), `decompose` (spec -> beads), `forward` (beads -> code).
-
-**Advanced — manual CLI invocation:**
+### Phase 1: Planning (reverse produces specs)
 
 ```bash
-bun run <cli_path> forward --epic <epic-id>
+super-ralph reverse "add dark mode toggle" --skill feature
 ```
 
-Where `<cli_path>` is the absolute path stored in `.super-ralph/config.toml` under `[cli] path`.
+The reverse command runs intake and design. Depending on how you invoke it:
 
-## Skills
+1. **Interactive** (no inputs) — Relentless interrogation: business context, technical deep-dive, learned questions. Depth scales to skill type (feature: 10-15 questions, hotfix: 1-3).
+2. **Autonomous** (with inputs) — Analyzes provided files, code, descriptions, and produces a spec directly.
+3. **Mixed** (inputs + `--interactive`) — Uses inputs as context, then runs the interview for refinement.
 
-- `super-ralph-init` — Initialize a project for the framework
-- `feature-prd` — Full feature pipeline: deep intake -> design doc -> spec
-- `bug-prd` — Bug fix pipeline: focused intake -> fix spec
-- `hotfix-prd` — Urgent fix pipeline: fast intake -> fix spec
-- `refactor-prd` — Refactoring pipeline: architecture intake -> design doc -> spec
-- `plan-prd` — Planning only: full intake -> design doc -> STOP
+Output: a spec saved to `tasks/<name>-spec.md`.
+
+### Phase 2: Execution (decompose + forward)
+
+```bash
+super-ralph decompose --spec tasks/<name>-spec.md
+super-ralph forward --epic <ID>
+```
+
+The super-ralph CLI runs the loop engine via the OpenCode SDK. `decompose` reads the spec and autonomously creates beads. `forward` implements beads one at a time: select (priority-sorted) -> prompt -> execute -> evaluate. Review beads execute automatically at phase boundaries. Audit beads review the entire implementation at the end. The learning bead extracts lessons and updates the intake checklist for next time.
 
 ## Updating
 
 ```bash
-cd ~/.agents/super-ralph && git pull
+cd ~/.super-ralph-cli && git pull
 ```
 
-Skills update instantly through symlinks. The `cli.path` in `.super-ralph/config.toml` points to the global install directory, so it stays stable across `git pull` — no need to re-run init after updating.
+The `cli.path` in `.super-ralph/config.toml` points to the install directory, so it stays stable across `git pull` — no need to re-run init after updating.
 
 ## Design Documentation
 
