@@ -61,7 +61,7 @@ async function runInteractive(projectDir: string, flags: ReverseFlags): Promise<
     console.log(`[dry-run] Output: ${outputDir}`);
     if (flags.skill) console.log(`[dry-run] Skill: ${flags.skill}`);
     if (flags.inputs.length > 0) console.log(`[dry-run] Inputs: ${flags.inputs.join(", ")}`);
-    return { completed: 0, failed: 0, skipped: 0, totalTime: 0 };
+    return { completed: 0, failed: 0, skipped: 0, totalTime: 0, maxIterations: 1, iterations: [] };
   }
 
   // Start server
@@ -96,13 +96,13 @@ async function runInteractive(projectDir: string, flags: ReverseFlags): Promise<
 
     if (result.completion.status === "phase_done") {
       console.log("\nSpec complete.");
-      return { completed: 1, failed: 0, skipped: 0, totalTime };
+      return { completed: 1, failed: 0, skipped: 0, totalTime, maxIterations: 1, iterations: [] };
     } else if (result.completion.status === "blocked") {
       console.log(`\nBlocked: ${result.completion.reason || "unknown"}`);
-      return { completed: 0, failed: 0, skipped: 1, totalTime };
+      return { completed: 0, failed: 0, skipped: 1, totalTime, maxIterations: 1, iterations: [] };
     } else {
       console.log(`\nSession ended: ${result.completion.status}`);
-      return { completed: 0, failed: 1, skipped: 0, totalTime };
+      return { completed: 0, failed: 1, skipped: 0, totalTime, maxIterations: 1, iterations: [] };
     }
   } finally {
     server.close();
@@ -156,10 +156,12 @@ async function runAutonomous(projectDir: string, flags: ReverseFlags): Promise<L
         "",
         "CRITICAL: You MUST call task_complete as your FINAL action. Never end without it.",
         "Signal completion via the task_complete tool:",
-        '- status: "complete" — you expanded/refined the spec, loop continues',
-        '- status: "phase_done" — the spec comprehensively covers the input, loop ends',
+        '- status: "complete" — you made significant improvements but the spec still has major gaps. Loop continues.',
+        '- status: "phase_done" — the spec covers purpose, behavior, interfaces, and constraints well enough for decomposition. Loop ends. PREFER THIS when the spec is adequate.',
         '- status: "blocked" — you can\'t proceed, explain why',
         '- status: "failed" — something went wrong, explain what',
+        "",
+        "IMPORTANT: Do not over-iterate. If the spec covers the core requirements and is ready for decomposition, signal phase_done. Polishing is not a reason to continue.",
       ].join("\n");
 
       return {

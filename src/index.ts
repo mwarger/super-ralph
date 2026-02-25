@@ -6,7 +6,12 @@ import { runInit } from "./init.js";
 import { getEpicProgress, getAllBeads } from "./beads.js";
 import { loadConfig } from "./config.js";
 import { checkBrokenSymlinks } from "./opencode.js";
-import type { ForwardFlags, DecomposeFlags, ReverseFlags } from "./types.js";
+import { writeFileSync } from "fs";
+import type { ForwardFlags, DecomposeFlags, ReverseFlags, LoopResult } from "./types.js";
+
+function writeJsonResult(path: string, result: LoopResult): void {
+  writeFileSync(path, JSON.stringify(result, null, 2) + "\n");
+}
 
 function printUsage(): void {
   console.log(`
@@ -29,6 +34,7 @@ Common options:
   --max-iterations <n>       Maximum iterations (default varies by phase)
   --dry-run                  Show what would run without executing
   --attach <url>             Attach to existing OpenCode server instead of spawning one
+  --json <path>              Write structured JSON results to file
 
 Forward options:
   --epic <ID>                Epic bead ID (required)
@@ -100,6 +106,7 @@ async function cmdForward(flags: Record<string, string | boolean>): Promise<void
   const projectDir = process.cwd();
   const result = await runForward(projectDir, forwardFlags);
 
+  if (flags.json) writeJsonResult(flags.json as string, result);
   if (result.failed > 0) {
     process.exit(1);
   }
@@ -124,6 +131,7 @@ async function cmdDecompose(flags: Record<string, string | boolean>): Promise<vo
   const projectDir = process.cwd();
   const result = await runDecompose(projectDir, decomposeFlags);
 
+  if (flags.json) writeJsonResult(flags.json as string, result);
   if (result.failed > 0) {
     process.exit(1);
   }
@@ -154,6 +162,7 @@ async function cmdReverse(positionals: string[], flags: Record<string, string | 
   const projectDir = process.cwd();
   const result = await runReverse(projectDir, reverseFlags);
 
+  if (flags.json) writeJsonResult(flags.json as string, result);
   if (result.failed > 0) {
     process.exit(1);
   }

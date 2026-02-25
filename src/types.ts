@@ -45,9 +45,10 @@ export interface LoopConfig {
 
 // Result of a single iteration
 export interface IterationResult {
+  iteration: number;
   beadId: string;
   beadTitle: string;
-  status: "complete" | "blocked" | "failed" | "stalled" | "timeout" | "error";
+  status: "complete" | "phase_done" | "blocked" | "failed" | "stalled" | "timeout" | "error";
   reason?: string;
   model: string;
   duration: number; // milliseconds
@@ -68,6 +69,8 @@ export interface LoopResult {
   failed: number;
   skipped: number;
   totalTime: number; // milliseconds
+  maxIterations: number;
+  iterations: IterationResult[];
 }
 
 // Common flags shared by all three phases

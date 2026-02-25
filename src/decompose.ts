@@ -59,9 +59,10 @@ export async function runDecompose(projectDir: string, flags: DecomposeFlags): P
         "Use `br create` to make beads. Use `br show` to inspect existing ones.",
         "",
         "CRITICAL: You MUST call task_complete as your FINAL action. Never end without it.",
+        "You may create MULTIPLE beads in a single iteration if appropriate.",
         "Signal completion via the task_complete tool:",
-        '- status: "complete" — you created a bead, loop continues',
-        '- status: "phase_done" — the spec is fully decomposed, loop ends',
+        '- status: "complete" — you created bead(s) but the spec has more work to decompose. Loop continues.',
+        '- status: "phase_done" — ALL spec requirements are covered by beads. Loop ends. Signal this as soon as the spec is fully decomposed.',
         '- status: "blocked" — you can\'t proceed, explain why',
         '- status: "failed" — something went wrong, explain what',
       ].join("\n");

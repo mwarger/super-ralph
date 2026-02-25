@@ -40,7 +40,7 @@ export async function runPhaseLoop(
       console.log(`[dry-run] Iteration ${iteration}: ${next.iterationLabel} (model: ${modelStr})`);
     }
     console.log(`\n[dry-run] Would run up to ${iteration} iterations`);
-    return { completed: 0, failed: 0, skipped: 0, totalTime: 0 };
+    return { completed: 0, failed: 0, skipped: 0, totalTime: 0, maxIterations, iterations: [] };
   }
 
   let server: ServerHandle;
@@ -57,6 +57,7 @@ export async function runPhaseLoop(
   let completed = 0;
   let failed = 0;
   let skipped = 0;
+  const iterations: IterationResult[] = [];
   const retryCount = new Map<string, number>();
   const startTime = Date.now();
 
@@ -88,9 +89,10 @@ export async function runPhaseLoop(
         const iterDuration = Date.now() - iterStartTime;
 
         const iterResult: IterationResult = {
+          iteration,
           beadId: next.beadId || `iter-${iteration}`,
           beadTitle: next.iterationLabel,
-          status: result.status === "phase_done" ? "complete" : result.status,
+          status: result.status,
           reason: result.reason,
           model: modelStr,
           duration: iterDuration,
@@ -98,6 +100,7 @@ export async function runPhaseLoop(
           tokens: promptResult.tokens,
           filesChanged: promptResult.filesChanged,
         };
+        iterations.push(iterResult);
         appendProgress(projectDir, iteration, iterResult);
 
         const shouldContinue = await callbacks.handleResult(result, iteration);
@@ -130,6 +133,7 @@ export async function runPhaseLoop(
       } catch (err) {
         const iterDuration = Date.now() - iterStartTime;
         const iterResult: IterationResult = {
+          iteration,
           beadId: next.beadId || `iter-${iteration}`,
           beadTitle: next.iterationLabel,
           status: "error",
@@ -137,6 +141,7 @@ export async function runPhaseLoop(
           model: modelStr,
           duration: iterDuration,
         };
+        iterations.push(iterResult);
         appendProgress(projectDir, iteration, iterResult);
         failed++;
         console.error(`✗ ${next.iterationLabel} error: ${(err as Error).message}`);
@@ -156,5 +161,5 @@ export async function runPhaseLoop(
   console.log(`Completed: ${completed}, Failed: ${failed}, Skipped: ${skipped}`);
   console.log(`Total time: ${Math.round(totalTime / 1000)}s`);
 
-  return { completed, failed, skipped, totalTime };
+  return { completed, failed, skipped, totalTime, maxIterations, iterations };
 }

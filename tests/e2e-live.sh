@@ -16,7 +16,7 @@ CLI="bun run $PROJECT_ROOT/src/index.ts"
 FIXTURE_DIR="$PROJECT_ROOT/tests/fixtures/tiny-project"
 
 MODEL="anthropic/claude-haiku-4-5"
-MAX_ITER=1
+MAX_ITER=3  # Set higher than 1 to verify agents exit the loop early via phase_done
 
 # Colors
 RED='\033[0;31m'
@@ -104,6 +104,12 @@ if ! command -v br &>/dev/null; then
 fi
 pass "br CLI found: $(br --version 2>&1 | head -1)"
 
+if ! command -v jq &>/dev/null; then
+  fail "jq not found (needed for structured result assertions)"
+  exit 1
+fi
+pass "jq found: $(jq --version)"
+
 if [[ ! -d "$FIXTURE_DIR" ]]; then
   fail "Fixture not found: $FIXTURE_DIR"
   exit 1
@@ -189,37 +195,66 @@ pass "Created .super-ralph/ config with model: $MODEL"
 
 header "Phase 1: Reverse (input → spec)"
 
-info "Running: reverse calc.ts --output docs/specs --max-iterations $MAX_ITER --model $MODEL"
+REVERSE_JSON="$TMPDIR/reverse-result.json"
+info "Running: reverse calc.ts --output docs/specs --max-iterations $MAX_ITER --model $MODEL --json $REVERSE_JSON"
 
 REVERSE_OUTPUT=$(cd "$TMPDIR" && $CLI reverse calc.ts \
   --output docs/specs \
   --max-iterations "$MAX_ITER" \
-  --model "$MODEL" 2>&1) || true
+  --model "$MODEL" \
+  --json "$REVERSE_JSON" 2>&1) || true
 
 echo "$REVERSE_OUTPUT" | tail -20
 
-# Check that the reverse loop ran
-if echo "$REVERSE_OUTPUT" | grep -q "Iteration 1\|--- Iteration 1 ---"; then
-  pass "Reverse: iteration 1 ran"
+# --- Structured assertions from JSON result ---
+
+if [[ ! -f "$REVERSE_JSON" ]]; then
+  fail "Reverse: no JSON result file produced"
+  echo -e "\n${RED}${BOLD}Cannot continue pipeline — reverse phase crashed.${NC}"
+  echo -e "Output:\n$REVERSE_OUTPUT"
+  exit 1
+fi
+pass "Reverse: JSON result file produced"
+
+REVERSE_ITERS=$(jq '.iterations | length' "$REVERSE_JSON")
+REVERSE_MAX=$(jq '.maxIterations' "$REVERSE_JSON")
+REVERSE_COMPLETED=$(jq '.completed' "$REVERSE_JSON")
+REVERSE_FAILED=$(jq '.failed' "$REVERSE_JSON")
+REVERSE_LAST_STATUS=$(jq -r '.iterations[-1].status // "none"' "$REVERSE_JSON")
+REVERSE_HAS_ERROR=$(jq '[.iterations[] | select(.status == "error")] | length' "$REVERSE_JSON")
+
+if [[ "$REVERSE_ITERS" -ge 1 ]]; then
+  pass "Reverse: ran $REVERSE_ITERS iteration(s)"
 else
-  fail "Reverse: iteration 1 did not run" "$(echo "$REVERSE_OUTPUT" | tail -5)"
+  fail "Reverse: no iterations ran"
 fi
 
-# Check that phase completed (not crashed)
-if echo "$REVERSE_OUTPUT" | grep -q "Phase Complete"; then
-  pass "Reverse: phase completed"
+if [[ "$REVERSE_COMPLETED" -ge 1 ]]; then
+  pass "Reverse: $REVERSE_COMPLETED iteration(s) completed"
 else
-  fail "Reverse: phase did not complete" "$(echo "$REVERSE_OUTPUT" | tail -5)"
+  fail "Reverse: no iterations completed (completed=$REVERSE_COMPLETED, failed=$REVERSE_FAILED)"
 fi
 
-# Check for session errors
-if echo "$REVERSE_OUTPUT" | grep -q "session error"; then
-  fail "Reverse: session error occurred" "$(echo "$REVERSE_OUTPUT" | grep "session error")"
-else
+if [[ "$REVERSE_HAS_ERROR" -eq 0 ]]; then
   pass "Reverse: no session errors"
+else
+  fail "Reverse: $REVERSE_HAS_ERROR iteration(s) had errors"
 fi
 
-# Check that a spec file was created
+if [[ "$REVERSE_LAST_STATUS" == "phase_done" || "$REVERSE_LAST_STATUS" == "complete" ]]; then
+  pass "Reverse: agent called task_complete (status: $REVERSE_LAST_STATUS)"
+else
+  fail "Reverse: agent did not call task_complete (status: $REVERSE_LAST_STATUS)"
+fi
+
+if [[ "$REVERSE_ITERS" -lt "$REVERSE_MAX" ]]; then
+  pass "Reverse: early exit after $REVERSE_ITERS/$REVERSE_MAX iterations"
+else
+  info "Reverse: used all $REVERSE_MAX iterations (no early exit)"
+fi
+
+# --- Artifact checks (filesystem) ---
+
 SPEC_FILES=($(find "$TMPDIR/docs/specs" -name "*.md" 2>/dev/null))
 SPEC_COUNT=${#SPEC_FILES[@]}
 
@@ -230,18 +265,15 @@ if [[ $SPEC_COUNT -gt 0 ]]; then
   if [[ $SPEC_SIZE -gt 50 ]]; then
     pass "Reverse: spec file is non-trivial ($SPEC_SIZE bytes)"
   else
-    fail "Reverse: spec file too small ($SPEC_SIZE bytes)" "$(cat "$SPEC_PATH")"
+    fail "Reverse: spec file too small ($SPEC_SIZE bytes)"
   fi
 else
   fail "Reverse: no spec file created in docs/specs/"
-  # Can't continue without a spec
   echo -e "\n${RED}${BOLD}Cannot continue pipeline — reverse phase produced no spec.${NC}"
-  echo -e "Reverse output:\n$REVERSE_OUTPUT"
   exit 1
 fi
 
 info "Spec file: $SPEC_PATH"
-info "Spec preview: $(head -3 "$SPEC_PATH")"
 
 # ============================================================
 # Phase 2: Decompose (spec → beads)
@@ -249,17 +281,19 @@ info "Spec preview: $(head -3 "$SPEC_PATH")"
 
 header "Phase 2: Decompose (spec → beads)"
 
-info "Running: decompose --spec $SPEC_PATH --epic-title 'E2E Live Test' --max-iterations $MAX_ITER --model $MODEL"
+DECOMPOSE_JSON="$TMPDIR/decompose-result.json"
+info "Running: decompose --spec $SPEC_PATH --epic-title 'E2E Live Test' --max-iterations $MAX_ITER --model $MODEL --json $DECOMPOSE_JSON"
 
 DECOMPOSE_OUTPUT=$(cd "$TMPDIR" && $CLI decompose \
   --spec "$SPEC_PATH" \
   --epic-title "E2E Live Test" \
   --max-iterations "$MAX_ITER" \
-  --model "$MODEL" 2>&1) || true
+  --model "$MODEL" \
+  --json "$DECOMPOSE_JSON" 2>&1) || true
 
 echo "$DECOMPOSE_OUTPUT" | tail -20
 
-# Extract epic ID from output (format: "Created epic: bd-xxx")
+# Extract epic ID from output (still needed for artifact checks — the epic ID is a side effect, not in LoopResult)
 EPIC_ID=$(echo "$DECOMPOSE_OUTPUT" | grep -o 'Created epic: [^ ]*' | head -1 | awk '{print $3}') || true
 
 if [[ -n "$EPIC_ID" ]]; then
@@ -267,42 +301,58 @@ if [[ -n "$EPIC_ID" ]]; then
 else
   fail "Decompose: no epic ID found in output"
   echo -e "\n${RED}${BOLD}Cannot continue pipeline — decompose phase produced no epic.${NC}"
-  echo -e "Decompose output:\n$DECOMPOSE_OUTPUT"
   exit 1
 fi
 
-# Check that the decompose loop ran
-if echo "$DECOMPOSE_OUTPUT" | grep -q "Iteration 1\|--- Iteration 1 ---"; then
-  pass "Decompose: iteration 1 ran"
+# --- Structured assertions from JSON result ---
+
+if [[ ! -f "$DECOMPOSE_JSON" ]]; then
+  fail "Decompose: no JSON result file produced"
+  exit 1
+fi
+pass "Decompose: JSON result file produced"
+
+DECOMPOSE_ITERS=$(jq '.iterations | length' "$DECOMPOSE_JSON")
+DECOMPOSE_MAX=$(jq '.maxIterations' "$DECOMPOSE_JSON")
+DECOMPOSE_COMPLETED=$(jq '.completed' "$DECOMPOSE_JSON")
+DECOMPOSE_HAS_ERROR=$(jq '[.iterations[] | select(.status == "error")] | length' "$DECOMPOSE_JSON")
+DECOMPOSE_LAST_STATUS=$(jq -r '.iterations[-1].status // "none"' "$DECOMPOSE_JSON")
+
+if [[ "$DECOMPOSE_ITERS" -ge 1 ]]; then
+  pass "Decompose: ran $DECOMPOSE_ITERS iteration(s)"
 else
-  fail "Decompose: iteration 1 did not run" "$(echo "$DECOMPOSE_OUTPUT" | tail -5)"
+  fail "Decompose: no iterations ran"
 fi
 
-# Check for session errors
-if echo "$DECOMPOSE_OUTPUT" | grep -q "session error"; then
-  fail "Decompose: session error occurred" "$(echo "$DECOMPOSE_OUTPUT" | grep "session error")"
-else
+if [[ "$DECOMPOSE_HAS_ERROR" -eq 0 ]]; then
   pass "Decompose: no session errors"
+else
+  fail "Decompose: $DECOMPOSE_HAS_ERROR iteration(s) had errors"
 fi
 
-# Check for child beads (br show <epic> --json → dependents with parent-child type)
-EPIC_JSON=$(cd "$TMPDIR" && br show "$EPIC_ID" --json 2>/dev/null) || true
+if [[ "$DECOMPOSE_LAST_STATUS" == "phase_done" || "$DECOMPOSE_LAST_STATUS" == "complete" ]]; then
+  pass "Decompose: agent called task_complete (status: $DECOMPOSE_LAST_STATUS)"
+else
+  fail "Decompose: agent did not call task_complete (status: $DECOMPOSE_LAST_STATUS)"
+fi
+
+if [[ "$DECOMPOSE_ITERS" -lt "$DECOMPOSE_MAX" ]]; then
+  pass "Decompose: early exit after $DECOMPOSE_ITERS/$DECOMPOSE_MAX iterations"
+else
+  info "Decompose: used all $DECOMPOSE_MAX iterations (no early exit)"
+fi
+
+# --- Artifact checks (beads) ---
+
+EPIC_DETAIL=$(cd "$TMPDIR" && br show "$EPIC_ID" --json 2>/dev/null) || true
 CHILD_COUNT=0
-if [[ -n "$EPIC_JSON" ]]; then
-  CHILD_COUNT=$(echo "$EPIC_JSON" | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-if isinstance(data, list): data = data[0]
-deps = data.get('dependents', [])
-children = [d for d in deps if d.get('dependency_type') == 'parent-child']
-print(len(children))
-" 2>/dev/null) || true
+if [[ -n "$EPIC_DETAIL" ]]; then
+  CHILD_COUNT=$(echo "$EPIC_DETAIL" | jq '[.[0].dependents[]? | select(.dependency_type == "parent-child")] | length' 2>/dev/null) || true
 fi
 
 if [[ "$CHILD_COUNT" -gt 0 ]]; then
   pass "Decompose: created $CHILD_COUNT child bead(s)"
 else
-  # Even with 1 iteration, the agent might not create beads. That's a soft failure.
   fail "Decompose: no child beads found under $EPIC_ID"
 fi
 
@@ -314,34 +364,45 @@ header "Phase 3: Forward (beads → code)"
 
 # Only run forward if we have child beads
 if [[ "$CHILD_COUNT" -gt 0 ]]; then
-  info "Running: forward --epic $EPIC_ID --max-iterations $MAX_ITER --model $MODEL"
+  FORWARD_JSON="$TMPDIR/forward-result.json"
+  info "Running: forward --epic $EPIC_ID --max-iterations $MAX_ITER --model $MODEL --json $FORWARD_JSON"
 
   FORWARD_OUTPUT=$(cd "$TMPDIR" && $CLI forward \
     --epic "$EPIC_ID" \
     --max-iterations "$MAX_ITER" \
-    --model "$MODEL" 2>&1) || true
+    --model "$MODEL" \
+    --json "$FORWARD_JSON" 2>&1) || true
 
   echo "$FORWARD_OUTPUT" | tail -20
 
-  # Check that forward started
-  if echo "$FORWARD_OUTPUT" | grep -q "Iteration 1\|--- Iteration 1 ---\|Selected bead"; then
-    pass "Forward: iteration 1 ran"
-  else
-    fail "Forward: iteration 1 did not run" "$(echo "$FORWARD_OUTPUT" | tail -5)"
-  fi
+  # --- Structured assertions from JSON result ---
 
-  # Check that phase completed (not crashed)
-  if echo "$FORWARD_OUTPUT" | grep -q "Phase Complete"; then
-    pass "Forward: phase completed"
+  if [[ ! -f "$FORWARD_JSON" ]]; then
+    fail "Forward: no JSON result file produced"
   else
-    fail "Forward: phase did not complete" "$(echo "$FORWARD_OUTPUT" | tail -5)"
-  fi
+    pass "Forward: JSON result file produced"
 
-  # Check that no session error occurred
-  if echo "$FORWARD_OUTPUT" | grep -q "session error"; then
-    fail "Forward: session error occurred" "$(echo "$FORWARD_OUTPUT" | grep "session error")"
-  else
-    pass "Forward: no session errors"
+    FORWARD_ITERS=$(jq '.iterations | length' "$FORWARD_JSON")
+    FORWARD_COMPLETED=$(jq '.completed' "$FORWARD_JSON")
+    FORWARD_HAS_ERROR=$(jq '[.iterations[] | select(.status == "error")] | length' "$FORWARD_JSON")
+
+    if [[ "$FORWARD_ITERS" -ge 1 ]]; then
+      pass "Forward: ran $FORWARD_ITERS iteration(s)"
+    else
+      fail "Forward: no iterations ran"
+    fi
+
+    if [[ "$FORWARD_HAS_ERROR" -eq 0 ]]; then
+      pass "Forward: no session errors"
+    else
+      fail "Forward: $FORWARD_HAS_ERROR iteration(s) had errors"
+    fi
+
+    if [[ "$FORWARD_COMPLETED" -ge 1 ]]; then
+      pass "Forward: $FORWARD_COMPLETED iteration(s) completed"
+    else
+      fail "Forward: no iterations completed"
+    fi
   fi
 else
   skip "Forward: skipped (no child beads from decompose)"
