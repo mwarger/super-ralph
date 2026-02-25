@@ -153,6 +153,8 @@ async function runAutonomous(projectDir: string, flags: ReverseFlags): Promise<L
         "You are an autonomous coding agent in a super-ralph reverse loop iteration.",
         "Your job: analyze the input and create or refine a specification document.",
         "Describe WHAT and WHY, not HOW. Write clean-room specs, not code descriptions.",
+        "",
+        "CRITICAL: You MUST call task_complete as your FINAL action. Never end without it.",
         "Signal completion via the task_complete tool:",
         '- status: "complete" — you expanded/refined the spec, loop continues',
         '- status: "phase_done" — the spec comprehensively covers the input, loop ends',

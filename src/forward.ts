@@ -55,6 +55,8 @@ export async function runForward(projectDir: string, flags: ForwardFlags): Promi
         "Your job: implement the assigned bead and close it.",
         "Use `br show`, `br close` to interact with beads.",
         "Run `bun run typecheck` before committing. Fix any failures.",
+        "",
+        "CRITICAL: You MUST call task_complete as your FINAL action. Never end without it.",
         "Signal completion via the task_complete tool:",
         '- status: "complete" — you implemented and closed the bead, loop continues',
         '- status: "phase_done" — all work is done, loop ends',

@@ -15,7 +15,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 CLI="bun run $PROJECT_ROOT/src/index.ts"
 FIXTURE_DIR="$PROJECT_ROOT/tests/fixtures/tiny-project"
 
-MODEL="anthropic/claude-haiku-3-5"
+MODEL="anthropic/claude-haiku-4-5"
 MAX_ITER=1
 
 # Colors
@@ -196,11 +196,18 @@ else
   fail "Reverse: iteration 1 did not run" "$(echo "$REVERSE_OUTPUT" | tail -5)"
 fi
 
-# Check that phase completed (not errored)
+# Check that phase completed (not crashed)
 if echo "$REVERSE_OUTPUT" | grep -q "Phase Complete"; then
   pass "Reverse: phase completed"
 else
   fail "Reverse: phase did not complete" "$(echo "$REVERSE_OUTPUT" | tail -5)"
+fi
+
+# Check for session errors
+if echo "$REVERSE_OUTPUT" | grep -q "session error"; then
+  fail "Reverse: session error occurred" "$(echo "$REVERSE_OUTPUT" | grep "session error")"
+else
+  pass "Reverse: no session errors"
 fi
 
 # Check that a spec file was created
@@ -262,11 +269,25 @@ else
   fail "Decompose: iteration 1 did not run" "$(echo "$DECOMPOSE_OUTPUT" | tail -5)"
 fi
 
-# Check for child beads
-CHILD_BEADS=$(cd "$TMPDIR" && br list --parent "$EPIC_ID" --json 2>/dev/null) || true
+# Check for session errors
+if echo "$DECOMPOSE_OUTPUT" | grep -q "session error"; then
+  fail "Decompose: session error occurred" "$(echo "$DECOMPOSE_OUTPUT" | grep "session error")"
+else
+  pass "Decompose: no session errors"
+fi
+
+# Check for child beads (br show <epic> --json → dependents with parent-child type)
+EPIC_JSON=$(cd "$TMPDIR" && br show "$EPIC_ID" --json 2>/dev/null) || true
 CHILD_COUNT=0
-if [[ -n "$CHILD_BEADS" ]]; then
-  CHILD_COUNT=$(echo "$CHILD_BEADS" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null) || true
+if [[ -n "$EPIC_JSON" ]]; then
+  CHILD_COUNT=$(echo "$EPIC_JSON" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+if isinstance(data, list): data = data[0]
+deps = data.get('dependents', [])
+children = [d for d in deps if d.get('dependency_type') == 'parent-child']
+print(len(children))
+" 2>/dev/null) || true
 fi
 
 if [[ "$CHILD_COUNT" -gt 0 ]]; then
@@ -307,11 +328,11 @@ if [[ "$CHILD_COUNT" -gt 0 ]]; then
     fail "Forward: phase did not complete" "$(echo "$FORWARD_OUTPUT" | tail -5)"
   fi
 
-  # Check for a non-error completion
-  if echo "$FORWARD_OUTPUT" | grep -qE "(complete|phase_done|blocked)"; then
-    pass "Forward: got valid completion status"
+  # Check that no session error occurred
+  if echo "$FORWARD_OUTPUT" | grep -q "session error"; then
+    fail "Forward: session error occurred" "$(echo "$FORWARD_OUTPUT" | grep "session error")"
   else
-    fail "Forward: no valid completion status found"
+    pass "Forward: no session errors"
   fi
 else
   skip "Forward: skipped (no child beads from decompose)"

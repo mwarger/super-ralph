@@ -57,6 +57,8 @@ export async function runDecompose(projectDir: string, flags: DecomposeFlags): P
         "Create small, verifiable tasks. Each bead should be implementable in one forward iteration.",
         "Add review/audit beads at natural boundaries based on spec complexity.",
         "Use `br create` to make beads. Use `br show` to inspect existing ones.",
+        "",
+        "CRITICAL: You MUST call task_complete as your FINAL action. Never end without it.",
         "Signal completion via the task_complete tool:",
         '- status: "complete" — you created a bead, loop continues',
         '- status: "phase_done" — the spec is fully decomposed, loop ends',

@@ -148,38 +148,37 @@ export async function runPrompt(
     ...(systemPrompt && { system: systemPrompt }),
   });
 
-  // Track which parts we've seen content for, to avoid re-printing
-  let lastTextLength = 0;
-  let currentPartId: string | null = null;
-
   // Stream events until session goes idle
   for await (const event of stream) {
     const ev = event as Record<string, unknown>;
     const eventType = ev.type as string;
 
-    if (eventType === "message.part.updated") {
+    // Debug: log event details
+    if (process.env.SUPER_RALPH_DEBUG) {
+      if (eventType === "message.part.delta" || eventType === "message.part.updated") {
+        const props = ev.properties as Record<string, unknown>;
+        process.stderr.write(`[debug] ${eventType}: ${JSON.stringify(props).slice(0, 300)}\n`);
+      } else if (eventType === "session.idle" || eventType === "session.error") {
+        process.stderr.write(`[debug] ${eventType}: ${JSON.stringify(ev.properties).slice(0, 300)}\n`);
+      }
+    }
+
+    if (eventType === "message.part.delta") {
+      // Real-time text streaming — print deltas as they arrive
+      const props = ev.properties as Record<string, unknown>;
+      if ((props.sessionID as string) !== sessionId) continue;
+      if ((props.field as string) === "text" && props.delta) {
+        process.stdout.write(props.delta as string);
+      }
+    } else if (eventType === "message.part.updated") {
       const props = ev.properties as Record<string, unknown>;
       const part = props.part as Record<string, unknown> | undefined;
-      const eventSessionId = props.sessionID as string;
+      const eventSessionId = part?.sessionID as string || props.sessionID as string;
       if (eventSessionId !== sessionId || !part) continue;
 
       const partType = part.type as string;
-      const partId = part.id as string;
 
-      if (partType === "text") {
-        const text = (part.content as string) || "";
-        // If this is a new part, reset tracking
-        if (partId !== currentPartId) {
-          currentPartId = partId;
-          lastTextLength = 0;
-        }
-        // Print only the new content since last update
-        const newContent = text.slice(lastTextLength);
-        if (newContent) {
-          process.stdout.write(newContent);
-        }
-        lastTextLength = text.length;
-      } else if (partType === "tool") {
+      if (partType === "tool") {
         const toolName = part.tool as string;
         const state = part.state as Record<string, unknown> | undefined;
         const status = state?.status as string | undefined;
@@ -202,8 +201,17 @@ export async function runPrompt(
     } else if (eventType === "session.error") {
       const props = ev.properties as Record<string, unknown>;
       if ((props.sessionID as string) === sessionId) {
-        const error = props.error as string || "unknown error";
-        process.stdout.write(`\n[session error: ${error}]\n`);
+        const error = props.error as Record<string, unknown> | string | undefined;
+        let errorMsg = "unknown error";
+        if (typeof error === "string") {
+          errorMsg = error;
+        } else if (error && typeof error === "object") {
+          const name = error.name as string || "Error";
+          const data = error.data as Record<string, unknown> | undefined;
+          const message = data?.message as string || JSON.stringify(error);
+          errorMsg = `${name}: ${message}`;
+        }
+        process.stdout.write(`\n[session error: ${errorMsg}]\n`);
         break;
       }
     }
