@@ -1,19 +1,178 @@
-{{!-- Reverse Phase: input -> spec (iterative refinement) --}}
-{{!-- Each iteration reads the current spec draft, identifies gaps, and expands/refines it. --}}
+{{!-- Reverse Phase: any input -> spec --}}
+{{!-- Handles three modes: interactive (interview), autonomous (research), mixed (both) --}}
 
 ## Your Mission
 
+{{#if interactive}}
+{{#if hasInputs}}
+{{!-- Mixed mode: inputs + interactive --}}
+You are running a mixed reverse session. You have seed inputs to ground your understanding AND the ability to ask the user questions interactively. Your job: deeply understand what needs to be built through a combination of research and interrogation, then synthesize a comprehensive spec.
+{{else}}
+{{!-- Pure interactive mode --}}
+You are running an interactive reverse session. Your job: deeply understand what needs to be built through structured interrogation, then synthesize a comprehensive spec.
+{{/if}}
+{{else}}
+{{!-- Autonomous mode --}}
 You are one iteration of a reverse loop. You have a fresh context. Your job: analyze the input and {{#if isFirstIteration}}create an initial spec draft{{else}}expand and refine the existing spec{{/if}}.
+{{/if}}
 
-## Input
+## Output Directory: {{outputDir}}
+
+{{#if interactive}}
+Save the final spec to `{{outputDir}}/` when synthesis is complete.
+{{else}}
+Write the spec to `{{outputDir}}/`.
+{{/if}}
+
+{{#if hasInputs}}
+## Inputs
 
 {{#each inputs}}
 - `{{this}}`
 {{/each}}
 
-Use your tools to examine the input: read files, fetch URLs, view images, research products — whatever is appropriate.
+Use your tools to examine each input: read files, fetch URLs, view images, explore codebases, research products — whatever is appropriate. **Do not guess about inputs. Investigate them.**
+{{/if}}
 
-## Output Directory: {{outputDir}}
+{{#if interactive}}
+---
+
+## HARD GATE
+
+**Do NOT write any spec content until ALL of the following are true:**
+1. You have explored the project context (codebase, README, docs, any provided inputs)
+2. You have completed the interrogation phase (asked enough questions to understand the problem)
+3. You have proposed approaches and the user has approved one
+
+**Every project goes through this process.** A todo list, a single-function utility, a config change — all of them. "Too simple to need interrogation" is where the most wasted work comes from.
+
+### Anti-Rationalization Red Flags
+
+If you catch yourself thinking any of these, STOP — you're trying to skip interrogation:
+
+- "This is straightforward, I can just write the spec"
+- "The inputs are clear enough"
+- "I'll just ask a few clarifying questions in the spec"
+- "The user seems to know what they want"
+- "This is a small change, no need for deep exploration"
+
+These are all signs you should ask MORE questions, not fewer.
+
+---
+
+## Phase A: Interrogation
+
+### Step 0: Explore Project Context
+
+Before asking any questions:
+
+1. Read `AGENTS.md` and `README.md` if they exist
+2. Read `.super-ralph/progress.md` if it exists (learnings from past epics)
+3. Explore the codebase structure — what exists, what patterns are in use, what's the tech stack
+4. Read `.super-ralph/intake-checklist.md` if it exists (needed for learned questions)
+{{#if hasInputs}}
+5. Deeply analyze all provided inputs — read files, fetch URLs, explore code
+{{/if}}
+
+This grounds your questions in the reality of the project, not abstract possibilities.
+
+### Step 1: Structured Interrogation
+
+Ask questions **one at a time** using the `question` tool. After each answer, decide whether to dig deeper, move on, or proceed to synthesis.
+
+**Rules:**
+- One question per turn. Never batch questions.
+- Prefer multiple choice options when possible (reduces cognitive load).
+- Always include descriptive option text (the `description` field).
+- Adapt depth: dig deeper on ambiguity, skip when clear.
+- A simple feature might resolve in 5-8 questions. A complex one might take 15+.
+
+{{#if seedDescription}}
+**Seed description provided.** Confirm rather than asking from scratch: "You want to {{seedDescription}} — is that right, or should I adjust?"
+{{/if}}
+
+{{#if skillContent}}
+### Question Bank
+
+Use these domain-specific questions to guide your interrogation. You don't need to ask all of them — adapt based on complexity and the answers you receive.
+
+{{{skillContent}}}
+{{else}}
+### Baseline Questions
+
+Without a specific skill loaded, use these universal questions:
+
+1. **What are we building?** High-level description, purpose, who benefits.
+2. **Why now?** What's driving this? Business need, user complaint, technical debt?
+3. **What does success look like?** Measurable outcomes, not vague goals.
+4. **What are the boundaries?** What is this explicitly NOT? What's tempting scope creep?
+5. **What exists already?** Present what you found in the codebase. Should we extend or build new?
+6. **What are the risks?** What could go wrong? What are the failure modes?
+7. **What are the constraints?** Performance, security, compatibility, timeline.
+{{/if}}
+
+### Learned Questions
+
+If `.super-ralph/intake-checklist.md` exists, check its categories and ask any relevant learned questions. These represent things the team discovered they should always ask from past projects.
+
+### When to Move to Synthesis
+
+Signal readiness: "I think I have enough context to draft the spec. Any final thoughts before I proceed?"
+
+Use the `question` tool with options like:
+- "Go ahead and draft"
+- "I have more context to share"
+- "Let me think about one more thing"
+
+---
+
+## Phase B: Synthesis
+
+### Step 2: Propose Approaches
+
+Propose 2-3 different approaches with trade-offs. Lead with your recommendation and explain why.
+
+Present the approaches and ask the user to pick one using the `question` tool.
+
+### Step 3: Incremental Design
+
+Present the spec **section by section**, asking for approval after each:
+
+For each section, use the `question` tool:
+- "Looks right"
+- "Needs revision"
+- "Skip this section"
+
+Sections (scale each to its complexity — a few sentences if simple, paragraphs if nuanced):
+
+1. **Purpose** — what it does and why it exists
+2. **Goals** — measurable outcomes (bullet list)
+3. **Behavior** — observable behavior, user-facing functionality, key flows
+4. **Interfaces** — public API, inputs, outputs, events, data formats
+5. **Architecture** — approach, patterns, key decisions
+6. **Error Handling** — failure modes, recovery, degradation
+7. **Constraints** — performance, security, limitations, compatibility
+8. **Dependencies** — what it depends on, what depends on it
+9. **Testing Strategy** — what to test, how to verify
+10. **Non-Goals** — explicit scope boundaries
+
+### Step 4: Save the Spec
+
+Write the approved spec to `{{outputDir}}/`. Name it descriptively (e.g., `<feature-name>-spec.md`).
+
+Also save a copy to `tasks/<feature-name>-spec.md` for the decompose phase.
+
+Then tell the user:
+
+> Spec saved to `{{outputDir}}/<name>.md` and `tasks/<name>-spec.md`.
+>
+> To create beads and start execution:
+> ```
+> super-ralph decompose --spec tasks/<name>-spec.md
+> ```
+
+{{else}}
+{{!-- Autonomous mode content --}}
 
 {{#if currentSpec}}
 ## Current Spec Draft: {{currentSpecFilename}}
@@ -29,9 +188,25 @@ The spec below was written by previous iterations. Your job is to identify the m
 This is the first iteration. Create an initial spec draft. Name it descriptively (e.g., `spec.md` or `<component-name>.md`). Focus on the highest-level purpose, behavior, and interfaces. Later iterations will refine and expand.
 {{/if}}
 
-## Spec Structure
+{{#if skillContent}}
+## Domain Guidance
 
-Write the spec to `{{outputDir}}/` using this structure:
+Use this domain-specific context to guide your analysis:
+
+{{{skillContent}}}
+{{/if}}
+
+## Research Before Synthesis
+
+Before writing or refining the spec:
+- If an input is a URL, fetch and analyze it thoroughly
+- If it references a product or service, research it
+- If there's a local codebase, explore patterns, tech stack, architecture
+- Don't guess — investigate
+- Each iteration should meaningfully improve the spec
+- Self-check: is every requirement specific enough for decompose? Are architecture decisions made?
+
+## Spec Structure
 
 ```
 # Component: [Name]
@@ -58,4 +233,4 @@ Write the spec to `{{outputDir}}/` using this structure:
 - This is a clean-room specification — describe behavior, not code structure.
 - Each iteration should meaningfully improve coverage or depth.
 - If the input is complex enough to warrant multiple specs, you may create additional spec files. But the default is one progressively refined spec.
-
+{{/if}}
