@@ -13,7 +13,7 @@ super-ralph — Three-phase Ralph loop engine
 Usage:
   super-ralph forward --epic <ID> [options]     Beads -> code (implement beads)
   super-ralph decompose --spec <path> [options]  Spec -> beads (create beads from spec)
-  super-ralph reverse --input <path> [options]   Input -> spec (generate spec from input)
+  super-ralph reverse [inputs...] [options]      Input -> spec (generate spec from input)
   super-ralph status --epic <ID>                 Show epic progress
   super-ralph doctor                             Preflight checks
   super-ralph help                               Show this help
@@ -35,40 +35,51 @@ Decompose options:
   --epic-title <title>       Title for the created epic
 
 Reverse options:
-  --input <path>             Input path, URL, or description (required, repeatable)
+  [inputs...]                Positional args: paths, URLs, or descriptions
+  --skill <name-or-path>     Question bank / skill to use
+  --interactive              Force interactive mode (default when no inputs)
   --output <dir>             Output directory for specs (default: docs/specs)
+
+Reverse modes:
+  No inputs, no --interactive  → interactive (implied)
+  Inputs without --interactive → autonomous
+  Inputs with --interactive    → mixed
+  --interactive without inputs → interactive
 `);
 }
 
-function parseArgs(args: string[]): { command: string; flags: Record<string, string | boolean | string[]> } {
+/** Boolean flags that never take a value argument */
+const BOOLEAN_FLAGS = new Set(["dry-run", "interactive"]);
+
+function parseArgs(args: string[]): {
+  command: string;
+  positionals: string[];
+  flags: Record<string, string | boolean>;
+} {
   const command = args[0] || "help";
-  const flags: Record<string, string | boolean | string[]> = {};
+  const flags: Record<string, string | boolean> = {};
+  const positionals: string[] = [];
 
   for (let i = 1; i < args.length; i++) {
     const arg = args[i];
     if (arg.startsWith("--")) {
       const key = arg.slice(2);
-      if (key === "dry-run") {
+      if (BOOLEAN_FLAGS.has(key)) {
         flags[key] = true;
-      } else if (key === "input") {
-        // --input can be repeated
-        const inputs = (flags[key] as string[]) || [];
-        if (i + 1 < args.length && !args[i + 1].startsWith("--")) {
-          inputs.push(args[++i]);
-        }
-        flags[key] = inputs;
       } else if (i + 1 < args.length && !args[i + 1].startsWith("--")) {
         flags[key] = args[++i];
       } else {
         flags[key] = true;
       }
+    } else {
+      positionals.push(arg);
     }
   }
 
-  return { command, flags };
+  return { command, positionals, flags };
 }
 
-async function cmdForward(flags: Record<string, string | boolean | string[]>): Promise<void> {
+async function cmdForward(flags: Record<string, string | boolean>): Promise<void> {
   const epicId = flags.epic as string;
   if (!epicId) {
     console.error("Error: --epic <ID> is required");
@@ -91,7 +102,7 @@ async function cmdForward(flags: Record<string, string | boolean | string[]>): P
   }
 }
 
-async function cmdDecompose(flags: Record<string, string | boolean | string[]>): Promise<void> {
+async function cmdDecompose(flags: Record<string, string | boolean>): Promise<void> {
   const specPath = flags.spec as string;
   if (!specPath) {
     console.error("Error: --spec <path> is required");
@@ -115,16 +126,22 @@ async function cmdDecompose(flags: Record<string, string | boolean | string[]>):
   }
 }
 
-async function cmdReverse(flags: Record<string, string | boolean | string[]>): Promise<void> {
-  const inputs = flags.input as string[];
-  if (!inputs || inputs.length === 0) {
-    console.error("Error: --input <path> is required (can be repeated)");
-    process.exit(1);
-  }
+async function cmdReverse(positionals: string[], flags: Record<string, string | boolean>): Promise<void> {
+  const hasInputs = positionals.length > 0;
+  const isInteractive = !!flags.interactive;
+
+  // Mode detection:
+  //   No inputs and no --interactive -> interactive (implied)
+  //   Inputs without --interactive   -> autonomous
+  //   Inputs with --interactive      -> mixed
+  //   --interactive without inputs   -> interactive
+  const interactive = !hasInputs || isInteractive;
 
   const reverseFlags: ReverseFlags = {
-    inputs,
+    inputs: positionals,
     outputDir: flags.output as string | undefined,
+    skill: flags.skill as string | undefined,
+    interactive,
     dryRun: !!flags["dry-run"],
     maxIterations: flags["max-iterations"] ? parseInt(flags["max-iterations"] as string, 10) : undefined,
     modelOverride: flags.model as string | undefined,
@@ -139,7 +156,7 @@ async function cmdReverse(flags: Record<string, string | boolean | string[]>): P
   }
 }
 
-async function cmdStatus(flags: Record<string, string | boolean | string[]>): Promise<void> {
+async function cmdStatus(flags: Record<string, string | boolean>): Promise<void> {
   const epicId = flags.epic as string;
   if (!epicId) {
     console.error("Error: --epic <ID> is required");
@@ -275,7 +292,7 @@ async function cmdDoctor(): Promise<void> {
 
 // Main
 const args = process.argv.slice(2);
-const { command, flags } = parseArgs(args);
+const { command, positionals, flags } = parseArgs(args);
 
 switch (command) {
   case "run":  // backward compatibility alias
@@ -286,7 +303,7 @@ switch (command) {
     await cmdDecompose(flags);
     break;
   case "reverse":
-    await cmdReverse(flags);
+    await cmdReverse(positionals, flags);
     break;
   case "status":
     await cmdStatus(flags);
