@@ -2,6 +2,7 @@
 import { runForward } from "./forward.js";
 import { runDecompose } from "./decompose.js";
 import { runReverse } from "./reverse.js";
+import { runInit } from "./init.js";
 import { getEpicProgress, getAllBeads } from "./beads.js";
 import { loadConfig } from "./config.js";
 import type { ForwardFlags, DecomposeFlags, ReverseFlags } from "./types.js";
@@ -14,6 +15,7 @@ Usage:
   super-ralph forward --epic <ID> [options]     Beads -> code (implement beads)
   super-ralph decompose --spec <path> [options]  Spec -> beads (create beads from spec)
   super-ralph reverse [inputs...] [options]      Input -> spec (generate spec from input)
+  super-ralph init                                Scaffold .super-ralph/ in current project
   super-ralph status --epic <ID>                 Show epic progress
   super-ralph doctor                             Preflight checks
   super-ralph help                               Show this help
@@ -227,7 +229,7 @@ async function cmdDoctor(): Promise<void> {
     console.log("✓ Project initialized (.super-ralph/AGENTS.md)");
   } else {
     console.log("✗ Project not initialized");
-    console.log("  Fix: /super-ralph:init");
+    console.log("  Fix: super-ralph init");
     allGood = false;
   }
 
@@ -238,7 +240,7 @@ async function cmdDoctor(): Promise<void> {
       console.log(`✓ Template: .super-ralph/${tmpl}`);
     } else {
       console.log(`✗ Template missing: .super-ralph/${tmpl}`);
-      console.log("  Fix: /super-ralph:init");
+      console.log("  Fix: super-ralph init");
       allGood = false;
     }
   }
@@ -247,16 +249,7 @@ async function cmdDoctor(): Promise<void> {
     console.log("✓ Config (.super-ralph/config.toml)");
   } else {
     console.log("✗ Config not found");
-    console.log("  Fix: /super-ralph:init");
-    allGood = false;
-  }
-
-  // Check plugin
-  if (existsSync(join(projectDir, ".opencode", "plugins", "super-ralph.js"))) {
-    console.log("✓ OpenCode plugin (.opencode/plugins/super-ralph.js)");
-  } else {
-    console.log("✗ OpenCode plugin missing");
-    console.log("  Fix: /super-ralph:init");
+    console.log("  Fix: super-ralph init");
     allGood = false;
   }
 
@@ -275,11 +268,11 @@ async function cmdDoctor(): Promise<void> {
     console.log(`✓ CLI path: ${config.cli.path}`);
   } else if (config.cli.path) {
     console.log(`✗ CLI path not found: ${config.cli.path}`);
-    console.log("  Fix: /super-ralph:init to re-detect");
+    console.log("  Fix: super-ralph init");
     allGood = false;
   } else {
     console.log("⚠ CLI path not set in config");
-    console.log("  Fix: /super-ralph:init to set [cli] path");
+    console.log("  Fix: super-ralph init");
   }
 
   if (allGood) {
@@ -304,6 +297,9 @@ switch (command) {
     break;
   case "reverse":
     await cmdReverse(positionals, flags);
+    break;
+  case "init":
+    await runInit(process.cwd());
     break;
   case "status":
     await cmdStatus(flags);
