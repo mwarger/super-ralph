@@ -59,10 +59,11 @@ run_test() {
   fi
 }
 
-# Run each phase test
-run_test "Forward Phase"   "$SCRIPT_DIR/e2e-forward.sh"
-run_test "Decompose Phase" "$SCRIPT_DIR/e2e-decompose.sh"
-run_test "Reverse Phase"   "$SCRIPT_DIR/e2e-reverse.sh"
+# Run each test suite
+run_test "Doctor / Preflight" "$SCRIPT_DIR/e2e-doctor.sh"
+run_test "Forward Phase"      "$SCRIPT_DIR/e2e-forward.sh"
+run_test "Decompose Phase"    "$SCRIPT_DIR/e2e-decompose.sh"
+run_test "Reverse Phase"      "$SCRIPT_DIR/e2e-reverse.sh"
 
 # --- Suite Summary ---
 

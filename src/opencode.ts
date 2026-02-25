@@ -1,4 +1,7 @@
 import { createOpencode, createOpencodeClient, type OpencodeClient, type Part } from "@opencode-ai/sdk";
+import { existsSync, lstatSync, readdirSync, unlinkSync, readlinkSync } from "fs";
+import { join } from "path";
+import { homedir } from "os";
 import type { CompletionResult } from "./types.js";
 
 export type { OpencodeClient };
@@ -16,8 +19,60 @@ export interface ServerHandle {
   close: () => void;
 }
 
+/**
+ * Scan OpenCode's global config directories for broken symlinks.
+ * OpenCode crashes on startup if it encounters broken plugin or command symlinks.
+ * Returns a list of broken symlinks that were found (and optionally removed).
+ */
+export function checkBrokenSymlinks(opts: { fix?: boolean } = {}): string[] {
+  const configDir = join(homedir(), ".config", "opencode");
+  const dirsToCheck = ["plugins", "commands"];
+  const broken: string[] = [];
+
+  for (const sub of dirsToCheck) {
+    const dir = join(configDir, sub);
+    if (!existsSync(dir)) continue;
+
+    let entries: string[];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      const fullPath = join(dir, entry);
+      try {
+        const stat = lstatSync(fullPath);
+        if (stat.isSymbolicLink()) {
+          // Check if the symlink target exists
+          const target = readlinkSync(fullPath);
+          if (!existsSync(fullPath)) {
+            broken.push(fullPath);
+            if (opts.fix) {
+              unlinkSync(fullPath);
+              console.log(`Removed broken symlink: ${fullPath} -> ${target}`);
+            }
+          }
+        }
+      } catch {
+        // Can't stat — treat as broken
+        broken.push(fullPath);
+      }
+    }
+  }
+
+  return broken;
+}
+
 // Start an ephemeral OpenCode server and return a client + handle
 export async function startServer(): Promise<ServerHandle> {
+  // Preflight: broken symlinks in ~/.config/opencode/ crash the server
+  const broken = checkBrokenSymlinks({ fix: true });
+  if (broken.length > 0) {
+    console.log(`Fixed ${broken.length} broken symlink(s) in ~/.config/opencode/`);
+  }
+
   const { client, server } = await createOpencode({ port: 0 });
 
   // Verify server is ready

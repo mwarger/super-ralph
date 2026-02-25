@@ -5,6 +5,7 @@ import { runReverse } from "./reverse.js";
 import { runInit } from "./init.js";
 import { getEpicProgress, getAllBeads } from "./beads.js";
 import { loadConfig } from "./config.js";
+import { checkBrokenSymlinks } from "./opencode.js";
 import type { ForwardFlags, DecomposeFlags, ReverseFlags } from "./types.js";
 
 function printUsage(): void {
@@ -51,7 +52,7 @@ Reverse modes:
 }
 
 /** Boolean flags that never take a value argument */
-const BOOLEAN_FLAGS = new Set(["dry-run", "interactive"]);
+const BOOLEAN_FLAGS = new Set(["dry-run", "interactive", "fix"]);
 
 function parseArgs(args: string[]): {
   command: string;
@@ -193,7 +194,8 @@ async function cmdStatus(flags: Record<string, string | boolean>): Promise<void>
   }
 }
 
-async function cmdDoctor(): Promise<void> {
+async function cmdDoctor(flags: Record<string, string | boolean> = {}): Promise<void> {
+  const shouldFix = !!flags.fix;
   const projectDir = process.cwd();
   let allGood = true;
 
@@ -275,6 +277,28 @@ async function cmdDoctor(): Promise<void> {
     console.log("  Fix: super-ralph init");
   }
 
+  // Check for broken symlinks in ~/.config/opencode/
+  if (shouldFix) {
+    const fixed = checkBrokenSymlinks({ fix: true });
+    if (fixed.length > 0) {
+      console.log(`✓ Fixed ${fixed.length} broken symlink(s) in ~/.config/opencode/`);
+    } else {
+      console.log("✓ No broken symlinks in ~/.config/opencode/");
+    }
+  } else {
+    const brokenSymlinks = checkBrokenSymlinks();
+    if (brokenSymlinks.length > 0) {
+      console.log(`✗ Broken symlinks in ~/.config/opencode/ (${brokenSymlinks.length} found)`);
+      for (const s of brokenSymlinks) {
+        console.log(`    ${s}`);
+      }
+      console.log("  Fix: super-ralph doctor --fix (or remove them manually)");
+      allGood = false;
+    } else {
+      console.log("✓ No broken symlinks in ~/.config/opencode/");
+    }
+  }
+
   if (allGood) {
     console.log("\nAll checks passed!");
   } else {
@@ -305,7 +329,7 @@ switch (command) {
     await cmdStatus(flags);
     break;
   case "doctor":
-    await cmdDoctor();
+    await cmdDoctor(flags);
     break;
   case "help":
   case "--help":
