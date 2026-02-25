@@ -158,6 +158,15 @@ cp "$PROJECT_ROOT/.super-ralph/reverse.hbs" "$TMPDIR/.super-ralph/reverse.hbs"
 cp "$PROJECT_ROOT/.super-ralph/decompose.hbs" "$TMPDIR/.super-ralph/decompose.hbs"
 cp "$PROJECT_ROOT/.super-ralph/forward.hbs" "$TMPDIR/.super-ralph/forward.hbs"
 
+# Set up .opencode/ plugin (provides task_complete tool)
+mkdir -p "$TMPDIR/.opencode/plugins"
+cp "$PROJECT_ROOT/.opencode/plugins/super-ralph.js" "$TMPDIR/.opencode/plugins/"
+cat > "$TMPDIR/.opencode/package.json" <<'JSON'
+{"dependencies":{"@opencode-ai/plugin":"1.2.10"}}
+JSON
+(cd "$TMPDIR/.opencode" && bun install --silent 2>/dev/null)
+pass "Installed .opencode/ plugin (task_complete tool)"
+
 # Minimal AGENTS.md
 cat > "$TMPDIR/.super-ralph/AGENTS.md" <<'MD'
 # Test Project Agent Instructions

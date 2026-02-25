@@ -65,7 +65,42 @@ export async function runInit(projectDir: string): Promise<void> {
     }
   }
 
-  // 4. Create tasks/ directory
+  // 4. Set up .opencode/ plugin (provides task_complete tool)
+  const opencodeDir = join(projectDir, ".opencode");
+  const opencodePluginsDir = join(opencodeDir, "plugins");
+  const pluginDest = join(opencodePluginsDir, "super-ralph.js");
+
+  if (existsSync(pluginDest)) {
+    console.log("  .opencode/plugins/super-ralph.js already exists");
+  } else {
+    const pluginSrc = join(cliDir, ".opencode", "plugins", "super-ralph.js");
+    if (existsSync(pluginSrc)) {
+      mkdirSync(opencodePluginsDir, { recursive: true });
+      writeFileSync(pluginDest, readFileSync(pluginSrc, "utf-8"));
+      console.log("  Created .opencode/plugins/super-ralph.js");
+
+      // Create package.json and install dependency
+      const pkgPath = join(opencodeDir, "package.json");
+      if (!existsSync(pkgPath)) {
+        writeFileSync(pkgPath, '{"dependencies":{"@opencode-ai/plugin":"1.2.10"}}\n');
+      }
+      try {
+        const proc = Bun.spawn(["bun", "install", "--silent"], {
+          cwd: opencodeDir,
+          stdout: "pipe",
+          stderr: "pipe",
+        });
+        await proc.exited;
+        console.log("  Installed @opencode-ai/plugin dependency");
+      } catch {
+        console.log("  Warning: bun install failed in .opencode/ (run manually: cd .opencode && bun install)");
+      }
+    } else {
+      console.log("  Warning: plugin source not found at " + pluginSrc);
+    }
+  }
+
+  // 5. Create tasks/ directory (legacy, kept for compatibility)
   const tasksDir = join(projectDir, "tasks");
   if (!existsSync(tasksDir)) {
     mkdirSync(tasksDir, { recursive: true });
@@ -74,7 +109,7 @@ export async function runInit(projectDir: string): Promise<void> {
     console.log("  tasks/ already exists");
   }
 
-  // 5. Initialize beads workspace
+  // 6. Initialize beads workspace
   const beadsDir = join(projectDir, ".beads");
   if (existsSync(beadsDir)) {
     console.log("  .beads/ already exists");
@@ -96,7 +131,7 @@ export async function runInit(projectDir: string): Promise<void> {
     }
   }
 
-  // 6. Update root AGENTS.md
+  // 7. Update root AGENTS.md
   const rootAgents = join(projectDir, "AGENTS.md");
   const referenceLine =
     "Also read .super-ralph/AGENTS.md for SDLC framework instructions.";
