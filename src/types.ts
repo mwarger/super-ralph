@@ -88,8 +88,10 @@ export interface DecomposeFlags extends PhaseFlags {
 }
 
 export interface ReverseFlags extends PhaseFlags {
-  inputs: string[]; // paths, URLs, descriptions — anything
+  inputs: string[];         // paths, URLs, descriptions — anything (positional args)
   outputDir?: string;
+  skill?: string;           // --skill <name-or-path> — question bank
+  interactive?: boolean;    // --interactive — force interactive mode (default when no inputs)
 }
 
 export type ErrorStrategy = "retry" | "skip" | "abort";
