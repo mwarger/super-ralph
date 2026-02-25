@@ -11,9 +11,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@clack/prompts": "^1.0.1",
+    "@iarna/toml": "^2.2.5",
     "@opencode-ai/sdk": "1.2.10",
-    "handlebars": "^4.7.8",
-    "@iarna/toml": "^2.2.5"
+    "handlebars": "^4.7.8"
   },
   "devDependencies": {
     "@types/bun": "latest",
