@@ -177,8 +177,8 @@ pass "Created output directory: $OUTPUT_DIR"
 
 header "Test: reverse --dry-run"
 
-info "Running: $CLI reverse --input $INPUT_PATH --output $OUTPUT_DIR --dry-run"
-DRY_OUTPUT=$(cd "$TMPDIR" && $CLI reverse --input "$INPUT_PATH" --output "$OUTPUT_DIR" --dry-run 2>&1) || true
+info "Running: $CLI reverse $INPUT_PATH --output $OUTPUT_DIR --dry-run"
+DRY_OUTPUT=$(cd "$TMPDIR" && $CLI reverse "$INPUT_PATH" --output "$OUTPUT_DIR" --dry-run 2>&1) || true
 
 # Verify dry-run output
 if echo "$DRY_OUTPUT" | grep -q "\[dry-run\]"; then
@@ -225,8 +225,8 @@ export function clamp(value: number, min: number, max: number): number {
 }
 TS
 
-info "Running: $CLI reverse --input $INPUT_PATH --input $INPUT2_PATH --output $OUTPUT_DIR --dry-run"
-MULTI_OUTPUT=$(cd "$TMPDIR" && $CLI reverse --input "$INPUT_PATH" --input "$INPUT2_PATH" --output "$OUTPUT_DIR" --dry-run 2>&1) || true
+info "Running: $CLI reverse $INPUT_PATH $INPUT2_PATH --output $OUTPUT_DIR --dry-run"
+MULTI_OUTPUT=$(cd "$TMPDIR" && $CLI reverse "$INPUT_PATH" "$INPUT2_PATH" --output "$OUTPUT_DIR" --dry-run 2>&1) || true
 
 if echo "$MULTI_OUTPUT" | grep -q "\[dry-run\]"; then
   pass "Multiple inputs dry-run produces output"
@@ -234,17 +234,30 @@ else
   fail "Multiple inputs dry-run failed" "$MULTI_OUTPUT"
 fi
 
-# --- Test: missing --input flag ---
+# --- Test: no inputs defaults to interactive mode ---
 
-header "Test: reverse without --input"
+header "Test: reverse without inputs (defaults to interactive)"
 
 info "Running: $CLI reverse --output $OUTPUT_DIR --dry-run"
 NOINPUT_OUTPUT=$(cd "$TMPDIR" && $CLI reverse --output "$OUTPUT_DIR" --dry-run 2>&1) || true
 
-if echo "$NOINPUT_OUTPUT" | grep -qi "required\|error\|input"; then
-  pass "Missing --input flag produces error"
+if echo "$NOINPUT_OUTPUT" | grep -qi "interactive\|dry-run"; then
+  pass "No inputs defaults to interactive mode"
 else
-  fail "Missing --input flag did not produce error" "$NOINPUT_OUTPUT"
+  fail "No inputs did not trigger interactive mode" "$NOINPUT_OUTPUT"
+fi
+
+# --- Test: --skill flag ---
+
+header "Test: reverse with --skill flag"
+
+info "Running: $CLI reverse $INPUT_PATH --skill feature --output $OUTPUT_DIR --dry-run"
+SKILL_OUTPUT=$(cd "$TMPDIR" && $CLI reverse "$INPUT_PATH" --skill feature --output "$OUTPUT_DIR" --dry-run 2>&1) || true
+
+if echo "$SKILL_OUTPUT" | grep -q "\[dry-run\]"; then
+  pass "Skill flag dry-run produces output"
+else
+  fail "Skill flag dry-run failed" "$SKILL_OUTPUT"
 fi
 
 # --- Live test (optional) ---
@@ -255,8 +268,8 @@ if $LIVE; then
   LIVE_OUTPUT_DIR="$TMPDIR/live-specs"
   mkdir -p "$LIVE_OUTPUT_DIR"
 
-  info "Running: $CLI reverse --input $INPUT_PATH --output $LIVE_OUTPUT_DIR --max-iterations 1"
-  LIVE_OUTPUT=$(cd "$TMPDIR" && $CLI reverse --input "$INPUT_PATH" --output "$LIVE_OUTPUT_DIR" --max-iterations 1 2>&1) || true
+  info "Running: $CLI reverse $INPUT_PATH --output $LIVE_OUTPUT_DIR --max-iterations 1"
+  LIVE_OUTPUT=$(cd "$TMPDIR" && $CLI reverse "$INPUT_PATH" --output "$LIVE_OUTPUT_DIR" --max-iterations 1 2>&1) || true
 
   if echo "$LIVE_OUTPUT" | grep -q "Iteration 1"; then
     pass "Live run started iteration 1"
