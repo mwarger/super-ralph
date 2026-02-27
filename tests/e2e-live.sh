@@ -16,7 +16,8 @@ CLI="bun run $PROJECT_ROOT/src/index.ts"
 FIXTURE_DIR="$PROJECT_ROOT/tests/fixtures/tiny-project"
 
 MODEL="anthropic/claude-haiku-4-5"
-MAX_ITER=3  # Set higher than 1 to verify agents exit the loop early via phase_done
+MAX_ITER=10  # Set high to verify agents exit the loop early via phase_done
+PHASE_TIMEOUT_SECS=1800
 
 # Colors
 RED='\033[0;31m'
@@ -59,6 +60,46 @@ info() {
 header() {
   echo ""
   echo -e "${BOLD}═══ $1 ═══${NC}"
+}
+
+run_with_watchdog() {
+  local name="$1"
+  local timeout_secs="$2"
+  local workdir="$3"
+  local logfile="$4"
+  local cmd="$5"
+
+  : > "$logfile"
+  info "[$name] command: $cmd"
+  info "[$name] log: $logfile"
+
+  (
+    cd "$workdir"
+    bash -lc "$cmd" 2>&1 | tee "$logfile"
+  ) &
+
+  local pid=$!
+  local elapsed=0
+
+  while kill -0 "$pid" 2>/dev/null; do
+    sleep 10
+    elapsed=$((elapsed + 10))
+    info "[$name] still running (${elapsed}s)"
+
+    if [[ "$elapsed" -ge "$timeout_secs" ]]; then
+      echo -e "  ${RED}✗ TIMEOUT${NC}: $name exceeded ${timeout_secs}s"
+      kill "$pid" 2>/dev/null || true
+      sleep 2
+      kill -9 "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+      return 124
+    fi
+  done
+
+  wait "$pid"
+  local rc=$?
+  info "[$name] exited rc=$rc after ${elapsed}s"
+  return "$rc"
 }
 
 # --- Cleanup ---
@@ -141,6 +182,7 @@ mkdir -p "$TMPDIR/.super-ralph"
 cat > "$TMPDIR/.super-ralph/config.toml" <<TOML
 [engine]
 timeout_minutes = 2
+inactivity_timeout_seconds = 90
 iteration_delay_ms = 0
 strategy = "abort"
 max_retries = 0
@@ -198,13 +240,10 @@ header "Phase 1: Reverse (input → spec)"
 REVERSE_JSON="$TMPDIR/reverse-result.json"
 info "Running: reverse calc.ts --output docs/specs --max-iterations $MAX_ITER --model $MODEL --json $REVERSE_JSON"
 
-REVERSE_OUTPUT=$(cd "$TMPDIR" && $CLI reverse calc.ts \
-  --output docs/specs \
-  --max-iterations "$MAX_ITER" \
-  --model "$MODEL" \
-  --json "$REVERSE_JSON" 2>&1) || true
-
-echo "$REVERSE_OUTPUT" | tail -20
+REVERSE_LOG="$TMPDIR/reverse-phase.log"
+REVERSE_CMD="$CLI reverse calc.ts --output docs/specs --max-iterations \"$MAX_ITER\" --model \"$MODEL\" --json \"$REVERSE_JSON\""
+run_with_watchdog "reverse" "$PHASE_TIMEOUT_SECS" "$TMPDIR" "$REVERSE_LOG" "$REVERSE_CMD" || true
+REVERSE_OUTPUT="$(<"$REVERSE_LOG")"
 
 # --- Structured assertions from JSON result ---
 
@@ -284,14 +323,10 @@ header "Phase 2: Decompose (spec → beads)"
 DECOMPOSE_JSON="$TMPDIR/decompose-result.json"
 info "Running: decompose --spec $SPEC_PATH --epic-title 'E2E Live Test' --max-iterations $MAX_ITER --model $MODEL --json $DECOMPOSE_JSON"
 
-DECOMPOSE_OUTPUT=$(cd "$TMPDIR" && $CLI decompose \
-  --spec "$SPEC_PATH" \
-  --epic-title "E2E Live Test" \
-  --max-iterations "$MAX_ITER" \
-  --model "$MODEL" \
-  --json "$DECOMPOSE_JSON" 2>&1) || true
-
-echo "$DECOMPOSE_OUTPUT" | tail -20
+DECOMPOSE_LOG="$TMPDIR/decompose-phase.log"
+DECOMPOSE_CMD="$CLI decompose --spec \"$SPEC_PATH\" --epic-title \"E2E Live Test\" --max-iterations \"$MAX_ITER\" --model \"$MODEL\" --json \"$DECOMPOSE_JSON\""
+run_with_watchdog "decompose" "$PHASE_TIMEOUT_SECS" "$TMPDIR" "$DECOMPOSE_LOG" "$DECOMPOSE_CMD" || true
+DECOMPOSE_OUTPUT="$(<"$DECOMPOSE_LOG")"
 
 # Extract epic ID from output (still needed for artifact checks — the epic ID is a side effect, not in LoopResult)
 EPIC_ID=$(echo "$DECOMPOSE_OUTPUT" | grep -o 'Created epic: [^ ]*' | head -1 | awk '{print $3}') || true
@@ -367,13 +402,10 @@ if [[ "$CHILD_COUNT" -gt 0 ]]; then
   FORWARD_JSON="$TMPDIR/forward-result.json"
   info "Running: forward --epic $EPIC_ID --max-iterations $MAX_ITER --model $MODEL --json $FORWARD_JSON"
 
-  FORWARD_OUTPUT=$(cd "$TMPDIR" && $CLI forward \
-    --epic "$EPIC_ID" \
-    --max-iterations "$MAX_ITER" \
-    --model "$MODEL" \
-    --json "$FORWARD_JSON" 2>&1) || true
-
-  echo "$FORWARD_OUTPUT" | tail -20
+  FORWARD_LOG="$TMPDIR/forward-phase.log"
+  FORWARD_CMD="$CLI forward --epic \"$EPIC_ID\" --max-iterations \"$MAX_ITER\" --model \"$MODEL\" --json \"$FORWARD_JSON\""
+  run_with_watchdog "forward" "$PHASE_TIMEOUT_SECS" "$TMPDIR" "$FORWARD_LOG" "$FORWARD_CMD" || true
+  FORWARD_OUTPUT="$(<"$FORWARD_LOG")"
 
   # --- Structured assertions from JSON result ---
 

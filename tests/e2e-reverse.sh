@@ -102,13 +102,14 @@ mkdir -p "$TMPDIR/.super-ralph"
 
 cat > "$TMPDIR/.super-ralph/config.toml" <<'TOML'
 [engine]
-timeout_minutes = 5
+timeout_minutes = 10
+inactivity_timeout_seconds = 420
 iteration_delay_ms = 0
 strategy = "abort"
 max_retries = 0
 
 [models]
-default = "anthropic/claude-sonnet-4-6"
+default = "anthropic/claude-haiku-4-5"
 
 [models.areas]
 
@@ -134,6 +135,15 @@ cat > "$TMPDIR/AGENTS.md" <<'MD'
 # Test Project
 E2E test fixture.
 MD
+
+# Set up .opencode/ plugin (provides task_complete tool)
+mkdir -p "$TMPDIR/.opencode/plugins"
+cp "$PROJECT_ROOT/.opencode/plugins/super-ralph.js" "$TMPDIR/.opencode/plugins/"
+cat > "$TMPDIR/.opencode/package.json" <<'JSON'
+{"dependencies":{"@opencode-ai/plugin":"1.2.10"}}
+JSON
+(cd "$TMPDIR/.opencode" && bun install --silent 2>/dev/null)
+pass "Installed .opencode/ plugin (task_complete tool)"
 
 pass "Created .super-ralph/ config"
 
@@ -268,8 +278,8 @@ if $LIVE; then
   LIVE_OUTPUT_DIR="$TMPDIR/live-specs"
   mkdir -p "$LIVE_OUTPUT_DIR"
 
-  info "Running: $CLI reverse $INPUT_PATH --output $LIVE_OUTPUT_DIR --max-iterations 1"
-  LIVE_OUTPUT=$(cd "$TMPDIR" && $CLI reverse "$INPUT_PATH" --output "$LIVE_OUTPUT_DIR" --max-iterations 1 2>&1) || true
+  info "Running: $CLI reverse $INPUT_PATH --output $LIVE_OUTPUT_DIR --max-iterations 5"
+  LIVE_OUTPUT=$(cd "$TMPDIR" && $CLI reverse "$INPUT_PATH" --output "$LIVE_OUTPUT_DIR" --max-iterations 5 2>&1) || true
 
   if echo "$LIVE_OUTPUT" | grep -q "Iteration 1"; then
     pass "Live run started iteration 1"

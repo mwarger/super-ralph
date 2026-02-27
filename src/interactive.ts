@@ -5,7 +5,9 @@ import {
   type QuestionInfo,
 } from "@opencode-ai/sdk/v2";
 import * as clack from "@clack/prompts";
+import { readFileSync } from "fs";
 import type { CompletionResult } from "./types.js";
+import { StreamCapture } from "./output-parser.js";
 
 export type { OpencodeClient as InteractiveClient };
 
@@ -14,6 +16,43 @@ export interface InteractiveResult {
   cost: number;
   tokens: { input: number; output: number; reasoning: number };
   filesChanged: string[];
+  rawOutput: string;
+  displayOutput: string;
+}
+
+/**
+ * Pre-recorded answer for mock/test sessions.
+ * Matched by substring against the question text.
+ * If `answer` is a string, it's used as a custom text answer.
+ * If `answer` is a number, it selects the Nth option (0-indexed).
+ * If `answer` is "first", it selects the first option.
+ */
+export interface MockAnswer {
+  match: string;           // substring to match against question text
+  answer: string | number; // text answer, or option index
+}
+
+// Module-level state for mock answers
+let mockAnswers: MockAnswer[] | null = null;
+let mockAnswerLog: Array<{ question: string; answer: string[] }> = [];
+
+/**
+ * Load mock answers from a JSON file. Once loaded, all questions will be
+ * answered from this file instead of prompting the user via clack.
+ * Unmatched questions default to selecting the first option.
+ */
+export function loadMockAnswers(filePath: string): void {
+  const content = readFileSync(filePath, "utf-8");
+  mockAnswers = JSON.parse(content) as MockAnswer[];
+  mockAnswerLog = [];
+  console.log(`Loaded ${mockAnswers.length} mock answers from ${filePath}`);
+}
+
+/**
+ * Get the log of questions asked and answers given during a mock session.
+ */
+export function getMockAnswerLog(): Array<{ question: string; answer: string[] }> {
+  return mockAnswerLog;
 }
 
 /**
@@ -39,7 +78,11 @@ export async function runInteractiveSession(
   prompt: string,
   model: { providerID: string; modelID: string },
   systemPrompt?: string,
+  inactivityTimeoutMs: number = 180000,
 ): Promise<InteractiveResult> {
+  // Subscribe to SSE events BEFORE sending prompt so we don't miss anything
+  const { stream } = await client.event.subscribe();
+
   // Start the session non-blocking
   await client.session.promptAsync({
     sessionID: sessionId,
@@ -48,44 +91,150 @@ export async function runInteractiveSession(
     ...(systemPrompt && { system: systemPrompt }),
   });
 
-  // Subscribe to SSE events
-  const { stream } = await client.event.subscribe();
+  // Process events until session goes idle, with inactivity watchdog + heartbeat.
+  const capture = new StreamCapture();
+  const iterator = stream[Symbol.asyncIterator]();
+  const pollMs = 10_000;
+  const heartbeatMs = 30_000;
+  let lastEventAt = Date.now();
+  let lastHeartbeatAt = Date.now();
 
-  // Process events until session goes idle
-  for await (const event of stream) {
-    const ev = event as Record<string, unknown>;
-    const eventType = ev.type as string;
+  try {
+    while (true) {
+      let tickTimer: ReturnType<typeof setTimeout> | undefined;
+      const nextResult = await Promise.race([
+        iterator.next().then((result) => ({ type: "event" as const, result })),
+        new Promise<{ type: "tick" }>((resolve) => {
+          tickTimer = setTimeout(() => resolve({ type: "tick" }), pollMs);
+        }),
+      ]);
 
-    if (eventType === "question.asked") {
-      const props = ev.properties as Record<string, unknown>;
-      const eventSessionId = props.sessionID as string;
-      if (eventSessionId !== sessionId) continue;
+      if (tickTimer) clearTimeout(tickTimer);
 
-      const requestId = props.id as string;
-      const questions = props.questions as QuestionInfo[];
-
-      const answers = await handleQuestions(questions);
-
-      if (answers === null) {
-        // User cancelled — reject the question
-        await client.question.reject({ requestID: requestId });
-        return buildBlockedResult(client, sessionId, "User cancelled question");
+      if (nextResult.type === "tick") {
+        const idleForMs = Date.now() - lastEventAt;
+        if (idleForMs >= inactivityTimeoutMs) {
+          throw new Error(`Interactive session inactive for ${Math.round(inactivityTimeoutMs / 1000)}s`);
+        }
+        if (Date.now() - lastHeartbeatAt >= heartbeatMs) {
+          const idleSec = Math.round(idleForMs / 1000);
+          process.stdout.write(`\n[heartbeat] interactive session active, waiting for events (${idleSec}s idle)\n`);
+          lastHeartbeatAt = Date.now();
+        }
+        continue;
       }
 
-      await client.question.reply({
-        requestID: requestId,
-        answers,
-      });
-    } else if (eventType === "session.idle") {
-      const props = ev.properties as Record<string, unknown>;
-      const eventSessionId = props.sessionID as string;
-      if (eventSessionId !== sessionId) continue;
-      break;
+      if (nextResult.result.done) break;
+
+      const ev = nextResult.result.value as Record<string, unknown>;
+      const eventType = ev.type as string;
+      lastEventAt = Date.now();
+
+      if (eventType) {
+        capture.addRawLine(JSON.stringify(ev));
+      }
+
+      if (eventType === "message.part.delta") {
+        // Stream text output in real-time
+        const props = ev.properties as Record<string, unknown>;
+        if ((props.sessionID as string) !== sessionId) continue;
+        if ((props.field as string) === "text" && props.delta) {
+          const text = props.delta as string;
+          capture.addDisplayText(text);
+          process.stdout.write(text);
+        }
+      } else if (eventType === "message.part.updated") {
+        // Show tool call status
+        const props = ev.properties as Record<string, unknown>;
+        const part = props.part as Record<string, unknown> | undefined;
+        const eventSessionId = part?.sessionID as string || props.sessionID as string;
+        if (eventSessionId !== sessionId || !part) continue;
+
+        const partType = part.type as string;
+        if (partType === "tool") {
+          const toolName = part.tool as string;
+          const state = part.state as Record<string, unknown> | undefined;
+          const status = state?.status as string | undefined;
+          const error = state?.error as string | undefined;
+
+          if (status) {
+            const toolText = capture.toolStatusText(toolName, status, error);
+            if (toolText) {
+              capture.addDisplayText(toolText);
+              process.stdout.write(toolText);
+            }
+          }
+        }
+      } else if (eventType === "question.asked") {
+        const props = ev.properties as Record<string, unknown>;
+        const eventSessionId = props.sessionID as string;
+        if (eventSessionId !== sessionId) continue;
+
+        const requestId = props.id as string;
+        const questions = props.questions as QuestionInfo[];
+
+        const answers = await handleQuestions(questions);
+
+        if (answers === null) {
+          // User cancelled — reject the question
+          await client.question.reject({ requestID: requestId });
+          return buildBlockedResult(
+            client,
+            sessionId,
+            "User cancelled question",
+            capture.getRawOutput(),
+            capture.getDisplayOutput(),
+          );
+        }
+
+        await client.question.reply({
+          requestID: requestId,
+          answers,
+        });
+      } else if (eventType === "session.error") {
+        const props = ev.properties as Record<string, unknown>;
+        if ((props.sessionID as string) !== sessionId) continue;
+        const error = props.error as Record<string, unknown> | string | undefined;
+        let errorMsg = "unknown error";
+        if (typeof error === "string") {
+          errorMsg = error;
+        } else if (error && typeof error === "object") {
+          const name = error.name as string || "Error";
+          const data = error.data as Record<string, unknown> | undefined;
+        const message = data?.message as string || JSON.stringify(error);
+        errorMsg = `${name}: ${message}`;
+      }
+        const errorText = `\n[session error: ${errorMsg}]\n`;
+        capture.addDisplayText(errorText);
+        process.stdout.write(errorText);
+        break;
+      } else if (eventType === "session.idle") {
+        const props = ev.properties as Record<string, unknown>;
+        const eventSessionId = props.sessionID as string;
+        if (eventSessionId !== sessionId) continue;
+        capture.addDisplayText("\n");
+        process.stdout.write("\n");
+        break;
+      }
+    }
+  } catch (err) {
+    if ((err as Error).message.includes("Interactive session inactive for")) {
+      // Best-effort abort to avoid zombie sessions after inactivity timeout.
+      try {
+        await client.session.abort({ sessionID: sessionId });
+      } catch {
+        // ignore abort failures
+      }
+    }
+    throw err;
+  } finally {
+    if (typeof stream.return === "function") {
+      await stream.return(undefined);
     }
   }
 
   // Session finished — gather results
-  return gatherResults(client, sessionId);
+  return gatherResults(client, sessionId, capture.getRawOutput(), capture.getDisplayOutput());
 }
 
 /**
@@ -119,6 +268,11 @@ async function handleQuestions(
  * Returns string[] of selected answers, or null if the user pressed Ctrl+C.
  */
 async function renderQuestion(q: QuestionInfo): Promise<string[] | null> {
+  // If mock answers are loaded, use them instead of clack
+  if (mockAnswers) {
+    return renderMockAnswer(q);
+  }
+
   const allowCustom = q.custom !== false;
   const CUSTOM_SENTINEL = "__custom_input__";
 
@@ -126,6 +280,39 @@ async function renderQuestion(q: QuestionInfo): Promise<string[] | null> {
     return renderMultiSelect(q, allowCustom, CUSTOM_SENTINEL);
   }
   return renderSingleSelect(q, allowCustom, CUSTOM_SENTINEL);
+}
+
+function renderMockAnswer(q: QuestionInfo): string[] {
+  const questionText = q.header ? `${q.header}: ${q.question}` : q.question;
+
+  // Find a matching mock answer
+  const match = mockAnswers!.find(m =>
+    questionText.toLowerCase().includes(m.match.toLowerCase())
+  );
+
+  let answer: string[];
+
+  if (match) {
+    if (typeof match.answer === "number") {
+      // Select by option index
+      const idx = Math.min(match.answer, q.options.length - 1);
+      answer = [q.options[idx]?.label || q.options[0]?.label || "yes"];
+    } else if (match.answer === "first") {
+      answer = [q.options[0]?.label || "yes"];
+    } else {
+      // Custom text answer
+      answer = [match.answer];
+    }
+  } else {
+    // Default: select first option
+    answer = [q.options[0]?.label || "yes"];
+  }
+
+  console.log(`[mock] Q: ${questionText.slice(0, 120)}`);
+  console.log(`[mock] A: ${answer.join(", ")}`);
+
+  mockAnswerLog.push({ question: questionText, answer });
+  return answer;
 }
 
 async function renderSingleSelect(
@@ -213,12 +400,16 @@ async function buildBlockedResult(
   client: OpencodeClient,
   sessionId: string,
   reason: string,
+  rawOutput: string,
+  displayOutput: string,
 ): Promise<InteractiveResult> {
   const totals = await gatherCostAndTokens(client, sessionId);
   return {
     completion: { status: "blocked", reason },
     ...totals,
     filesChanged: [],
+    rawOutput,
+    displayOutput,
   };
 }
 
@@ -229,6 +420,8 @@ async function buildBlockedResult(
 async function gatherResults(
   client: OpencodeClient,
   sessionId: string,
+  rawOutput: string,
+  displayOutput: string,
 ): Promise<InteractiveResult> {
   // Scan messages for task_complete
   let completion: CompletionResult = {
@@ -264,6 +457,8 @@ async function gatherResults(
     completion,
     ...totals,
     filesChanged,
+    rawOutput,
+    displayOutput,
   };
 }
 

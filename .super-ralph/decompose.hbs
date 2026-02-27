@@ -91,5 +91,6 @@ EOF
 
 - Signal `task_complete` with `status: "complete"` after creating a bead — the loop continues
 - Signal `task_complete` with `status: "phase_done"` when the spec is fully covered — every requirement has at least one bead
+- **Always provide a `reason`** explaining your decision. For `phase_done`, list which spec requirements are covered and by which beads. For `complete`, state what gaps remain. This reasoning is logged for evaluation.
 - Don't over-decompose — if the spec is simple, 3-5 beads may be enough
 - Don't under-decompose — every requirement in the spec should be traceable to a bead

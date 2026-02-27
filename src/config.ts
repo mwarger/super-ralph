@@ -6,6 +6,7 @@ import type { LoopConfig, ErrorStrategy } from "./types.js";
 const DEFAULT_CONFIG: LoopConfig = {
   engine: {
     timeout_minutes: 30,
+    inactivity_timeout_seconds: 180,
     iteration_delay_ms: 2000,
     strategy: "retry",
     max_retries: 3,

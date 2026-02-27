@@ -1,0 +1,54 @@
+[
+  {
+    "match": "what are we building",
+    "answer": "A complete in-memory task manager library with CRUD, filtering, sorting, stats, and input validation"
+  },
+  {
+    "match": "why now",
+    "answer": "The core CRUD works but filtering has bugs, stats is stubbed out, and there's no input validation. Need to complete it."
+  },
+  {
+    "match": "success",
+    "answer": "All features from README working, bugs fixed, comprehensive tests, type-safe API"
+  },
+  {
+    "match": "boundaries",
+    "answer": "In-memory only — no persistence, no async, no UI. Just a clean library."
+  },
+  {
+    "match": "exist",
+    "answer": 0
+  },
+  {
+    "match": "risk",
+    "answer": "The tag filter bug (AND vs OR) might break existing consumers. The stats module is completely unimplemented."
+  },
+  {
+    "match": "constraint",
+    "answer": "Must stay synchronous and dependency-free. TypeScript strict mode."
+  },
+  {
+    "match": "approach",
+    "answer": 0
+  },
+  {
+    "match": "looks right",
+    "answer": 0
+  },
+  {
+    "match": "draft",
+    "answer": 0
+  },
+  {
+    "match": "proceed",
+    "answer": 0
+  },
+  {
+    "match": "ready",
+    "answer": 0
+  },
+  {
+    "match": "final thought",
+    "answer": 0
+  }
+]

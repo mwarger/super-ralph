@@ -65,9 +65,10 @@ run_test "Forward Phase"      "$SCRIPT_DIR/e2e-forward.sh"
 run_test "Decompose Phase"    "$SCRIPT_DIR/e2e-decompose.sh"
 run_test "Reverse Phase"      "$SCRIPT_DIR/e2e-reverse.sh"
 
-# Live integration test (only when --live is passed)
+# Live integration tests (only when --live is passed)
 if $LIVE; then
   run_test "Live Integration Pipeline" "$SCRIPT_DIR/e2e-live.sh"
+  run_test "Complex Live Integration" "$SCRIPT_DIR/e2e-live-complex.sh"
 fi
 
 # --- Suite Summary ---

@@ -62,6 +62,8 @@ export async function runForward(projectDir: string, flags: ForwardFlags): Promi
         '- status: "phase_done" — all work is done, loop ends',
         '- status: "blocked" — you can\'t proceed, explain why',
         '- status: "failed" — something went wrong, explain what',
+        "",
+        "IMPORTANT: Always provide a `reason` explaining your status decision. For complete, summarize what you implemented and which acceptance criteria you verified. For blocked/failed, explain what went wrong. This is critical for evaluation.",
       ].join("\n");
 
       return {

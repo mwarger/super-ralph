@@ -65,6 +65,8 @@ export async function runDecompose(projectDir: string, flags: DecomposeFlags): P
         '- status: "phase_done" — ALL spec requirements are covered by beads. Loop ends. Signal this as soon as the spec is fully decomposed.',
         '- status: "blocked" — you can\'t proceed, explain why',
         '- status: "failed" — something went wrong, explain what',
+        "",
+        "IMPORTANT: Always provide a `reason` explaining your status decision. For phase_done, list which spec requirements are covered and by which beads (e.g., 'All 5 spec requirements covered: arithmetic ops (bd-xxx.1), error handling (bd-xxx.2), ...'). For complete, state what gaps remain. This is critical for evaluation.",
       ].join("\n");
 
       return {
@@ -72,7 +74,7 @@ export async function runDecompose(projectDir: string, flags: DecomposeFlags): P
         model,
         systemPrompt,
         sessionTitle: `Decompose: ${epicId} (iteration ${iteration})`,
-        iterationLabel: `${epicId}: decompose iteration ${iteration} (${existingBeads.length} beads exist)`,
+        iterationLabel: `${epicId}: decompose iteration ${iteration} (${existingBeads.length} beads before this iteration)`,
       };
     },
 

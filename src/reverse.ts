@@ -2,11 +2,13 @@ import { runPhaseLoop, type PhaseCallbacks } from "./engine.js";
 import { loadTemplate, renderPrompt } from "./template.js";
 import { resolveModel, loadConfig } from "./config.js";
 import { startServer, connectToServer } from "./opencode.js";
-import { runInteractiveSession, createInteractiveClient } from "./interactive.js";
+import { runInteractiveSession, createInteractiveClient, loadMockAnswers } from "./interactive.js";
 import { loadSkill, getCliDir } from "./skills.js";
 import type { ReverseFlags, LoopResult } from "./types.js";
 import { readdirSync, readFileSync, existsSync, mkdirSync, statSync } from "fs";
 import { join } from "path";
+import { startRunTracker } from "./run-state.js";
+import { withTimeout } from "./timeout.js";
 
 export async function runReverse(projectDir: string, flags: ReverseFlags): Promise<LoopResult> {
   if (flags.interactive) {
@@ -42,6 +44,7 @@ async function runInteractive(projectDir: string, flags: ReverseFlags): Promise<
   });
 
   const model = resolveModel([], "", config, flags.modelOverride);
+  const mode = flags.inputs.length > 0 ? "mixed" : "interactive";
 
   const systemPrompt = [
     "You are a super-ralph reverse session agent.",
@@ -51,11 +54,17 @@ async function runInteractive(projectDir: string, flags: ReverseFlags): Promise<
     "Signal completion via the task_complete tool:",
     '- status: "phase_done" — the spec is written and saved',
     '- status: "blocked" — you can\'t proceed, explain why',
+    "",
+    "IMPORTANT: Always provide a `reason` explaining your status decision. For phase_done, summarize what the spec covers and why it's ready for decomposition. This is critical for evaluation.",
   ].join("\n");
+
+  // Load mock answers if provided (for automated testing of interactive mode)
+  if (flags.answersFile) {
+    loadMockAnswers(flags.answersFile);
+  }
 
   if (flags.dryRun) {
     const modelStr = `${model.providerID}/${model.modelID}`;
-    const mode = flags.inputs.length > 0 ? "mixed" : "interactive";
     console.log(`[dry-run] Would start ${mode} reverse session`);
     console.log(`[dry-run] Model: ${modelStr}`);
     console.log(`[dry-run] Output: ${outputDir}`);
@@ -64,9 +73,13 @@ async function runInteractive(projectDir: string, flags: ReverseFlags): Promise<
     return { completed: 0, failed: 0, skipped: 0, totalTime: 0, maxIterations: 1, iterations: [] };
   }
 
+  const runDescription = `Reverse ${mode} session -> spec in ${outputDir}`;
+  const runTracker = startRunTracker(projectDir, runDescription, 1);
+
   // Start server
   const startTime = Date.now();
   let server;
+  let finalized = false;
   if (flags.attach) {
     server = await connectToServer(flags.attach);
     console.log(`Attached to OpenCode server at ${server.url}`);
@@ -80,7 +93,6 @@ async function runInteractive(projectDir: string, flags: ReverseFlags): Promise<
     const v2Client = createInteractiveClient(server.url);
 
     // Create session
-    const mode = flags.inputs.length > 0 ? "mixed" : "interactive";
     const sessionResponse = await v2Client.session.create({ title: `Reverse: ${mode} session` });
     if (!sessionResponse.data) {
       throw new Error("Failed to create session");
@@ -89,22 +101,50 @@ async function runInteractive(projectDir: string, flags: ReverseFlags): Promise<
 
     console.log(`Session: ${sessionId} — starting ${mode} reverse...`);
 
-    // Run interactive session
-    const result = await runInteractiveSession(v2Client, sessionId, prompt, model, systemPrompt);
+    // Run interactive session with timeout protection (same timeout policy as loop phases)
+    const timeoutMs = config.engine.timeout_minutes * 60 * 1000;
+    const inactivityTimeoutMs = config.engine.inactivity_timeout_seconds * 1000;
+    let result;
+    try {
+      result = await withTimeout(
+        runInteractiveSession(v2Client, sessionId, prompt, model, systemPrompt, inactivityTimeoutMs),
+        timeoutMs,
+        `Interactive reverse timed out after ${config.engine.timeout_minutes}m`,
+      );
+    } catch (err) {
+      // Best-effort abort so timed-out sessions do not keep running in the background
+      try {
+        await v2Client.session.abort({ sessionID: sessionId });
+      } catch {
+        // ignore abort failures
+      }
+      throw err;
+    }
 
     const totalTime = Date.now() - startTime;
 
+    runTracker.writeIterationTranscript(1, `reverse ${mode}`, result.rawOutput, result.displayOutput);
+
     if (result.completion.status === "phase_done") {
+      runTracker.finalize("completed");
+      finalized = true;
       console.log("\nSpec complete.");
       return { completed: 1, failed: 0, skipped: 0, totalTime, maxIterations: 1, iterations: [] };
     } else if (result.completion.status === "blocked") {
+      runTracker.finalize("failed");
+      finalized = true;
       console.log(`\nBlocked: ${result.completion.reason || "unknown"}`);
       return { completed: 0, failed: 0, skipped: 1, totalTime, maxIterations: 1, iterations: [] };
     } else {
+      runTracker.finalize("failed");
+      finalized = true;
       console.log(`\nSession ended: ${result.completion.status}`);
       return { completed: 0, failed: 1, skipped: 0, totalTime, maxIterations: 1, iterations: [] };
     }
   } finally {
+    if (!finalized) {
+      runTracker.finalize("failed");
+    }
     server.close();
   }
 }
@@ -160,6 +200,8 @@ async function runAutonomous(projectDir: string, flags: ReverseFlags): Promise<L
         '- status: "phase_done" — the spec covers purpose, behavior, interfaces, and constraints well enough for decomposition. Loop ends. PREFER THIS when the spec is adequate.',
         '- status: "blocked" — you can\'t proceed, explain why',
         '- status: "failed" — something went wrong, explain what',
+        "",
+        "IMPORTANT: Always provide a `reason` explaining your status decision. For phase_done, explain what coverage criteria you verified (e.g., 'Spec covers purpose, behavior, 4 interfaces, constraints, and dependencies — ready for decomposition'). This is critical for evaluation.",
         "",
         "IMPORTANT: Do not over-iterate. If the spec covers the core requirements and is ready for decomposition, signal phase_done. Polishing is not a reason to continue.",
       ].join("\n");

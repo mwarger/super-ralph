@@ -16,6 +16,7 @@ export interface BeadInfo {
 export interface LoopConfig {
   engine: {
     timeout_minutes: number;
+    inactivity_timeout_seconds: number;
     iteration_delay_ms: number;
     strategy: ErrorStrategy;
     max_retries: number;
@@ -55,6 +56,7 @@ export interface IterationResult {
   cost?: number;
   tokens?: { input: number; output: number; reasoning: number };
   filesChanged?: string[];
+  transcriptPath?: string;
 }
 
 // Completion result from OpenCode session
@@ -95,6 +97,7 @@ export interface ReverseFlags extends PhaseFlags {
   outputDir?: string;
   skill?: string;           // --skill <name-or-path> — question bank
   interactive?: boolean;    // --interactive — force interactive mode (default when no inputs)
+  answersFile?: string;     // --answers <path> — JSON file with pre-recorded answers for non-interactive testing
 }
 
 export type ErrorStrategy = "retry" | "skip" | "abort";

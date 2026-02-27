@@ -61,7 +61,11 @@ export function formatProgressEntry(iteration: number, result: IterationResult):
   if (result.filesChanged && result.filesChanged.length > 0) {
     entry += `- Files changed: ${result.filesChanged.join(", ")}\n`;
   }
-  
+
+  if (result.transcriptPath) {
+    entry += `- Transcript: ${result.transcriptPath}\n`;
+  }
+
   if (result.reason) {
     entry += `- Notes: ${result.reason}\n`;
   }

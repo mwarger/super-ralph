@@ -233,4 +233,5 @@ Before writing or refining the spec:
 - This is a clean-room specification — describe behavior, not code structure.
 - Each iteration should meaningfully improve coverage or depth.
 - If the input is complex enough to warrant multiple specs, you may create additional spec files. But the default is one progressively refined spec.
+- **Always provide a `reason`** when calling `task_complete`. For `phase_done`, explain what the spec covers and why it's ready for decomposition. For `complete`, state what gaps remain. This reasoning is logged for evaluation.
 {{/if}}

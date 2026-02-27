@@ -6,6 +6,7 @@ import { runInit } from "./init.js";
 import { getEpicProgress, getAllBeads } from "./beads.js";
 import { loadConfig } from "./config.js";
 import { checkBrokenSymlinks } from "./opencode.js";
+import { getRunStatus } from "./run-status.js";
 import { writeFileSync } from "fs";
 import type { ForwardFlags, DecomposeFlags, ReverseFlags, LoopResult } from "./types.js";
 
@@ -22,7 +23,8 @@ Usage:
   super-ralph decompose --spec <path> [options]  Spec -> beads (create beads from spec)
   super-ralph reverse [inputs...] [options]      Input -> spec (generate spec from input)
   super-ralph init                                Scaffold .super-ralph/ in current project
-  super-ralph status --epic <ID>                 Show epic progress
+  super-ralph status --epic <ID>                 Show epic bead progress
+  super-ralph status --run <runId|latest>        Show run artifact status
   super-ralph doctor                             Preflight checks
   super-ralph help                               Show this help
 
@@ -43,11 +45,16 @@ Decompose options:
   --spec <path>              Path to spec/PRD file (required)
   --epic-title <title>       Title for the created epic
 
+Status options:
+  --epic <ID>                Show bead progress for an epic
+  --run <runId|latest>       Show run artifact status
+
 Reverse options:
   [inputs...]                Positional args: paths, URLs, or descriptions
   --skill <name-or-path>     Question bank / skill to use
   --interactive              Force interactive mode (default when no inputs)
   --output <dir>             Output directory for specs (default: docs/specs)
+  --answers <path>           JSON file with pre-recorded answers (for testing interactive mode)
 
 Reverse modes:
   No inputs, no --interactive  → interactive (implied)
@@ -157,6 +164,7 @@ async function cmdReverse(positionals: string[], flags: Record<string, string | 
     maxIterations: flags["max-iterations"] ? parseInt(flags["max-iterations"] as string, 10) : undefined,
     modelOverride: flags.model as string | undefined,
     attach: flags.attach as string | undefined,
+    answersFile: flags.answers as string | undefined,
   };
 
   const projectDir = process.cwd();
@@ -169,9 +177,42 @@ async function cmdReverse(positionals: string[], flags: Record<string, string | 
 }
 
 async function cmdStatus(flags: Record<string, string | boolean>): Promise<void> {
-  const epicId = flags.epic as string;
+  const epicId = flags.epic as string | undefined;
+  const runRef = flags.run as string | undefined;
+
+  if (epicId && runRef) {
+    console.error("Error: use either --epic <ID> or --run <runId|latest>, not both");
+    process.exit(1);
+  }
+
+  if (runRef) {
+    const projectDir = process.cwd();
+    try {
+      const run = getRunStatus(projectDir, runRef);
+      console.log(`Run: ${run.runId}`);
+      console.log(`Status: ${run.session.status}`);
+      console.log(`Description: ${run.session.description}`);
+      console.log(`Iteration: ${run.session.currentIteration}/${run.session.maxIterations}`);
+      console.log(`Completed: ${run.session.completed}, Failed: ${run.session.failed}, Skipped: ${run.session.skipped}`);
+      console.log(`Started: ${run.session.startedAt}`);
+      console.log(`Updated: ${run.session.updatedAt}`);
+      console.log(`Events: ${run.eventCount}`);
+      if (run.lastEventType) {
+        const suffix = run.lastEventTimestamp ? ` @ ${run.lastEventTimestamp}` : "";
+        console.log(`Last event: ${run.lastEventType}${suffix}`);
+      }
+      if (run.latestTranscript) {
+        console.log(`Latest transcript: ${run.latestTranscript}`);
+      }
+      return;
+    } catch (error) {
+      console.error(`Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  }
+
   if (!epicId) {
-    console.error("Error: --epic <ID> is required");
+    console.error("Error: --epic <ID> or --run <runId|latest> is required");
     process.exit(1);
   }
 

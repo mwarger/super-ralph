@@ -4,6 +4,7 @@ import { existsSync, lstatSync, readdirSync, unlinkSync, readlinkSync } from "fs
 import { join } from "path";
 import { homedir } from "os";
 import type { CompletionResult } from "./types.js";
+import { StreamCapture } from "./output-parser.js";
 
 export type { OpencodeClient };
 
@@ -12,6 +13,8 @@ export interface PromptResult {
   cost: number;
   tokens: { input: number; output: number; reasoning: number };
   filesChanged: string[];
+  rawOutput: string;
+  displayOutput: string;
 }
 
 export interface ServerHandle {
@@ -133,6 +136,7 @@ export async function runPrompt(
   model: { providerID: string; modelID: string },
   systemPrompt?: string,
   serverUrl?: string,
+  inactivityTimeoutMs: number = 180000,
 ): Promise<PromptResult> {
   // Use v2 client for promptAsync + event streaming
   const v2 = createV2Client({ baseUrl: serverUrl || "http://127.0.0.1:4096" });
@@ -148,72 +152,132 @@ export async function runPrompt(
     ...(systemPrompt && { system: systemPrompt }),
   });
 
-  // Stream events until session goes idle
-  for await (const event of stream) {
-    const ev = event as Record<string, unknown>;
-    const eventType = ev.type as string;
+  // Stream events until session goes idle, with inactivity watchdog + heartbeat.
+  const capture = new StreamCapture();
+  const iterator = stream[Symbol.asyncIterator]();
+  const pollMs = 10_000;
+  const heartbeatMs = 30_000;
+  let lastEventAt = Date.now();
+  let lastHeartbeatAt = Date.now();
 
-    // Debug: log event details
-    if (process.env.SUPER_RALPH_DEBUG) {
-      if (eventType === "message.part.delta" || eventType === "message.part.updated") {
+  try {
+    while (true) {
+      let tickTimer: ReturnType<typeof setTimeout> | undefined;
+      const nextResult = await Promise.race([
+        iterator.next().then((result) => ({ type: "event" as const, result })),
+        new Promise<{ type: "tick" }>((resolve) =>
+          { tickTimer = setTimeout(() => resolve({ type: "tick" }), pollMs); }
+        ),
+      ]);
+
+      if (tickTimer) clearTimeout(tickTimer);
+
+      if (nextResult.type === "tick") {
+        const idleForMs = Date.now() - lastEventAt;
+        if (idleForMs >= inactivityTimeoutMs) {
+          throw new Error(`Session inactive for ${Math.round(inactivityTimeoutMs / 1000)}s`);
+        }
+
+        if (Date.now() - lastHeartbeatAt >= heartbeatMs) {
+          const idleSec = Math.round(idleForMs / 1000);
+          process.stdout.write(`\n[heartbeat] session active, waiting for events (${idleSec}s idle)\n`);
+          lastHeartbeatAt = Date.now();
+        }
+        continue;
+      }
+
+      if (nextResult.result.done) break;
+
+      const ev = nextResult.result.value as Record<string, unknown>;
+      const eventType = ev.type as string;
+      lastEventAt = Date.now();
+
+      if (eventType) {
+        capture.addRawLine(JSON.stringify(ev));
+      }
+
+      // Debug: log event details
+      if (process.env.SUPER_RALPH_DEBUG) {
+        if (eventType === "message.part.delta" || eventType === "message.part.updated") {
+          const props = ev.properties as Record<string, unknown>;
+          process.stderr.write(`[debug] ${eventType}: ${JSON.stringify(props).slice(0, 300)}\n`);
+        } else if (eventType === "session.idle" || eventType === "session.error") {
+          process.stderr.write(`[debug] ${eventType}: ${JSON.stringify(ev.properties).slice(0, 300)}\n`);
+        }
+      }
+
+      if (eventType === "message.part.delta") {
+        // Real-time text streaming — print deltas as they arrive
         const props = ev.properties as Record<string, unknown>;
-        process.stderr.write(`[debug] ${eventType}: ${JSON.stringify(props).slice(0, 300)}\n`);
-      } else if (eventType === "session.idle" || eventType === "session.error") {
-        process.stderr.write(`[debug] ${eventType}: ${JSON.stringify(ev.properties).slice(0, 300)}\n`);
+        if ((props.sessionID as string) !== sessionId) continue;
+        if ((props.field as string) === "text" && props.delta) {
+          const text = props.delta as string;
+          capture.addDisplayText(text);
+          process.stdout.write(text);
+        }
+      } else if (eventType === "message.part.updated") {
+        const props = ev.properties as Record<string, unknown>;
+        const part = props.part as Record<string, unknown> | undefined;
+        const eventSessionId = part?.sessionID as string || props.sessionID as string;
+        if (eventSessionId !== sessionId || !part) continue;
+
+        const partType = part.type as string;
+        if (partType === "tool") {
+          const toolName = part.tool as string;
+          const state = part.state as Record<string, unknown> | undefined;
+          const status = state?.status as string | undefined;
+          const error = state?.error as string | undefined;
+
+          if (status) {
+            const toolText = capture.toolStatusText(toolName, status, error);
+            if (toolText) {
+              capture.addDisplayText(toolText);
+              process.stdout.write(toolText);
+            }
+          }
+        }
+      } else if (eventType === "session.idle") {
+        const props = ev.properties as Record<string, unknown>;
+        if ((props.sessionID as string) === sessionId) {
+          capture.addDisplayText("\n");
+          process.stdout.write("\n");
+          break;
+        }
+      } else if (eventType === "session.error") {
+        const props = ev.properties as Record<string, unknown>;
+        if ((props.sessionID as string) === sessionId) {
+          const error = props.error as Record<string, unknown> | string | undefined;
+          let errorMsg = "unknown error";
+          if (typeof error === "string") {
+            errorMsg = error;
+          } else if (error && typeof error === "object") {
+            const name = error.name as string || "Error";
+            const data = error.data as Record<string, unknown> | undefined;
+            const message = data?.message as string || JSON.stringify(error);
+            errorMsg = `${name}: ${message}`;
+          }
+          const errorText = `\n[session error: ${errorMsg}]\n`;
+          capture.addDisplayText(errorText);
+          process.stdout.write(errorText);
+          break;
+        }
       }
     }
-
-    if (eventType === "message.part.delta") {
-      // Real-time text streaming — print deltas as they arrive
-      const props = ev.properties as Record<string, unknown>;
-      if ((props.sessionID as string) !== sessionId) continue;
-      if ((props.field as string) === "text" && props.delta) {
-        process.stdout.write(props.delta as string);
+  } catch (err) {
+    if ((err as Error).message.includes("Session inactive for")) {
+      // Best-effort abort to avoid zombie sessions after inactivity timeout.
+      try {
+        await v2.session.abort({ sessionID: sessionId });
+      } catch {
+        // ignore abort failures
       }
-    } else if (eventType === "message.part.updated") {
-      const props = ev.properties as Record<string, unknown>;
-      const part = props.part as Record<string, unknown> | undefined;
-      const eventSessionId = part?.sessionID as string || props.sessionID as string;
-      if (eventSessionId !== sessionId || !part) continue;
-
-      const partType = part.type as string;
-
-      if (partType === "tool") {
-        const toolName = part.tool as string;
-        const state = part.state as Record<string, unknown> | undefined;
-        const status = state?.status as string | undefined;
-
-        if (status === "running") {
-          process.stdout.write(`\n[tool: ${toolName}] `);
-        } else if (status === "completed") {
-          process.stdout.write(`done\n`);
-        } else if (status === "error") {
-          const error = state?.error as string | undefined;
-          process.stdout.write(`error: ${error || "unknown"}\n`);
-        }
-      }
-    } else if (eventType === "session.idle") {
-      const props = ev.properties as Record<string, unknown>;
-      if ((props.sessionID as string) === sessionId) {
-        process.stdout.write("\n");
-        break;
-      }
-    } else if (eventType === "session.error") {
-      const props = ev.properties as Record<string, unknown>;
-      if ((props.sessionID as string) === sessionId) {
-        const error = props.error as Record<string, unknown> | string | undefined;
-        let errorMsg = "unknown error";
-        if (typeof error === "string") {
-          errorMsg = error;
-        } else if (error && typeof error === "object") {
-          const name = error.name as string || "Error";
-          const data = error.data as Record<string, unknown> | undefined;
-          const message = data?.message as string || JSON.stringify(error);
-          errorMsg = `${name}: ${message}`;
-        }
-        process.stdout.write(`\n[session error: ${errorMsg}]\n`);
-        break;
-      }
+    }
+    throw err;
+  } finally {
+    // Explicitly close the event stream to avoid lingering SSE connections
+    // that can delay process exit by minutes.
+    if (typeof stream.return === "function") {
+      await stream.return(undefined);
     }
   }
 
@@ -268,6 +332,8 @@ export async function runPrompt(
     cost: totalCost,
     tokens: { input: totalInput, output: totalOutput, reasoning: totalReasoning },
     filesChanged,
+    rawOutput: capture.getRawOutput(),
+    displayOutput: capture.getDisplayOutput(),
   };
 }
 
