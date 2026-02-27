@@ -14,15 +14,29 @@ The engine has three composable phases — **reverse**, **decompose**, and **for
 
 ## Installation
 
+Quick install (one command):
+
+```bash
+curl -fsSL "https://raw.githubusercontent.com/mwarger/super-ralph/main/install.sh?$(date +%s)" | bash
+```
+
+This installer will:
+- install missing prerequisites (`bun`, `br`) if needed
+- clone/update super-ralph in `~/.super-ralph-cli`
+- install dependencies
+- install a `super-ralph` command into a writable bin directory
+
+Manual install (if you prefer):
+
 ```bash
 git clone https://github.com/mwarger/super-ralph.git ~/.super-ralph-cli
 cd ~/.super-ralph-cli && bun install
 ```
 
-Add to your PATH or alias:
+Then add to your PATH or alias:
 
 ```bash
-alias super-ralph="bun run ~/.super-ralph-cli/src/cli.ts"
+alias super-ralph="bun run ~/.super-ralph-cli/src/index.ts"
 ```
 
 ## Per-Project Setup
@@ -51,7 +65,8 @@ super-ralph init                              Scaffold .super-ralph/ in current 
 super-ralph reverse [inputs...] [--skill ...] Input -> spec (interactive or autonomous)
 super-ralph decompose --spec <path>           Spec -> beads
 super-ralph forward --epic <ID>               Beads -> code
-super-ralph status --epic <ID>                Show progress
+super-ralph status --epic <ID>                Show bead progress for an epic
+super-ralph status --run <runId|latest>       Show run artifact status
 super-ralph doctor                            Preflight checks
 super-ralph help                              Show all options
 ```
@@ -122,6 +137,31 @@ All phases use the same `task_complete` tool with four statuses:
 
 For forward, there's a third exit condition: no ready beads means the epic is complete.
 
+## Run Artifacts and Debugging
+
+Each phase run writes structured diagnostics under `.super-ralph/runs/<runId>/`:
+
+- `session.json` — current state for this run (`running`, `completed`, `failed`), iteration counters, timestamps
+- `events.jsonl` — newline-delimited engine events (`iteration.started`, `iteration.completed`, `loop.completed`, etc.)
+- `iterations/*.log` — per-iteration transcripts with both display stream and raw event stream (when available)
+
+The latest run state is also mirrored to `.super-ralph/session.json` for quick inspection.
+
+Common checks during a long run:
+
+```bash
+# watch current run state
+cat .super-ralph/session.json
+
+# inspect recent events from a specific run
+tail -n 30 .super-ralph/runs/<runId>/events.jsonl
+
+# open the latest transcript
+ls -1t .super-ralph/runs/<runId>/iterations | head -n 1
+```
+
+For a full artifact walkthrough, see [Run Artifacts Reference](docs/reference/run-artifacts.md).
+
 ## Model Selection
 
 Beads carry semantic `area:` labels (e.g., `area:frontend-design`, `area:backend`, `area:review`) that describe the type of work. The config maps areas to models:
@@ -173,14 +213,23 @@ The super-ralph CLI runs the loop engine via the OpenCode SDK. `decompose` reads
 ## Updating
 
 ```bash
-cd ~/.super-ralph-cli && git pull
+curl -fsSL "https://raw.githubusercontent.com/mwarger/super-ralph/main/install.sh?$(date +%s)" | bash
 ```
 
-The `cli.path` in `.super-ralph/config.toml` points to the install directory, so it stays stable across `git pull` — no need to re-run init after updating.
+The installer is idempotent: it updates the existing checkout, refreshes dependencies, and re-installs the `super-ralph` wrapper.
+
+## Uninstalling
+
+```bash
+curl -fsSL "https://raw.githubusercontent.com/mwarger/super-ralph/main/uninstall.sh?$(date +%s)" | bash
+```
+
+This removes the managed `super-ralph` wrapper and `~/.super-ralph-cli`.
 
 ## Design Documentation
 
 - [Three-Phase Ralph Loop Design](docs/plans/2026-02-24-three-phase-ralph-loop-design.md) — Current architecture (reverse, decompose, forward phases)
+- [Run Artifacts Reference](docs/reference/run-artifacts.md) — Event logs, session state, and transcript files for debugging
 - [Two-Phase Pipeline Design](docs/plans/2026-02-22-two-phase-pipeline-design.md) — Historical (superseded by three-phase model)
 - [Distribution Design](docs/plans/2026-02-21-super-ralph-distribution-design.md) — How global install works
 - [Original SDLC Design](docs/plans/2026-02-21-superpowers-ralph-sdlc-design.md) — Historical (superseded by two-phase pipeline)
