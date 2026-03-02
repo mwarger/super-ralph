@@ -1489,7 +1489,7 @@ from retry decrements that the tracker does not model.
 
 The engine MUST register a console renderer as the first event listener. The
 console renderer writes human-readable output to **stderr** (not stdout — stdout
-is reserved for `--json` structured output and must not be polluted by
+is reserved for sub-agent streaming output and must not be polluted by
 diagnostic messages).
 
 No terminal formatting library is required. Output MUST use plain text with
@@ -1782,6 +1782,9 @@ configuration file is missing entirely, the system MUST use all defaults.
 ### 7.4 Loading Behavior
 
 - **Missing file:** Return all defaults. This MUST NOT be an error.
+- **Malformed file:** If the TOML file exists but contains syntax errors, the
+  system MUST throw an error with the parse error message. Partially valid
+  configuration MUST NOT be silently accepted.
 - **Present file:** Perform a shallow merge per section with defaults. File
   values override defaults at the section-key level (not deeply nested).
 - The `[models.areas]` sub-table MUST be extracted separately from flat

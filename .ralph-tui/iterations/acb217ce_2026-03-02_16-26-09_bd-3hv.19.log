@@ -1,0 +1,108 @@
+# Iteration 13 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.19
+- **Task Title**: Fix spec: Interactive mode infrastructure scope and cleanup
+- **Description**: ## Problem
+§2.4.5 (Interactive Mode) says it 'MUST NOT use the standard engine loop' and manages its own server/session lifecycle. §11.2 confirms this is intentional. However, the spec never explicitl...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T23:26:09.517Z
+- **Ended At**: 2026-03-02T23:30:18.110Z
+- **Duration**: 4m 8s
+- **Input Tokens**: 77
+- **Output Tokens**: 4752
+- **Total Tokens**: 4829
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by invoking the brainstorming skill since this is a creative/design task involving spec changes.
+
+Actually, looking at this more carefully, this is a spec editing task with clear requirements already defined. Let me explore the spec file to understand the current state before making changes.
+[94m[Agent][0m Explore spec for interactive mode
+[94m[Glob][0m pattern: [96m**/*.md[0m
+[94m[Bash][0m Find all markdown files $ find /Users/mat/dev/farsight/agent-framework -name "*.md" -not -path "*/node_modules/*" | head -30
+[94m[Bash][0m List all spec markdown files $ find /Users/mat/dev/farsight/agent-framework/spec -name "*.md" | sort
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/README.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/tasks/prd-ralph-tui-clean-room-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/engine/engine.md[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec[0m pattern: [96m§[0-9]|^## [0-9]|^### [0-9]|^# [0-9]|Interactive Mode|Cleanup|finally block|Event system|Run tracker|Progress log|Transcript writ|LoopResult|--json|confirmation"[0m
+[94m[Bash][0m Search for numbered sections in spec files $ grep -rn "§\|^## [0-9]\|^### [0-9]\|^#### [0-9]" /Users/mat/dev/farsight/agent-framework/spec/ | hea...
+[94m[Bash][0m Search for the specific section topics across spec files $ grep -rn "Interactive Mode\|2\.4\.5\|2\.8\|2\.10\|4\.1\|5\.6\|6\.4\.1\|11\.2\|--json\|finally block\...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/architecture/runtime-lifecycle.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/interactive.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/events.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/run-state.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/progress.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/cli/index.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/types.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/persistence-and-io.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/phases/reverse.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/workflows/core-workflows.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now let me read the exact lines around §2.4.5 and the interactive mode module spec to make precise edits.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/interactive.md[0m
+Let me also check the reverse command section and §11.2.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m#### 3\.1\.\d+ `reverse`[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now I have a clear picture. Let me also check the `InteractiveResult` type mentioned in the module spec, as this is relevant for defining the return value.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96mInteractiveResult[0m
+Good — `InteractiveResult` isn't in the main spec yet, only in the module spec. Now I have everything I need. Let me make the four required changes:
+
+1. Add §2.4.5.1 'Infrastructure Scope' after §2.4.5
+2. Add cleanup guarantees for interactive mode
+3. Specify the return value / exit behavior
+4. Document `--json` flag behavior in interactive mode
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "**Timeout:** Interactive mode MUST still enforce t..." → "**Timeout:** Interactive mode MUST still enforce t..."
+[94m[TodoWrite][0m
+Now update §11.2 to reference the new subsections.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "### 11.2 Interactive Reverse Breaks the Engine Pat..." → "### 11.2 Interactive Reverse Breaks the Engine Pat..."
+[94m[TodoWrite][0m
+Now update the interactive module spec to add a note about infrastructure scope.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/interactive.md[0m edit: "## Purpose
+
+The interactive session module is a pa..." → "## Purpose
+
+The interactive session module is a pa..."
+[94m[TodoWrite][0m
+Let me verify the changes look correct by reading the updated sections.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+All changes look correct. Here's a summary of what was done:
+
+## Changes Made
+
+### 1. `docs/specs/super-ralph-spec.md` — Three new subsections after §2.4.5
+
+- **§2.4.5.1 Infrastructure Scope** — Explicitly states interactive mode MUST NOT use: event system, run tracker, progress log, transcripts, or console renderer. Each exclusion references the relevant spec section.
+
+- **§2.4.5.2 Cleanup Guarantees** — Defines that interactive mode MUST clean up on ALL exit paths: abort the session (best-effort) and close the server. References §2.8 as the engine equivalent.
+
+- **§2.4.5.3 Return Value and Exit Behavior** — Specifies `InteractiveResult` as the return type (with full schema), defines CLI exit codes (0 for complete, 1 for blocked/error), and states `--json` is silently ignored.
+
+### 2. `docs/specs/super-ralph-spec.md` — §11.2 expanded
+
+Added a paragraph explaining why the new subsections exist: an implementer can't safely infer exclusions from "MUST NOT use the engine" alone.
+
+### 3. `spec/modules/integrations/interactive.md` — New "Infrastructure Scope" section
+
+Added a concise summary section cross-referencing all the new spec subsections, so the module-level spec stays in sync with the main spec.
+
+<promise>COMPLETE</promise>
