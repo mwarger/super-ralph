@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "sessionId": "19cdf538-e65c-4a24-be03-beb31e2fabf2",
+  "status": "running",
+  "startedAt": "2026-03-02T22:15:24.790Z",
+  "updatedAt": "2026-03-02T22:22:32.175Z",
+  "currentIteration": 0,
+  "maxIterations": 10,
+  "tasksCompleted": 0,
+  "isPaused": false,
+  "agentPlugin": "claude",
+  "trackerState": {
+    "plugin": "beads-rust",
+    "epicId": "bd-3hv",
+    "totalTasks": 6,
+    "tasks": [
+      {
+        "id": "bd-3hv.1",
+        "title": "Deep study of source material",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "bd-3hv.2",
+        "title": "Draft clean-room specification",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "bd-3hv.3",
+        "title": "Fresh eyes review pass 1",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "bd-3hv.4",
+        "title": "Fresh eyes review pass 2",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "bd-3hv.5",
+        "title": "Fresh eyes review pass 3",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "bd-3hv.6",
+        "title": "Clean-room verification and consolidation",
+        "status": "open",
+        "completedInSession": false
+      }
+    ]
+  },
+  "iterations": [],
+  "skippedTaskIds": [],
+  "cwd": "/Users/mat/dev/farsight/agent-framework",
+  "activeTaskIds": [],
+  "subagentPanelVisible": false
+}

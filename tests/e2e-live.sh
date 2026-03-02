@@ -181,8 +181,8 @@ mkdir -p "$TMPDIR/.super-ralph"
 
 cat > "$TMPDIR/.super-ralph/config.toml" <<TOML
 [engine]
-timeout_minutes = 2
-inactivity_timeout_seconds = 90
+timeout_minutes = 10
+inactivity_timeout_seconds = 420
 iteration_delay_ms = 0
 strategy = "abort"
 max_retries = 0

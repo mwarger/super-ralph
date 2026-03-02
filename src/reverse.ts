@@ -2,7 +2,7 @@ import { runPhaseLoop, type PhaseCallbacks } from "./engine.js";
 import { loadTemplate, renderPrompt } from "./template.js";
 import { resolveModel, loadConfig } from "./config.js";
 import { startServer, connectToServer } from "./opencode.js";
-import { runInteractiveSession, createInteractiveClient, loadMockAnswers } from "./interactive.js";
+import { runInteractiveSession, createInteractiveClient, loadMockAnswers, clearMockAnswers } from "./interactive.js";
 import { loadSkill, getCliDir } from "./skills.js";
 import type { ReverseFlags, LoopResult } from "./types.js";
 import { readdirSync, readFileSync, existsSync, mkdirSync, statSync } from "fs";
@@ -61,6 +61,8 @@ async function runInteractive(projectDir: string, flags: ReverseFlags): Promise<
   // Load mock answers if provided (for automated testing of interactive mode)
   if (flags.answersFile) {
     loadMockAnswers(flags.answersFile);
+  } else {
+    clearMockAnswers();
   }
 
   if (flags.dryRun) {

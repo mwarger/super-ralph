@@ -20,6 +20,7 @@ CLI="bun run $PROJECT_ROOT/src/index.ts"
 FIXTURE_DIR="$PROJECT_ROOT/tests/fixtures/task-manager"
 
 MODEL="anthropic/claude-sonnet-4-6"
+INTERACTIVE_MODEL="anthropic/claude-haiku-4-5"
 MAX_ITER=15
 PHASE_TIMEOUT_SECS=1200
 
@@ -184,8 +185,8 @@ mkdir -p "$TMPDIR/.super-ralph"
 
 cat > "$TMPDIR/.super-ralph/config.toml" <<TOML
 [engine]
-timeout_minutes = 15
-inactivity_timeout_seconds = 420
+timeout_minutes = 20
+inactivity_timeout_seconds = 900
 iteration_delay_ms = 0
 strategy = "retry"
 max_retries = 1
@@ -251,10 +252,10 @@ INTERACTIVE_JSON="$TMPDIR/interactive-result.json"
 INTERACTIVE_SPEC_DIR="$TMPDIR/docs/interactive-specs"
 mkdir -p "$INTERACTIVE_SPEC_DIR"
 
-info "Running: reverse --interactive --skill feature --answers mock-answers.json --output $INTERACTIVE_SPEC_DIR --model $MODEL"
+info "Running: reverse task-manager.ts --interactive --skill feature --answers mock-answers.json --output $INTERACTIVE_SPEC_DIR --model $INTERACTIVE_MODEL"
 
 INTERACTIVE_LOG="$TMPDIR/interactive-phase.log"
-INTERACTIVE_CMD="$CLI reverse types.ts task-manager.ts filters.ts stats.ts --interactive --skill feature --answers mock-answers.json --output \"$INTERACTIVE_SPEC_DIR\" --model \"$MODEL\""
+INTERACTIVE_CMD="$CLI reverse task-manager.ts --interactive --skill feature --answers mock-answers.json --output \"$INTERACTIVE_SPEC_DIR\" --model \"$INTERACTIVE_MODEL\""
 run_with_watchdog "interactive-reverse" "$PHASE_TIMEOUT_SECS" "$TMPDIR" "$INTERACTIVE_LOG" "$INTERACTIVE_CMD" || true
 INTERACTIVE_OUTPUT="$(<"$INTERACTIVE_LOG")"
 

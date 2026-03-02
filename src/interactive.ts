@@ -48,6 +48,15 @@ export function loadMockAnswers(filePath: string): void {
   console.log(`Loaded ${mockAnswers.length} mock answers from ${filePath}`);
 }
 
+export function clearMockAnswers(): void {
+  mockAnswers = null;
+  mockAnswerLog = [];
+}
+
+export function hasMockAnswersLoaded(): boolean {
+  return mockAnswers !== null;
+}
+
 /**
  * Get the log of questions asked and answers given during a mock session.
  */

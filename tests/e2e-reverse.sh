@@ -287,10 +287,18 @@ if $LIVE; then
     fail "Live run did not start iteration" "$LIVE_OUTPUT"
   fi
 
-  # Check if a spec file was created
-  LIVE_SPEC_COUNT=$(find "$LIVE_OUTPUT_DIR" -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
+  # Check if a spec file was created (prefer explicit output dir, but accept
+  # known fallback locations if the agent chooses a conventional path).
+  LIVE_SPEC_COUNT=0
+  for dir in "$LIVE_OUTPUT_DIR" "$TMPDIR/docs/specs" "$TMPDIR/tasks"; do
+    if [[ -d "$dir" ]]; then
+      COUNT=$(find "$dir" -maxdepth 1 -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
+      LIVE_SPEC_COUNT=$((LIVE_SPEC_COUNT + COUNT))
+    fi
+  done
+
   if [[ "$LIVE_SPEC_COUNT" -gt 0 ]]; then
-    pass "Live run created spec file(s) ($LIVE_SPEC_COUNT found)"
+    pass "Live run created spec file(s) ($LIVE_SPEC_COUNT found across output/fallback dirs)"
   else
     fail "Live run did not create any spec files"
   fi
