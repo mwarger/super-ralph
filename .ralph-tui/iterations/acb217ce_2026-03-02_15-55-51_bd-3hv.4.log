@@ -1,0 +1,117 @@
+# Iteration 5 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.4
+- **Task Title**: Fresh eyes review pass 2
+- **Description**: ## Objective
+Carefully review this entire spec with completely fresh eyes. You have
+NOT seen this spec before. You are reviewing it as a clean-room
+specification — a document that must be complete eno...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T22:55:51.707Z
+- **Ended At**: 2026-03-02T22:59:58.239Z
+- **Duration**: 4m 6s
+- **Input Tokens**: 70
+- **Output Tokens**: 10405
+- **Total Tokens**: 10475
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by reading the spec and checking for existing fix-up beads from previous review passes.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Show parent bead and existing children $ br show bd-3hv 2>/dev/null || echo "br show failed"
+Let me read the full spec and check existing fix-up beads.
+[94m[Read][0m [95m/Users/mat/.claude/projects/-Users-mat-dev-farsight-agent-framework/aa9c9670-44e6-4a8c-8d23-b5a7fd9f4b7b/tool-results/toolu_0184ikRA1MKAbHUKwevyNaFQ.txt[0m
+
+[91m[Error: File content (25834 tokens) exceeds maximum allowed tokens (25000). Please use offset and limit parameters to read specific portions of the file, or use the GrepTool to search for specific content.][0m
+[94m[Bash][0m Show existing fix-up beads from pass 1 $ br show bd-3hv.7 && echo "---" && br show bd-3hv.8 && echo "---" && br show bd-3hv.9 && echo "---" &...
+
+[91m[Error: <tool_use_error>Sibling tool call errored</tool_use_error>][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Show existing fix-up beads $ br show bd-3hv.7 && echo "===" && br show bd-3hv.8 && echo "===" && br show bd-3hv.9 && echo "===" &...
+Now let me read the rest of the spec.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now I have the full spec. Let me create a todo list to track my review work.
+[94m[TodoWrite][0m
+I've now read the entire spec and all 6 existing fix-up beads (bd-3hv.7 through bd-3hv.12, all CLOSED). Let me document my findings.
+
+## Review Pass 2 — Findings
+
+### Significant Gaps (need fix-up beads)
+
+**1. Transcript file content format is completely unspecified**
+§6.3 defines transcript file NAMING (`<NNN>-<label>.log`) but never says what goes IN them. §2.1.3 step 5h says "Record the iteration in the progress log" (that's `progress.md`) and the run tracker writes events to `events.jsonl`, but nowhere does the spec say what content goes into the `.log` transcript files, when they're written, or by which component. An implementer would have to guess.
+
+**2. `config.opencode.url` contradicts `createOpencode({ port: 0 })`**
+§2.5.1 says "The server URL MUST default to `config.opencode.url` (default: `http://localhost:4096`)" but §2.5.4 shows `createOpencode({ port: 0 })` where the OS assigns a random port. These are contradictory — if the SDK picks a random port, the config default URL is never used for ephemeral mode. Additionally, §8.3 lists `opencode` as an external CLI tool, but the SDK factory `createOpencode()` handles server process management internally. Is `opencode` a binary dependency or just an SDK dependency?
+
+**3. Skills system resolution mechanism is underspecified**
+§3.5 says built-in skills are `feature`, `bug`, `hotfix`, `refactor` and custom skills use `--skill <name-or-path>`. But: Where are built-in skills stored (in the CLI package? in `.super-ralph/`)? How does name-to-path resolution work? What's the file format (just markdown)? How are they discovered? Can they be overridden per-project?
+
+**4. Reverse phase input materials processing is unspecified**
+§2.4.4 says "Collect all input materials (file paths, URLs, descriptions)" but never says HOW these are processed before being injected into the prompt. Are files read into memory? Are URLs fetched? Or are they passed as paths/URLs for the sub-agent to read? §3.4.2 shows `inputs` as `string[]` — are these raw path strings or file contents?
+
+### Minor Fixes (will fix directly)
+
+**5. §11.8 says "bead title" but should say "bead ID"**
+The text says "Retry tracking by iteration label (bead title)" but §2.1.4 says "Retry counts MUST be keyed by iterationLabel (the bead ID or task identifier)" and §2.2.3 step 6 uses `label: bead.id`. The design rationale is slightly misleading.
+
+**6. `closingCommand` construction not explicit**
+§2.2.4 provides `closingCommand` as a template variable but doesn't show how it's built. §8.4 has the command format. I'll add a clarifying note.
+
+Let me fix the minor issues first, then create beads.
+[94m[TodoWrite][0m
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "Retry tracking by iteration label (bead title) ens..." → "Retry tracking by iteration label (bead ID) ensure..."
+Now add the `closingCommand` construction detail to §2.2.4:
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "- `closingCommand`: The `br close` command the sub..." → "- `closingCommand`: The `br close` command the sub..."
+[94m[TodoWrite][0m
+Now let me create the 4 fix-up beads.
+[94m[Bash][0m Create bead for transcript content gap $ br create --parent bd-3hv \   --title "Fix spec: Transcript file content format and write lifecycle"...
+[94m[Bash][0m Create bead for URL config contradiction $ br create --parent bd-3hv \   --title "Fix spec: Server URL config vs SDK port assignment contradict...
+[94m[Bash][0m Create bead for skills system gaps $ br create --parent bd-3hv \   --title "Fix spec: Skills system resolution and storage mechanism" \  ...
+[94m[Bash][0m Create bead for input materials gap $ br create --parent bd-3hv \   --title "Fix spec: Reverse phase input materials processing" \   --typ...
+Now wire the dependencies — each fix-up bead should block bd-3hv.4 (this pass), and bd-3hv.5 (next pass) should be blocked by each fix-up bead.
+[94m[Bash][0m Wire fix-up beads as blocked by this review pass $ br dep add bd-3hv.13 bd-3hv.4 && br dep add bd-3hv.14 bd-3hv.4 && br dep add bd-3hv.15 bd-3hv.4 && b...
+[94m[Bash][0m Block next review pass on all fix-up beads $ br dep add bd-3hv.5 bd-3hv.13 && br dep add bd-3hv.5 bd-3hv.14 && br dep add bd-3hv.5 bd-3hv.15 && b...
+Let me verify the dependency wiring:
+[94m[Bash][0m Verify pass 3 is blocked by all fix-up beads $ br show bd-3hv.5
+All 4 fix-up beads are properly wired. Now close this bead.
+[94m[TodoWrite][0m
+[94m[Bash][0m Close the review pass 2 bead $ br close bd-3hv.4 --reason "Review pass 2: found 6 issues, created 4 fix-up beads (bd-3hv.13-16), fi...
+[94m[TodoWrite][0m
+## Review Pass 2 Summary
+
+### Changes I wholeheartedly agree improve the spec:
+
+1. **Transcript file content format** (bd-3hv.13) — This is the most impactful gap. §6.3 defines file naming but never says what goes IN the files. An implementer would have to guess entirely. Every other artifact (progress.md, events.jsonl, session.json) has its format specified.
+
+2. **Server URL config vs SDK contradiction** (bd-3hv.14) — `config.opencode.url = "http://localhost:4096"` directly contradicts `createOpencode({ port: 0 })` which uses a random port. This would confuse any implementer immediately.
+
+3. **Input materials processing** (bd-3hv.16) — Whether files are READ or just their paths are passed to the sub-agent fundamentally changes the system's behavior. This must be explicit.
+
+### Changes I somewhat agree with:
+
+4. **Skills system resolution** (bd-3hv.15) — The skills section is thin, but it's a smaller feature. Still, an implementer wouldn't know where built-in skills live or how name-vs-path resolution works.
+
+### Changes I considered but rejected:
+
+- **Signal handling (SIGINT/SIGTERM)**: §1.3 explicitly puts this out of scope. While it would be valuable, respecting the spec's own scope boundaries is important.
+- **Skip-specific-bead mechanism**: Would be a nice-to-have for forward phase, but it's a new feature not implied by the existing spec. The user can manually close beads to skip them.
+- **`br` response format mapping**: §4.5 (BeadInfo) already defines the normalized model, and §8.5 specifies JSON parsing strategy. Adding raw `br show` response schemas would document an external tool's API, which is out of scope.
+
+### Direct fixes made:
+- §11.8: Changed "bead title" → "bead ID" (was misleading — retry tracking uses `bead.id`, not title)
+- §2.2.4: Added explicit `closingCommand` construction format
+
+<promise>COMPLETE</promise>

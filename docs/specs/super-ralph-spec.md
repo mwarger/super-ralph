@@ -1446,6 +1446,48 @@ Transcript files MUST be named `<NNN>-<label>.log` where:
 - `<NNN>` is a zero-padded 3-digit iteration number (e.g., `001`, `002`).
 - `<label>` is the iteration label (bead ID or synthetic label).
 
+### 6.3.1 Transcript File Content and Lifecycle
+
+**Content format:** Transcript files are plain text with Markdown headings. Each
+file MUST contain the following structure:
+
+```
+# Iteration <N> Transcript
+# Label: <label>
+
+## Display Stream
+
+<display buffer contents>
+
+## Raw Event Stream
+
+<raw buffer contents>
+```
+
+- The `## Display Stream` section contains the human-readable display output
+  captured during the iteration (the display capture buffer from §2.9.4).
+- The `## Raw Event Stream` section contains the raw SSE event output captured
+  during the iteration (the raw capture buffer from §2.9.4).
+- Each section MUST be omitted entirely if its respective capture buffer is
+  empty (after trimming whitespace). If both buffers are empty, no transcript
+  file is written and `IterationResult.transcriptPath` remains `undefined`.
+- If the capture buffer was truncated (§2.9.4), the `[truncated]` marker at the
+  head of the buffer MUST be preserved in the transcript file as-is.
+
+**Responsible component:** The run tracker (§5.6) MUST implement a
+`writeIterationTranscript` method that accepts the iteration number, label, and
+both capture buffer contents (raw and display), writes the file, and returns the
+relative path (or `undefined` if both buffers were empty).
+
+**Write timing:** The engine MUST call `writeIterationTranscript` after
+harvesting the prompt result (§2.1.3 step 5g) and before recording the
+iteration in the progress log (§2.1.3 step 5h). The returned path is set on
+`IterationResult.transcriptPath` so the progress log entry can reference it.
+
+**Filename sanitization:** The `<label>` portion of the filename MUST be
+lowercased, have non-alphanumeric characters replaced with hyphens, and be
+truncated to 80 characters.
+
 ### 6.4 Dual-Write State Pattern
 
 The system MUST write SessionState to two locations on every update:

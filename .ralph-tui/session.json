@@ -3,10 +3,10 @@
   "sessionId": "acb217ce-7a83-430c-90db-97c9c144f5c4",
   "status": "running",
   "startedAt": "2026-03-02T22:44:36.575Z",
-  "updatedAt": "2026-03-02T22:59:58.287Z",
-  "currentIteration": 4,
+  "updatedAt": "2026-03-02T23:02:09.330Z",
+  "currentIteration": 5,
   "maxIterations": 10,
-  "tasksCompleted": 2,
+  "tasksCompleted": 3,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -35,8 +35,8 @@
       {
         "id": "bd-3hv.4",
         "title": "Fresh eyes review pass 2",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "bd-3hv.5",
@@ -128,6 +128,16 @@
       "durationMs": 188074,
       "startedAt": "2026-03-02T22:52:42.311Z",
       "endedAt": "2026-03-02T22:55:50.385Z"
+    },
+    {
+      "iteration": 5,
+      "status": "completed",
+      "taskId": "bd-3hv.4",
+      "taskTitle": "Fresh eyes review pass 2",
+      "taskCompleted": true,
+      "durationMs": 246532,
+      "startedAt": "2026-03-02T22:55:51.707Z",
+      "endedAt": "2026-03-02T22:59:58.239Z"
     }
   ],
   "skippedTaskIds": [],
