@@ -1,0 +1,90 @@
+# Iteration 2 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.11
+- **Task Title**: Fix spec: task_complete plugin implementation contract
+- **Description**: ## Problem
+§3.6 describes the task_complete tool interface but lacks the plugin implementation details needed to actually build it.
+
+### Gaps:
+1. **Plugin API contract**: What does an OpenCode plugin ...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T22:47:01.018Z
+- **Ended At**: 2026-03-02T22:49:34.326Z
+- **Duration**: 2m 33s
+- **Input Tokens**: 15027
+- **Output Tokens**: 4177
+- **Total Tokens**: 19204
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by understanding the codebase and the spec file that needs to be updated.
+[94m[Skill][0m
+This is a spec-fixing task (updating documentation for clarity), not a creative feature design. The brainstorming skill doesn't apply here. Let me read the spec and understand the gaps.
+[94m[Agent][0m Find spec and plugin files
+[94m[Glob][0m pattern: [96m**/*spec*[0m
+[94m[Glob][0m pattern: [96m**/*design*[0m
+[94m[Glob][0m pattern: [96m**/*opencode*[0m
+[94m[Glob][0m pattern: [96m**/*plugin*[0m
+[94m[Glob][0m pattern: [96m**/.opencode[0m
+[94m[Glob][0m pattern: [96m**/*task_complete*[0m
+[94m[Grep][0m pattern: [96mtask_complete|§3\.6|§2\.7|§3\.1\.7[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/opencode.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/opencode.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m§3\.6|§2\.7|§3\.1\.7[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/.opencode/plugins/super-ralph.js[0m
+[94m[Bash][0m List all files in .opencode directory $ find /Users/mat/dev/farsight/agent-framework/.opencode -type f | head -20
+[94m[Bash][0m Find all references to task_complete and section numbers $ grep -n "task_complete\|§3\.6\|§2\.7\|§3\.1\.7" /Users/mat/dev/farsight/agent-framework/docs/specs/s...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m List all files in .opencode root directory $ ls -la /Users/mat/dev/farsight/agent-framework/.opencode/
+[94m[Bash][0m Find all .opencode directories $ find /Users/mat/dev/farsight/agent-framework -type d -name ".opencode" 2>/dev/null
+[94m[Bash][0m Read .opencode package.json $ cat /Users/mat/dev/farsight/agent-framework/.opencode/package.json
+[94m[Bash][0m Read first 20 lines of bun.lock $ head -20 /Users/mat/dev/farsight/agent-framework/.opencode/bun.lock
+Now let me read the relevant sections of the spec file and the actual plugin implementation.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/.opencode/plugins/super-ralph.js[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/.opencode/package.json[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/opencode.ts[0m
+Let me find §3.1.7 for the package.json reference.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m3\.1\.7|package\.json[0m
+Now I have everything I need. Let me also look at the OpenCode plugin documentation to understand the API contract better.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/opencode.md[0m
+Now I have a complete picture. Let me update §3.6 in the spec to address all five gaps identified in the task.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "### 3.6 task_complete Plugin Interface
+
+The `task_..." → "### 3.6 task_complete Plugin Interface
+
+The `task_..."
+Now let me also update §2.7 to add a cross-reference clarifying the two status concepts, since the task description identifies that as a confusion point.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "2. Scan message history for a `task_complete` tool..." → "2. Scan message history for a `task_complete` tool..."
+Let me verify the changes read well.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+The changes look good. Let me verify the rest of §3.6.4 rendered properly.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+All changes are clean. Here's a summary of what was added to address each gap:
+
+**Gap 1 - Plugin API contract** (§3.6.1): Specified that plugins export a default async factory function receiving a context object, returning `{ tool: { name: tool({...}) } }`. Documented the `tool()` helper, `tool.schema` Zod builders, and `execute` function contract.
+
+**Gap 2 - Tool registration/discovery** (§3.6.3): Clarified that OpenCode discovers plugins by scanning `.opencode/plugins/` automatically — no additional registration needed.
+
+**Gap 3 - Plugin behavior** (§3.6.2): Explained that `execute` simply returns a confirmation string. The plugin's purpose is tool registration; the engine reads tool call arguments from session history post-session, not from the execute return value.
+
+**Gap 4 - package.json contents** (§3.6.3): Provided the exact package.json with `@opencode-ai/plugin` as the sole dependency, and clarified that `init` creates it and runs `bun install`.
+
+**Gap 5 - Tool state vs tool call confusion** (§3.6.4 + §2.7 update): Added a dedicated subsection with a comparison table distinguishing `part.state.status` (OpenCode runtime execution state: `"completed"`) from `part.state.input.status` (sub-agent task status: `"complete"`, etc.). Updated §2.7 with inline clarification and a cross-reference to §3.6.4.
+
+<promise>COMPLETE</promise>

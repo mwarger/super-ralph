@@ -3,10 +3,10 @@
   "sessionId": "acb217ce-7a83-430c-90db-97c9c144f5c4",
   "status": "running",
   "startedAt": "2026-03-02T22:44:36.575Z",
-  "updatedAt": "2026-03-02T22:49:34.418Z",
-  "currentIteration": 1,
+  "updatedAt": "2026-03-02T22:55:50.471Z",
+  "currentIteration": 3,
   "maxIterations": 10,
-  "tasksCompleted": 0,
+  "tasksCompleted": 1,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -77,8 +77,8 @@
       {
         "id": "bd-3hv.11",
         "title": "Fix spec: task_complete plugin implementation contract",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "bd-3hv.12",
@@ -98,6 +98,26 @@
       "durationMs": 141053,
       "startedAt": "2026-03-02T22:44:38.766Z",
       "endedAt": "2026-03-02T22:46:59.819Z"
+    },
+    {
+      "iteration": 2,
+      "status": "completed",
+      "taskId": "bd-3hv.11",
+      "taskTitle": "Fix spec: task_complete plugin implementation contract",
+      "taskCompleted": true,
+      "durationMs": 153308,
+      "startedAt": "2026-03-02T22:47:01.018Z",
+      "endedAt": "2026-03-02T22:49:34.326Z"
+    },
+    {
+      "iteration": 3,
+      "status": "completed",
+      "taskId": "bd-3hv.12",
+      "taskTitle": "Fix spec: Init command AGENTS.md and template source paths",
+      "taskCompleted": false,
+      "durationMs": 185407,
+      "startedAt": "2026-03-02T22:49:35.644Z",
+      "endedAt": "2026-03-02T22:52:41.051Z"
     }
   ],
   "skippedTaskIds": [],
