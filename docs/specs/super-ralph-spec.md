@@ -386,6 +386,82 @@ autonomous iteration (single long session vs. many short sessions).
 5. Continue streaming until the session goes idle or the sub-agent signals
    completion.
 
+**Question/Answer Wire Protocol:**
+
+The agent asks questions by calling a `question` tool provided by the opencode
+server. The server translates each tool call into a `question.asked` SSE event.
+The host answers by calling a REST endpoint, which delivers the response back
+to the agent as the tool call result.
+
+*`question.asked` SSE Event Payload* — The event carries a `QuestionRequest` as
+its `properties`:
+
+```
+EventQuestionAsked {
+  type: "question.asked"
+  properties: QuestionRequest {
+    id: string              // Unique request ID; used to reply or reject
+    sessionID: string       // Session that originated the question
+    questions: QuestionInfo[] // Array of questions (typically one)
+    tool?: {                // Parent tool call (optional)
+      messageID: string
+      callID: string
+    }
+  }
+}
+```
+
+Each `QuestionInfo` contains:
+
+```
+QuestionInfo {
+  question: string          // Full question text
+  header: string            // Short label (max 30 chars)
+  options: QuestionOption[] // Available choices
+  multiple?: boolean        // Allow multiple selections (default false)
+  custom?: boolean          // Allow custom text answer (default true)
+}
+
+QuestionOption {
+  label: string             // Display text (max 200 chars)
+  description: string       // Explanation of the choice
+}
+```
+
+*Answering a Question* — The host MUST call the v2 SDK client to reply:
+
+```
+client.question.reply({
+  requestID: string,      // properties.id from the question.asked event
+  answers: string[][],    // One string[] per question in the batch
+})
+```
+
+Answer format per question type:
+- **Single select:** `["selectedLabel"]` — one-element array with the chosen
+  option's label.
+- **Multiselect:** `["label1", "label2", ...]` — array of all selected labels.
+- **Custom text:** `["free text input"]` — one-element array with the user's
+  typed answer.
+
+The `answers` array MUST have the same length as the `questions` array in the
+original event, with each element corresponding by index.
+
+*Rejecting a Question* — If the user cancels (e.g., Ctrl+C), the host MUST
+call:
+
+```
+client.question.reject({
+  requestID: string,      // properties.id from the question.asked event
+})
+```
+
+*Error Handling:* If `question.reply()` or `question.reject()` fails (network
+error, server crash), the host MUST treat the session as failed and propagate
+the error. The session will not receive further events for that question, so
+retrying is not meaningful — the host SHOULD abort the session and return an
+error result.
+
 **User Cancellation:** If the user presses Ctrl+C during a question, the
 question MUST be rejected, and the session MUST return a `"blocked"` result.
 
@@ -807,7 +883,7 @@ This prevents a race condition where early events are missed.
 | `message.part.updated` | Display tool status changes as `[tool: <name>] <status>`. |
 | `session.idle` | Session complete. MUST break the event loop. |
 | `session.error` | Capture error. MUST break the event loop. |
-| `question.asked` | (Interactive mode only) Render question via terminal UI. |
+| `question.asked` | (Interactive mode only) Render question via terminal UI; payload is `QuestionRequest` (§2.4.5). Reply via `client.question.reply()` or reject via `client.question.reject()`. |
 
 Unknown event types MUST be silently ignored.
 

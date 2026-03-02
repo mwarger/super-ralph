@@ -1,0 +1,62 @@
+# Iteration 15 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.21
+- **Task Title**: Fix spec: CLI exit code mapping for engine-driven commands
+- **Description**: PROBLEM: §2.4.5.3 defines exit codes for interactive mode (0 for complete, 1 for blocked/error), but the spec never defines exit codes for engine-driven commands (forward, decompose, autonomous revers...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T23:33:35.282Z
+- **Ended At**: 2026-03-02T23:34:51.333Z
+- **Duration**: 1m 16s
+- **Input Tokens**: 80
+- **Output Tokens**: 1511
+- **Total Tokens**: 1591
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by finding the spec file and understanding the current structure around the areas mentioned in the task.
+[94m[Agent][0m Find spec file and relevant sections
+[94m[Grep][0m pattern: [96m§3\.1\.3|Global Options|§2\.4\.5\.3|exit code[0m
+[94m[Glob][0m pattern: [96m**/*.md[0m
+[94m[Glob][0m pattern: [96m**/*.txt[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Check the file line count $ wc -l /Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md
+[94m[Bash][0m Find section references and Global Options $ grep -n "§3\.1\.3\|Global Options\|§2\.4\.5\.3\|§3\.1\." /Users/mat/dev/farsight/agent-framework/doc...
+[94m[Bash][0m Find exit code and LoopResult mentions $ grep -n "exit code\|LoopResult" /Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec....
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Find §2.4.5 and related sections $ grep -n "§2\.4\.5\|#### 2\.4\.5\|### 2\.4" /Users/mat/dev/farsight/agent-framework/docs/specs/super-...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Find all §3.1 subsections $ grep -n "^#### 3\.1\." /Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Find all top-level §3 sections $ grep -n "^### 3\." /Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Find exit code and InteractiveResult mentions $ grep -n "InteractiveResult\|exit code\|exit.*code" /Users/mat/dev/farsight/agent-framework/docs/spec...
+[94m[Bash][0m Find CompletionResult and CompletionStatus definitions $ grep -n "CompletionResult\|CompletionStatus" /Users/mat/dev/farsight/agent-framework/docs/specs/supe...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now let me read the area around where the new section should be inserted.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now I have everything I need. I'll add a new §3.1.12 section for CLI exit code mapping right after §3.1.11 and before §3.2.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "**Trade-off:** No automatic validation, help gener..." → "**Trade-off:** No automatic validation, help gener..."
+Let me verify the edit looks correct in context.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+The new §3.1.12 is properly placed and covers all the requirements from the task:
+
+- **Exit 0** when `LoopResult.failed === 0` (all iterations succeeded or were skipped)
+- **Exit 1** when `LoopResult.failed > 0` (at least one iteration failed)
+- **Exit 1** for unrecoverable engine errors (setup failure, server unreachable)
+- **Exit 0** for dry-run mode (always succeeds)
+- **Cross-reference** to §2.4.5.3 for interactive mode exit codes
+- **Utility commands** consolidated for completeness (referencing existing sections)
+
+<promise>COMPLETE</promise>

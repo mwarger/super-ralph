@@ -3,10 +3,10 @@
   "sessionId": "acb217ce-7a83-430c-90db-97c9c144f5c4",
   "status": "running",
   "startedAt": "2026-03-02T22:44:36.575Z",
-  "updatedAt": "2026-03-02T23:34:51.394Z",
-  "currentIteration": 14,
+  "updatedAt": "2026-03-02T23:37:41.088Z",
+  "currentIteration": 15,
   "maxIterations": 10,
-  "tasksCompleted": 12,
+  "tasksCompleted": 13,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -228,6 +228,16 @@
       "durationMs": 194417,
       "startedAt": "2026-03-02T23:30:19.487Z",
       "endedAt": "2026-03-02T23:33:33.904Z"
+    },
+    {
+      "iteration": 15,
+      "status": "completed",
+      "taskId": "bd-3hv.21",
+      "taskTitle": "Fix spec: CLI exit code mapping for engine-driven commands",
+      "taskCompleted": true,
+      "durationMs": 76051,
+      "startedAt": "2026-03-02T23:33:35.282Z",
+      "endedAt": "2026-03-02T23:34:51.333Z"
     }
   ],
   "skippedTaskIds": [],
