@@ -1,0 +1,128 @@
+# Iteration 18 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.24
+- **Task Title**: Fresh eyes review pass 5
+- **Description**: ## Objective
+Carefully review this entire spec with completely fresh eyes. You have
+NOT seen this spec before. You are reviewing it as a clean-room
+specification — a document that must be complete eno...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T23:38:38.775Z
+- **Ended At**: 2026-03-02T23:43:36.826Z
+- **Duration**: 4m 58s
+- **Input Tokens**: 74
+- **Output Tokens**: 13388
+- **Total Tokens**: 13462
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by reading the spec and checking existing beads to understand what's already been addressed.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+
+[91m[Error: File content (25282 tokens) exceeds maximum allowed tokens (25000). Please use offset and limit parameters to read specific portions of the file, or use the GrepTool to search for specific content.][0m
+[94m[Bash][0m List existing beads under bd-3hv $ br list --parent bd-3hv 2>/dev/null | head -80
+
+[91m[Error: <tool_use_error>Sibling tool call errored</tool_use_error>][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m List existing beads under bd-3hv $ br list --parent bd-3hv 2>/dev/null | head -80
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m List existing beads under bd-3hv $ br list --parent bd-3hv 2>/dev/null
+
+[91m[Error: Exit code 2][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m List beads under bd-3hv epic $ br list --parent bd-3hv 2>&1 || br show bd-3hv --json 2>&1 | head -100
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m List all child beads with status $ [print(f'{x[\"id\"]} ({x[\"status\"]}) - {x[\"title\"]}') for x in d.get('dependents',[])]"
+
+[91m[Error: Exit code 1
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+AttributeError: 'list' object has no attribute 'get'
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+AttributeError: 'list' object has no attribute 'get'][0m
+[94m[Bash][0m List child beads $ br show bd-3hv --json 2>&1 | python3 -c " import json,sys data=json.load(sys.stdin) if isinstance(da...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[TodoWrite][0m
+Now I have the full picture. Let me analyze the issues I've found.
+[94m[TodoWrite][0m
+Here's my analysis after a thorough clean-room review:
+
+**SIGNIFICANT ISSUES (need fix-up beads):**
+
+1. **Answers file format unspecified** — §2.4.7 says `--answers <path>` loads pre-recorded answers but never defines the file format. JSON? YAML? One per line? An implementer cannot implement this feature.
+
+2. **Question API methods missing from SDK reference** — §2.4.5 uses `client.question.reply()` and `client.question.reject()` on the v2 client, but §2.5.4's v2 client method listing doesn't include these methods. An implementer reading the SDK reference section wouldn't find them.
+
+**MINOR ISSUES (fix directly):**
+
+1. **Model ID inconsistency** — Config (§7.2) uses `claude-sonnet-4-6` but SDK example (§2.5.4) uses `claude-sonnet-4-20250514`. Should be consistent.
+
+2. **`--max-iterations` override application point** — §3.1.3 says `--max-iterations` overrides max iterations, and §2.1.3 step 1 says setup returns maxIterations, but nowhere specifies that the engine applies the CLI override after setup returns. Needs explicit statement.
+
+Let me apply the minor fixes first.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "  model: { providerID: "anthropic", modelID: "clau..." → "  model: { providerID: "anthropic", modelID: "clau..."
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "1. Call `setup` to obtain description and max iter..." → "1. Call `setup` to obtain description and max iter..."
+Good. Now let me create the fix-up beads for the significant issues.
+[94m[TodoWrite][0m
+[94m[Bash][0m Create fix-up bead for answers file format $ br create --parent bd-3hv \   --title "Fix spec: Answers file format for --answers flag" \   --type ...
+[94m[Bash][0m Create fix-up bead for question API methods $ br create --parent bd-3hv \   --title "Fix spec: Question API methods missing from SDK reference" \ ...
+Now wire the dependencies: each fix-up blocks bd-3hv.24, and the consolidation bead (bd-3hv.6) is blocked by each fix-up.
+[94m[Bash][0m Wire dependencies for fix-up beads $ br dep add bd-3hv.25 bd-3hv.24 && br dep add bd-3hv.26 bd-3hv.24 && br dep add bd-3hv.6 bd-3hv.25 &&...
+Found 2 significant issues, so I need to create pass 6. Let me do that.
+[94m[Bash][0m Create review pass 6 bead $ br create --parent bd-3hv \   --title "Fresh eyes review pass 6" \   --type task \   --description "...
+[94m[Bash][0m Wire pass 6 dependencies $ br dep add bd-3hv.27 bd-3hv.25 && br dep add bd-3hv.27 bd-3hv.26 && br dep add bd-3hv.6 bd-3hv.27
+Now close this bead.
+[94m[TodoWrite][0m
+[94m[Bash][0m Close review pass 5 bead $ br close bd-3hv.24 --reason "Review pass 5: found 2 significant issues, created 2 fix-up beads (bd-3...
+[94m[TodoWrite][0m
+## Review Pass 5 — Summary
+
+### Changes Wholeheartedly Agree Improve the Spec
+
+**Significant issues (fix-up beads created):**
+
+1. **bd-3hv.25: Answers file format** — §2.4.7 describes the `--answers` flag behavior but never specifies the file format. An implementer cannot build this feature. This is a clear clean-room test failure.
+
+2. **bd-3hv.26: Question API methods missing from SDK reference** — §2.4.5 uses `client.question.reply()` and `client.question.reject()` but §2.5.4's SDK method listing omits these entirely. An implementer reading the SDK reference wouldn't find them.
+
+**Minor fixes applied directly:**
+
+1. **Model ID inconsistency** — Config (§7.2) used `claude-sonnet-4-6` but the SDK example (§2.5.4) used `claude-sonnet-4-20250514`. Made them consistent.
+
+2. **`--max-iterations` override application point** — Added explicit statement in §2.1.3 that the engine applies the CLI override after `setup` returns.
+
+### Somewhat Agree
+
+- **Init template source paths** — §6.2 CLI Package Assets only lists skills, not the template source files that init copies. However, bd-3hv.12 already addressed this topic in a previous pass. The current spec says "Templates are copied during init" but the copy sources aren't in the filesystem layout. I chose not to create a duplicate bead.
+
+### Considered but Rejected
+
+- **System prompt content per phase** — The spec says each phase has "a short, hardcoded string" defining role and available statuses, but doesn't provide the actual text. I considered flagging this, but the spec clearly constrains what the strings must contain (role + status vocabulary), and the exact wording is an implementation detail that doesn't affect interoperability.
+
+- **`server.attach_hint` emission scope** — Ambiguous whether this fires for both ephemeral and attached servers. Context makes it clear it's ephemeral-only, and the console renderer text ("Attach TUI: opencode attach {url}") confirms the intent.
+
+- **Forward phase stall detection query** — §2.2.3 says "Query total remaining open beads" without specifying how, but the mechanism (br show + filter) is already established in §2.2.2. An implementer can infer this.
+
+### Spawned
+
+- **bd-3hv.27: Fresh eyes review pass 6** — Blocked on the two fix-up beads.
+
+<promise>COMPLETE</promise>

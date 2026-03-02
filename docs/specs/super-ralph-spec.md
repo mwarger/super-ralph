@@ -540,6 +540,61 @@ answers are loaded:
 - If no answer matches any option, the system MUST default to the first option.
 - This feature exists specifically for automated testing / CI scenarios.
 
+##### 2.4.7.1 Answers File Format
+
+The answers file MUST be a JSON file containing an array of answer entries.
+Each entry provides a pre-recorded answer to one question, consumed in order.
+
+**Schema:**
+
+```json
+[
+  "selected option label",
+  "another option label",
+  ["label1", "label2"]
+]
+```
+
+Each element in the top-level array corresponds to the next question asked
+during the session, consumed sequentially (first element answers the first
+question, second element answers the second question, etc.):
+
+- **String element:** Selects a single option. Matched via case-insensitive
+  substring matching against option labels (per §2.4.7).
+- **Array-of-strings element:** Selects multiple options for a multiselect
+  question. Each string is matched independently via case-insensitive substring
+  matching against option labels.
+
+**Matching to questions:** Answers are matched to questions by consumption
+order, not by question text or header. The first unanswered entry in the array
+is consumed by the next question asked, regardless of question content.
+
+**Fewer answers than questions:** When the answers array is exhausted (all
+entries consumed) and additional questions are asked, the system MUST default
+to the first option for each remaining question.
+
+**More answers than questions:** When the session ends with unconsumed entries
+remaining in the answers array, the system MUST silently ignore the surplus
+entries. This is not an error.
+
+**Example file** (`answers.json`):
+
+```json
+[
+  "TypeScript",
+  ["logging", "metrics"],
+  "yes",
+  "production"
+]
+```
+
+This file answers four questions in sequence:
+1. First question: selects the option whose label contains "TypeScript"
+2. Second question (multiselect): selects options matching "logging" and
+   "metrics"
+3. Third question: selects the option whose label contains "yes"
+4. Fourth question: selects the option whose label contains "production"
+
 ### 2.5 Server Lifecycle
 
 #### 2.5.1 Ephemeral Server (Default)
