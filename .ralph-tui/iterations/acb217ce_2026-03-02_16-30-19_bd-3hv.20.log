@@ -1,0 +1,117 @@
+# Iteration 14 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.20
+- **Task Title**: Fresh eyes review pass 4
+- **Description**: ## Objective
+Carefully review this entire spec with completely fresh eyes. You have
+NOT seen this spec before. You are reviewing it as a clean-room
+specification — a document that must be complete eno...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T23:30:19.487Z
+- **Ended At**: 2026-03-02T23:33:33.904Z
+- **Duration**: 3m 14s
+- **Input Tokens**: 63
+- **Output Tokens**: 7000
+- **Total Tokens**: 7063
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by reading the spec and checking for any existing fix-up beads from previous passes to avoid duplicating work.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Show existing beads under the epic $ br show bd-3hv --children 2>/dev/null | head -80
+[94m[Bash][0m List children of the epic $ br children bd-3hv 2>/dev/null || br show bd-3hv 2>/dev/null
+[94m[Read][0m [95m/Users/mat/.claude/projects/-Users-mat-dev-farsight-agent-framework/7dfb1255-b1a6-452e-8332-82dd3e74bb1e/tool-results/toolu_01AfHBT2zR7PY69T6KAuBa25.txt[0m
+[94m[Read][0m [95m/Users/mat/.claude/projects/-Users-mat-dev-farsight-agent-framework/7dfb1255-b1a6-452e-8332-82dd3e74bb1e/tool-results/toolu_01AfHBT2zR7PY69T6KAuBa25.txt[0m
+[94m[Read][0m [95m/Users/mat/.claude/projects/-Users-mat-dev-farsight-agent-framework/7dfb1255-b1a6-452e-8332-82dd3e74bb1e/tool-results/toolu_01AfHBT2zR7PY69T6KAuBa25.txt[0m
+[94m[Read][0m [95m/Users/mat/.claude/projects/-Users-mat-dev-farsight-agent-framework/7dfb1255-b1a6-452e-8332-82dd3e74bb1e/tool-results/toolu_01AfHBT2zR7PY69T6KAuBa25.txt[0m
+[94m[Read][0m [95m/Users/mat/.claude/projects/-Users-mat-dev-farsight-agent-framework/7dfb1255-b1a6-452e-8332-82dd3e74bb1e/tool-results/toolu_01AfHBT2zR7PY69T6KAuBa25.txt[0m
+Now let me check which beads are still open to avoid duplicating work.
+[94m[Bash][0m List open beads under the epic $ br list --parent bd-3hv --json 2>/dev/null | head -200
+[94m[Bash][0m Check status of existing fix-up beads $ done
+[94m[TodoWrite][0m
+Good. All previous fix-up beads (7-19) are closed. The spec is at a mature state after 3 review passes. Let me now do a thorough fresh-eyes review.
+
+After carefully reading the entire spec (2171 lines), here's my analysis:
+
+**Issues Found:**
+
+### Issue 1: CLI Exit Code Specification is Missing
+
+The spec defines exit codes for interactive mode (§2.4.5.3) but never specifies exit codes for the normal engine-driven commands (`forward`, `decompose`, autonomous `reverse`). An implementer would have to guess. The `LoopResult` has `failed` counter but there's no mapping from that to process exit codes.
+
+### Issue 2: `question.asked` SSE Event Underdefined
+
+In §2.9.2, the `question.asked` event is listed in the SSE event handling table but its payload structure is never defined. §2.4.5 describes interactive mode question handling but doesn't define the SSE event payload shape (what fields does `question.asked` contain? What's the response protocol for answering questions back to the server?). The interactive mode section (§2.4.5) says to "render the question" and "return the user's answer" but doesn't specify the API call to send the answer back.
+
+### Issue 3: `br close` Command in Forward Prompt Missing `--json` Flag Explanation
+
+In §2.2.4, the `closingCommand` is specified as `br close <beadId> --suggest-next --json --reason "<reason>"`, but the sub-agent is filling in the reason. The spec doesn't clarify that the sub-agent constructs and runs this command directly (i.e., the prompt tells the agent to run it). It's also unclear whether the engine validates that the bead was actually closed after `handleResult`.
+
+### Issue 4: `status` Command Output Format Unspecified
+
+§3.1.8 describes the `status` command with `--epic` and `--run` options, but the output format is vague: "Total beads, completed count, remaining count, and individual bead statuses." An implementer can't reproduce the exact output. Is this plain text? JSON? What's the rendering format?
+
+### Issue 5: Config Loading - TOML Parser Error Handling Missing
+
+§7.4 specifies behavior for missing files but not for malformed TOML. If the config file exists but has syntax errors, should the system crash? Use defaults? Print a warning?
+
+### Issue 6: Progress Log File Management - No Rotation/Size Limit
+
+§2.10 specifies an append-only progress.md but never addresses what happens when it grows large over many runs. No size cap, rotation policy, or cleanup mechanism is specified. The `progressTail` (last 5 entries) reads from it, so it must remain parseable.
+
+### Issue 7: `--json` Flag Type Inconsistency
+
+§3.1.3 says `--json <path>` (string, a file path), but the engine behavior in §2.1.3 step 7 says "Write JSON output if `--json` flag was provided." This is clear enough, but the interaction with stdout (§5.5 says stdout is reserved for `--json` structured output) is contradictory — the `--json` flag writes to a FILE, not stdout.
+
+Let me assess which of these are **significant** enough for fix-up beads vs. minor fixes I can apply directly.
+
+Issues 1, 2, and 4 are significant gaps that would cause incorrect implementations. Issues 3, 5, 6, and 7 are worth addressing but some can be fixed inline.
+
+Let me fix minor issues directly and create beads for the significant ones.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "### 7.4 Loading Behavior
+
+- **Missing file:** Retu..." → "### 7.4 Loading Behavior
+
+- **Missing file:** Retu..."
+Now fix the stdout/`--json` inconsistency (issue 7):
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "The engine MUST register a console renderer as the..." → "The engine MUST register a console renderer as the..."
+Now create fix-up beads for the significant issues.
+[94m[Bash][0m Create fix-up bead for CLI exit codes $ br create --parent bd-3hv \   --title 'Fix spec: CLI exit code mapping for engine-driven commands' \...
+[94m[Bash][0m Create fix-up bead for question protocol $ br create --parent bd-3hv \   --title 'Fix spec: Interactive mode question/answer protocol' \   --ty...
+[94m[Bash][0m Create fix-up bead for status output format $ br create --parent bd-3hv \   --title 'Fix spec: Status command output format' \   --type task \   -...
+Now wire dependencies:
+[94m[Bash][0m Wire dependencies for fix-up beads $ br dep add bd-3hv.21 bd-3hv.20 && br dep add bd-3hv.22 bd-3hv.20 && br dep add bd-3hv.23 bd-3hv.20 &...
+Now since I found significant issues, I need to create the next review pass:
+[94m[Bash][0m Create review pass 5 $ br create --parent bd-3hv \   --title 'Fresh eyes review pass 5' \   --type task \   --description '...
+[94m[Bash][0m Wire review pass 5 dependencies $ br dep add bd-3hv.24 bd-3hv.21 && br dep add bd-3hv.24 bd-3hv.22 && br dep add bd-3hv.24 bd-3hv.23 &...
+Now verify the consolidation bead:
+[94m[Bash][0m Verify consolidation bead dependencies $ br show bd-3hv.6 2>&1
+Good. All fix-up beads and the next review pass are properly wired. Let me close this bead.
+[94m[TodoWrite][0m
+[94m[Bash][0m Close review pass 4 bead $ br close bd-3hv.20 --reason 'Review pass 4: found 7 issues total. 3 significant gaps spawned as fix-...
+[94m[TodoWrite][0m
+## Review Pass 4 Summary
+
+### Changes I wholeheartedly agree improve the spec:
+1. **CLI exit code mapping** (bd-3hv.21) — Critical gap. Every CI/CD pipeline depends on exit codes. Without this, implementations would be inconsistent and the tool would be unusable in automation.
+2. **Interactive question/answer protocol** (bd-3hv.22) — The wire protocol for Q&A is completely missing. An implementer literally cannot build interactive mode without knowing the SSE event payload shape and the API to send answers back.
+3. **TOML parse error handling** (applied directly) — A missing file silently using defaults is fine, but a malformed file should fail loudly.
+
+### Changes I somewhat agree with:
+4. **Status command output format** (bd-3hv.23) — Important for reproducibility but arguably the status command is a diagnostic tool where exact output matters less. Still worth specifying for consistency.
+5. **stdout reservation clarification** (applied directly) — The original text implied `--json` writes to stdout, but it actually writes to a file path. Minor but could cause confusion.
+
+### Considered but deferred:
+6. **Progress log rotation** — While unbounded append-only files are a concern, the progress log is small per entry and many runs would be needed before it's a real problem. Not worth spec complexity now.
+7. **Forward phase bead closure validation** — The engine trusts the sub-agent to close beads via `br close`. Adding validation would increase complexity for minimal benefit since `br ready` naturally handles this on the next iteration.
+
+<promise>COMPLETE</promise>

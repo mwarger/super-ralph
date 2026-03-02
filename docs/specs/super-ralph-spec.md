@@ -1043,6 +1043,35 @@ keeps the binary small and avoids framework-specific conventions.
 **Trade-off:** No automatic validation, help generation, or error messages for
 malformed input.
 
+#### 3.1.12 Exit Codes
+
+This section defines the process exit code for all CLI commands. CI/CD pipelines
+depend on exit codes to determine success or failure, so consistent mapping is
+critical.
+
+**Engine-driven commands** (`forward`, `decompose`, `reverse` without
+`--interactive`):
+
+| Condition | Exit Code |
+|-----------|-----------|
+| `LoopResult.failed === 0` (all iterations succeeded or were skipped) | `0` |
+| `LoopResult.failed > 0` (at least one iteration failed) | `1` |
+| Engine threw an unrecoverable error (setup failure, server unreachable) | `1` |
+| `--dry-run` mode (always succeeds) | `0` |
+
+**Interactive mode** (`reverse --interactive`): Exit codes are defined in
+§2.4.5.3 — `0` for `completion.status === "complete"`, `1` for `"blocked"` or
+any error.
+
+**Utility commands:**
+
+| Command | Exit Code |
+|---------|-----------|
+| `doctor` | `0` if all checks pass, `1` if any check fails (§3.1.9) |
+| `help` / `--help` / `-h` | `0` (§3.1.10) |
+| `init` | `0` on success, `1` on failure |
+| `status` | `0` on success, `1` on failure |
+
 ### 3.2 Environment Variables
 
 No environment variables are defined by the system. All configuration is via
