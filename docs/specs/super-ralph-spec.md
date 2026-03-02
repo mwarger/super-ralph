@@ -79,7 +79,9 @@ The `context` object MUST provide access to:
 
 The engine MUST execute iterations as follows:
 
-1. Call `setup` to obtain description and max iterations.
+1. Call `setup` to obtain description and max iterations. If the CLI
+   `--max-iterations` flag was provided, the engine MUST override the
+   setup-returned `maxIterations` with the CLI value.
 2. Emit `loop.description` event.
 3. If dry-run mode: for each iteration, emit `loop.dry_run_iteration`, then
    emit `loop.dry_run_complete`. Return a result with zero completions. Skip
@@ -672,7 +674,7 @@ through the SSE stream.
 ```
 await v2.session.promptAsync({
   sessionID: sessionId,
-  model: { providerID: "anthropic", modelID: "claude-sonnet-4-20250514" },
+  model: { providerID: "anthropic", modelID: "claude-sonnet-4-6" },
   parts: [{ type: "text", text: promptContent }],
   system: systemPromptOrUndefined,
 })

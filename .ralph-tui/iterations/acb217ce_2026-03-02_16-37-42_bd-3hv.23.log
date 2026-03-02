@@ -1,0 +1,57 @@
+# Iteration 17 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.23
+- **Task Title**: Fix spec: Status command output format
+- **Description**: PROBLEM: §3.1.8 describes the status command with --epic and --run options but only vaguely describes the output: "Total beads, completed count, remaining count, and individual bead statuses" for --ep...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T23:37:42.402Z
+- **Ended At**: 2026-03-02T23:38:37.368Z
+- **Duration**: 54s
+- **Input Tokens**: 40
+- **Output Tokens**: 2368
+- **Total Tokens**: 2408
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by invoking the brainstorming skill since this involves creating/modifying a specification, then look at the current state of the spec.
+[94m[Skill][0m
+This is a well-defined spec fix task with concrete examples already provided in the description. Let me look at the current spec section and make the fix.
+[94m[Grep][0m pattern: [96mstatus Command|§3\.1\.8|3\.1\.8[0m
+[94m[Grep][0m pattern: [96mstatus.*--epic|status.*--run[0m
+[94m[Grep][0m pattern: [96mstatus Command|### 3\.1\.8|#### status[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now I have the full context. Let me also check how error cases are handled elsewhere in the spec to keep consistency.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m--json[0m
+Good. The spec uses `--json` in other places. Now let me check the exit codes table for `status`:
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now I have full context. Let me make the edit to replace the vague output descriptions with concrete format specifications.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "**`--epic` output:** Total beads, completed count,..." → "**`--epic` output format:**
+
+```
+Epic: <epicId> — ..."
+Now update the options table to include `--json`:
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "| Option | Type | Required | Description |
+|------..." → "| Option | Type | Required | Description |
+|------..."
+Let me verify the edit looks correct:
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+The edit is clean and complete. Here's what was changed in §3.1.8:
+
+1. **`--epic` output**: Replaced vague "Total beads, completed count..." with an exact text format showing the epic header, progress line, and per-bead listing with `✓`/`◆`/`○` status indicators. Specified bead ordering and error handling for missing epics.
+
+2. **`--run` output**: Replaced vague "Session state, event count..." with an exact text format showing run ID, status, timing, iteration counts, event summary, and last 10 transcript lines. Specified ISO 8601 timestamps, transcript indentation, and error handling for missing runs.
+
+3. **`--json` flag**: Added `--json` as an option in the options table and specified that both modes must support it for machine-readable output.
+
+4. **Error cases**: Specified exact stderr messages and exit code 1 for both missing epic IDs and missing run directories.
+
+<promise>COMPLETE</promise>
