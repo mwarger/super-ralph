@@ -630,9 +630,12 @@ After the SSE streaming loop ends for an iteration, the system MUST harvest
 results:
 
 1. Fetch all session messages via the v1 SDK.
-2. Scan message history for a `task_complete` tool call where the tool state's
-   status is `"completed"`.
-3. Extract `input.status` and `input.reason` from the tool call arguments.
+2. Scan message history for a `task_complete` tool call where the tool
+   execution state (`part.state.status`) is `"completed"` — meaning the tool
+   ran successfully, not that the task is complete. See §3.6.4 for the
+   distinction between tool execution state and task status.
+3. Extract `input.status` and `input.reason` from the tool call arguments
+   (`part.state.input.status` and `part.state.input.reason`).
 4. If no `task_complete` call is found, classify the iteration as `"stalled"`.
 5. Sum cost and token counts across all assistant messages in the session.
 6. Fetch the session diff for changed files (best-effort; failure MUST NOT
@@ -959,22 +962,138 @@ can include skill content.
 The `task_complete` tool is an OpenCode plugin that the sub-agent calls to
 signal iteration completion.
 
+#### 3.6.1 Plugin File Structure
+
 **Plugin location:** `.opencode/plugins/super-ralph.js`
 
-**Tool interface:**
+OpenCode plugins use the `@opencode-ai/plugin` package. A plugin file MUST
+export a default async factory function that receives a context object and
+returns a tool registration object.
 
-| Parameter | Type | Required | Values |
-|-----------|------|----------|--------|
-| `status` | String | Yes | `"complete"`, `"phase_done"`, `"blocked"`, `"failed"` |
-| `reason` | String | No | Human-readable explanation |
+**Plugin API contract:**
 
-**Detection:** After a session goes idle, the engine scans session message
-history for a `task_complete` tool call where the tool state's status is
-`"completed"`. The engine extracts `input.status` and `input.reason` from the
-tool call arguments.
+```javascript
+import { tool } from "@opencode-ai/plugin";
 
-**Missing signal:** If the sub-agent never calls `task_complete`, the iteration
-MUST be classified as `"stalled"`.
+export default async (ctx) => {
+  return {
+    tool: {
+      <tool_name>: tool({
+        description: "...",
+        args: { /* Zod schemas via tool.schema */ },
+        async execute(args) { return "string result"; },
+      }),
+    },
+  };
+};
+```
+
+**Key details:**
+
+- The export MUST be a default export of an async function.
+- The function receives a context object (`ctx`) provided by OpenCode.
+- The return value MUST be an object with a `tool` property containing named
+  tool definitions.
+- Each tool definition uses the `tool()` helper from `@opencode-ai/plugin`.
+- Tool argument schemas use `tool.schema`, which exposes Zod schema builders
+  (e.g., `tool.schema.enum()`, `tool.schema.string().optional()`).
+- The `execute` function is called when the sub-agent invokes the tool.
+  It receives the validated arguments and MUST return a string.
+
+#### 3.6.2 Complete Plugin Implementation
+
+The `super-ralph.js` plugin MUST define a single tool named `task_complete`:
+
+```javascript
+import { tool } from "@opencode-ai/plugin";
+
+export default async (ctx) => {
+  return {
+    tool: {
+      task_complete: tool({
+        description:
+          "Signal task/iteration completion. MUST be called as the final action in every session.",
+        args: {
+          status: tool.schema
+            .enum(["complete", "phase_done", "blocked", "failed"])
+            .describe(
+              'Completion status: "complete" = done, loop continues; '
+              + '"phase_done" = all work done, loop ends; '
+              + '"blocked" = cannot proceed; "failed" = error occurred',
+            ),
+          reason: tool.schema
+            .string()
+            .optional()
+            .describe("Explanation of the status (required for blocked/failed)"),
+        },
+        async execute(args) {
+          return `Task marked as ${args.status}${args.reason ? ": " + args.reason : ""}`;
+        },
+      }),
+    },
+  };
+};
+```
+
+**Plugin behavior:** The plugin's `execute` function simply returns a
+confirmation string. The plugin's purpose is to register the tool so the
+sub-agent can call it. The engine does NOT read the `execute` return value;
+it reads the tool call's arguments from the session message history after the
+session ends (see §3.6.4).
+
+#### 3.6.3 Package Dependencies
+
+**File:** `.opencode/package.json`
+
+```json
+{
+  "dependencies": {
+    "@opencode-ai/plugin": "1.2.15"
+  }
+}
+```
+
+The `init` command (§3.1.7) MUST create this file and run `bun install` to
+populate `.opencode/node_modules/`. The only required dependency is
+`@opencode-ai/plugin`. OpenCode discovers plugins by scanning the
+`.opencode/plugins/` directory automatically; no additional registration is
+needed.
+
+#### 3.6.4 Tool Input Parameters vs Tool Execution State
+
+The `task_complete` tool call has two distinct "status" concepts that MUST NOT
+be confused:
+
+**Tool execution state** (`part.state.status`): Set by OpenCode's tool
+execution runtime. The value `"completed"` means the tool's `execute` function
+ran successfully and returned a result. Other possible values include
+`"pending"` (queued) and `"error"` (execution failed). This is NOT set by the
+plugin or the sub-agent.
+
+**Tool input parameter** (`part.state.input.status`): Set by the sub-agent when
+it calls the tool. One of `"complete"`, `"phase_done"`, `"blocked"`, or
+`"failed"`. This is the value the engine uses to determine iteration outcome.
+
+**Detection algorithm:** After a session goes idle, the engine scans session
+message parts for a tool call matching ALL of:
+
+1. `part.type === "tool"` — it is a tool call
+2. `part.tool === "task_complete"` — it is the correct tool
+3. `part.state.status === "completed"` — the tool **executed** successfully
+
+If all three match, the engine extracts:
+
+- `part.state.input.status` → the iteration's completion status
+- `part.state.input.reason` → optional human-readable explanation
+
+| Field | Source | Values | Meaning |
+|-------|--------|--------|---------|
+| `part.state.status` | OpenCode runtime | `"completed"`, `"pending"`, `"error"` | Whether the tool call executed |
+| `part.state.input.status` | Sub-agent input | `"complete"`, `"phase_done"`, `"blocked"`, `"failed"` | What the sub-agent is signaling |
+
+**Missing signal:** If no `task_complete` call is found (or the tool call's
+execution state is not `"completed"`), the iteration MUST be classified as
+`"stalled"`.
 
 ---
 
