@@ -1,0 +1,143 @@
+# Iteration 16 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.22
+- **Task Title**: Fix spec: Interactive mode question/answer protocol
+- **Description**: PROBLEM: The interactive mode question-answer protocol is incompletely specified. §2.9.2 lists question.asked as an SSE event type but its payload structure is never defined. §2.4.5 describes renderin...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T23:34:52.692Z
+- **Ended At**: 2026-03-02T23:37:41.021Z
+- **Duration**: 2m 48s
+- **Input Tokens**: 322
+- **Output Tokens**: 5048
+- **Total Tokens**: 5370
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by invoking the relevant skill for this task, then explore the codebase to understand the spec structure.
+[94m[Skill][0m
+I'll start by exploring the codebase to understand the spec structure and find the relevant sections.
+[94m[TodoWrite][0m
+[94m[Agent][0m Find spec file and Q&A protocol
+[94m[Glob][0m pattern: [96m**/*.md[0m
+[94m[Glob][0m pattern: [96m**/*.txt[0m
+[94m[Glob][0m pattern: [96m**/*.rst[0m
+[94m[Agent][0m Research OpenCode SDK Q&A API
+[94m[Grep][0m pattern: [96m§2\.4\.5|interactive mode[0m
+[94m[Grep][0m pattern: [96m§2\.9\.2|event handling[0m
+[94m[Glob][0m pattern: [96m**/*.ts[0m
+[94m[Glob][0m pattern: [96m**/*.js[0m
+[94m[Glob][0m pattern: [96m**/*.json[0m
+[94m[Grep][0m pattern: [96m§2\.4\.5[0m
+[94m[Grep][0m pattern: [96m§2\.9\.2[0m
+[94m[Glob][0m pattern: [96m**/*opencode*[0m
+[94m[Glob][0m pattern: [96msrc/**/*.ts[0m
+[94m[Glob][0m [95m/Users/mat/dev/farsight/agent-framework/.opencode[0m pattern: [96m**/*.ts[0m
+[94m[Glob][0m pattern: [96mlib/**/*.ts[0m
+[94m[Glob][0m pattern: [96mtests/**/*.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/interactive.md[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96mquestion\.asked|questionID|question.*event[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96manswer|submitAnswer|interactive.*Q&A[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/opencode.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/opencode.md[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96mOpenCode|SDK.*client|wire.*protocol[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/interactive.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/opencode.ts[0m
+[94m[Bash][0m $ grep -n "§2\.4\.5\|§2\.9\.2" /Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/events.ts[0m
+[94m[Bash][0m $ head -200 /Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md | tail -100
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/types.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96mrequestID|question\.reply|question\.reject[0m
+[94m[Bash][0m $ awk '/^#### 2\.4\.5/,/^### 2\.[5-9]|^## / {print NR": "$0}' /Users/mat/dev/farsight/agent-framework/...
+[94m[Bash][0m $ awk '/^#### 2\.9\.2/,/^### 2\.[0-9]|^## |^#### 2\.[0-9]/ {print NR": "$0}' /Users/mat/dev/farsight/a...
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework -name "*.d.ts" -o -name "*.ts" | grep -E "(opencode|sdk...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96mquestion|answer|protocol|SSE[0m
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework/node_modules -name "@opencode-ai" -type d
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96mQuestionInfo|EventQuestionAsked|question\.asked[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/interactive.ts[0m
+[94m[Bash][0m $ ls -la /Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/
+[94m[Bash][0m $ ls -la /Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/ | head -30
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/interactive.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/interactive.ts[0m
+[94m[Bash][0m $ ls -la /Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/ | head -40
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/client.d.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/types.ts[0m
+[94m[Bash][0m $ ls -la /Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/client.d.ts[0m
+[94m[Bash][0m $ grep -n "^#### 2\.4\.5\|^##### 2\.4\.5" /Users/mat/dev/farsight/agent-framework/docs/specs/super-ral...
+[94m[Bash][0m $ grep -n "^#### 2\.9\.2" /Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md
+[94m[Bash][0m $ ls /Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/sdk.gen.d.ts[0m
+[94m[Bash][0m $ grep -n "class Question" /Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/sdk.gen.d.ts[0m
+[94m[Bash][0m $ grep -n "QuestionInfo\|QuestionAnswer" /Users/mat/dev/farsight/agent-framework/node_modules/@opencod...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/types.gen.d.ts[0m
+[94m[Bash][0m $ grep -n "QuestionOption" /Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/types.gen.d.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/types.gen.d.ts[0m
+[94m[Bash][0m $ grep -n "GlobalEventResponses\|EventSubscribeResponses" /Users/mat/dev/farsight/agent-framework/node...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/types.gen.d.ts[0m
+[94m[Bash][0m $ grep -n "^export type Event = " /Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sd...
+[94m[Bash][0m $ grep -n "QuestionReplyResponses\|QuestionRejectResponses\|QuestionListResponses" /Users/mat/dev/fars...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/types.gen.d.ts[0m
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework -name "*.test.ts" -o -name "*.spec.ts" | head -10
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework/tests -name "*.test.ts" -o -name "*.spec.ts"
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/tests/unit/reverse-mock-answers.test.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/tests/fixtures/task-manager/mock-answers.json[0m
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework -name "*.md" | grep -E "(spec|doc|protocol|interactive)...
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework -name "*.md" | xargs grep -l "question.asked\|interacti...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/interactive.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/reverse.ts[0m
+Excellent - I now have a comprehensive understanding of the wire protocol. Let me read the key files to understand exactly what's in the spec now and what needs to be added.
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/interactive.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/types.gen.d.ts[0m
+[94m[TodoWrite][0m
+Now I have a clear picture. The module spec at `spec/modules/integrations/interactive.md` already has thorough documentation of the protocol. The issue is that the **main spec** (`docs/specs/super-ralph-spec.md`) references `question.asked` in §2.9.2 but never defines the payload or the answer API. I need to:
+
+1. Expand §2.4.5 to include the question/answer wire protocol details
+2. Expand the §2.9.2 table entry for `question.asked` to reference the protocol
+
+Let me also check how other event types are described in the spec to match the style.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now I'll add the question/answer protocol section to §2.4.5, right after the current "Behavior" block and before "User Cancellation". I'll insert a new subsection that defines the wire protocol.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "5. Continue streaming until the session goes idle ..." → "5. Continue streaming until the session goes idle ..."
+Now update the §2.9.2 event table entry for `question.asked` to cross-reference the new protocol detail:
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "| `question.asked` | (Interactive mode only) Rende..." → "| `question.asked` | (Interactive mode only) Rende..."
+Now let me verify the changes read correctly:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Let me also check the §2.9.2 update:
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Both changes look good. Let me verify against the task's clean-room test criteria:
+[94m[TodoWrite][0m
+All items from the task description are now addressed in the spec:
+
+1. **`question.asked` SSE event payload schema** — Fully defined with `EventQuestionAsked` containing `QuestionRequest` (`id`, `sessionID`, `questions[]`, `tool?`), plus `QuestionInfo` and `QuestionOption` schemas.
+
+2. **API call to send answers back** — Specified as `client.question.reply({ requestID, answers })` with the v2 SDK client.
+
+3. **Question ID correlation** — Explicitly stated: `requestID` in reply/reject maps to `properties.id` from the `question.asked` event.
+
+4. **Answer format per question type** — Single select (`["label"]`), multiselect (`["label1", "label2"]`), custom text (`["free text"]`), with the constraint that `answers` length must match `questions` length.
+
+5. **Rejection mechanism** — `client.question.reject({ requestID })` for user cancellation.
+
+6. **Error handling** — If reply/reject fails, treat session as failed; retrying is not meaningful since the server won't send further events for that question.
+
+7. **§2.9.2 cross-reference** — Updated to reference the payload type and API methods.
+
+<promise>COMPLETE</promise>

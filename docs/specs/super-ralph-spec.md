@@ -1074,12 +1074,49 @@ super-ralph status --run <runId|latest>
 |--------|------|----------|-------------|
 | `--epic <ID>` | String | Mutually exclusive | Show bead progress for the specified epic. |
 | `--run <runId\|latest>` | String | Mutually exclusive | Show run artifact status. `"latest"` resolves to the most recent run. |
+| `--json` | Boolean | No | Output machine-readable JSON instead of human-readable text. |
 
-**`--epic` output:** Total beads, completed count, remaining count, and
-individual bead statuses.
+**`--epic` output format:**
 
-**`--run` output:** Session state, event count, last event, and latest
-transcript excerpt.
+```
+Epic: <epicId> — <epicTitle>
+Progress: <completed>/<total> beads completed (<remaining> remaining)
+
+  ✓ <beadId>: <title> [closed]
+  ◆ <beadId>: <title> [in_progress]
+  ○ <beadId>: <title> [open]
+```
+
+Beads MUST be listed in the order returned by `br list`. Status indicators:
+`✓` for closed, `◆` for in_progress, `○` for open. If the epic ID does not
+exist, print `Error: Epic not found: <epicId>` to stderr and exit 1.
+
+**`--run` output format:**
+
+```
+Run: <runId>
+Status: <running|completed|failed>
+Started: <startedAt>
+Iterations: <currentIteration>/<maxIterations>
+Completed: <completed> | Failed: <failed> | Skipped: <skipped>
+
+Last event: <event type> at <timestamp>
+Events logged: <count>
+
+Latest transcript:
+  <last 10 lines of most recent transcript file>
+```
+
+The `<startedAt>` and `<timestamp>` values MUST use ISO 8601 format. The
+transcript section MUST show the last 10 lines of the most recent `.log` file
+in the run's iterations directory, indented with two spaces. If no transcript
+files exist, print `(no transcripts)` instead. If the run directory does not
+exist, print `Error: Run not found: <runId>` to stderr and exit 1.
+
+**`--json` flag:** Both `--epic` and `--run` MUST support an optional `--json`
+flag that outputs the same information as a JSON object to stdout instead of
+the human-readable format. The JSON schema is not prescribed; it MUST contain
+the same fields shown in the text format above.
 
 **Constraint:** Using both `--epic` and `--run` simultaneously MUST be an error.
 
