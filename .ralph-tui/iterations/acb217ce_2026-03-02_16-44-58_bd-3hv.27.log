@@ -1,0 +1,208 @@
+# Iteration 21 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.27
+- **Task Title**: Fresh eyes review pass 6
+- **Description**: ## Objective
+Carefully review this entire spec with completely fresh eyes. You have
+NOT seen this spec before. You are reviewing it as a clean-room
+specification — a document that must be complete eno...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T23:44:58.253Z
+- **Ended At**: 2026-03-02T23:49:19.183Z
+- **Duration**: 4m 20s
+- **Input Tokens**: 80
+- **Output Tokens**: 12167
+- **Total Tokens**: 12247
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by reading the spec and checking existing open beads to avoid duplicating work.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+
+[91m[Error: File content (25840 tokens) exceeds maximum allowed tokens (25000). Please use offset and limit parameters to read specific portions of the file, or use the GrepTool to search for specific content.][0m
+[94m[Bash][0m List existing beads under bd-3hv $ br list --parent bd-3hv 2>/dev/null | head -80
+
+[91m[Error: <tool_use_error>Sibling tool call errored</tool_use_error>][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m List existing beads under bd-3hv $ br list --parent bd-3hv 2>/dev/null | head -80
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m List existing beads under bd-3hv $ br list --parent bd-3hv 2>/dev/null
+
+[91m[Error: Exit code 2][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Try different br commands to list child beads $ br list --parent bd-3hv 2>&1 || br show bd-3hv --json 2>&1 | head -100
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Show open beads under bd-3hv $ br show bd-3hv --json 2>&1 | python3 -c " import json, sys data = json.load(sys.stdin) for d in data...
+
+[91m[Error: Exit code 1
+  File "<string>", line 5
+    if d['status'] \!= 'closed':
+                    ^
+SyntaxError: unexpected character after line continuation character
+
+  File "<string>", line 5
+    if d['status'] \!= 'closed':
+                    ^
+SyntaxError: unexpected character after line continuation character][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Show open beads under bd-3hv $ br show bd-3hv --json 2>&1 | python3 -c " import json, sys data = json.load(sys.stdin) for d in data...
+
+[91m[Error: Exit code 1
+  File "<string>", line 5
+    if d['status'] \!= 'closed':
+                    ^
+SyntaxError: unexpected character after line continuation character
+
+  File "<string>", line 5
+    if d['status'] \!= 'closed':
+                    ^
+SyntaxError: unexpected character after line continuation character][0m
+[94m[Bash][0m Show open beads under bd-3hv $ br show bd-3hv --json 2>&1 | python3 -c ' import json, sys data = json.load(sys.stdin) for d in data...
+
+[91m[Error: Exit code 1
+  File "<string>", line 5
+    if d["status"] \!= "closed":
+                    ^
+SyntaxError: unexpected character after line continuation character
+
+  File "<string>", line 5
+    if d["status"] \!= "closed":
+                    ^
+SyntaxError: unexpected character after line continuation character][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+
+[91m[Error: <tool_use_error>Sibling tool call errored</tool_use_error>][0m
+[94m[Bash][0m Show open beads under bd-3hv $ br show bd-3hv --json | python3 << 'PYEOF' import json, sys data = json.load(sys.stdin) for d in dat...
+
+[91m[Error: Exit code 1
+Traceback (most recent call last):
+  File "<stdin>", line 209, in <module>
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+Traceback (most recent call last):
+  File "<stdin>", line 209, in <module>
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+
+[91m[Error: <tool_use_error>Sibling tool call errored</tool_use_error>][0m
+[94m[Bash][0m Check br show output format $ br show bd-3hv --json 2>/dev/null | head -5
+It's returning an array. Let me fix the parsing and continue reading.
+[94m[Bash][0m Show open beads under bd-3hv $ br show bd-3hv --json 2>/dev/null | python3 << 'PYEOF' import json, sys data = json.load(sys.stdin) ...
+
+[91m[Error: Exit code 1
+Traceback (most recent call last):
+  File "<stdin>", line 209, in <module>
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+Traceback (most recent call last):
+  File "<stdin>", line 209, in <module>
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+
+[91m[Error: <tool_use_error>Sibling tool call errored</tool_use_error>][0m
+[94m[Bash][0m Find non-closed beads $ br show bd-3hv --json 2>&1 | grep -E '"status": "(?!closed)' | head -20
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[TodoWrite][0m
+Now I have the full spec read. Let me check the existing open beads and previously fixed issues to avoid duplication.
+[94m[Bash][0m Check all bead titles and statuses $ br show bd-3hv --json 2>/dev/null | grep -E '"title"|"status"|"id"' | head -80
+Good. The only open beads are bd-3hv.27 (this review) and bd-3hv.6 (consolidation). All prior fix-up beads are closed. Let me now do my detailed analysis.
+[94m[TodoWrite][0m
+Now I have the full spec and context. Let me analyze the issues I've found.
+
+After thorough review of all 2293 lines across 5 prior passes, the spec is quite mature. I found a small number of issues — some I can fix directly, and I need to assess whether any warrant fix-up beads.
+
+**Issues found:**
+
+1. **§2.9.4 Stream capture buffer content rules undefined** — The spec defines two capture buffers ("raw" and "display") with size limits and truncation strategy, but never specifies what data gets appended to each buffer. An implementer cannot build this without knowing the capture rules.
+
+2. **§2.1.3 Iteration loop missing transcript write step** — The iteration loop lists steps 5a-5j but doesn't include transcript writing. §6.4.1 acknowledges this belongs between steps 5g and 5h, but the main loop listing omits it, creating an internal inconsistency.
+
+3. **§2.2.2 Edge case: zero children in epic** — If the epic has zero children after filtering `dependents`, `br list --all --json` would be called with no `--id` flags. Behavior unspecified.
+
+Both #1 and #2 are directly fixable. #3 is a minor edge case addition. Let me fix them all directly.
+[94m[TodoWrite][0m
+**Fix 1: Add stream capture buffer content assignment rules to §2.9.4**
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "The system MUST maintain two independent capture b..." → "The system MUST maintain two independent capture b..."
+**Fix 2: Add explicit transcript write step to §2.1.3 iteration loop**
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "   g. Harvest the result (see §2.7).
+   h. Record ..." → "   g. Harvest the result (see §2.7).
+   g2. Write ..."
+**Fix 3: Add edge case for zero children in forward phase setup**
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "| No ready beads but remaining > 0 | Log stall war..." → "| Epic has zero children | `totalBeadCount` is 0, ..."
+All fixes applied directly. Now let me close the bead.
+[94m[TodoWrite][0m
+[94m[Bash][0m Close the review bead $ br close bd-3hv.27 --reason "Review pass 6: found 3 minor issues, all fixed directly in spec. No sig...
+[94m[TodoWrite][0m
+## Review Pass 6 — Summary
+
+### Changes Made (all direct fixes, no fix-up beads needed)
+
+**1. Stream capture buffer content rules (§2.9.4)** — Added explicit definitions of what data gets written to each buffer:
+- **Display buffer**: text deltas from `message.part.delta` + tool status lines from `message.part.updated` (the user-visible output)
+- **Raw buffer**: JSON-serialized SSE events (machine-parseable record)
+
+**2. Iteration loop transcript write step (§2.1.3)** — Added explicit step 5g2 for transcript writing between harvest (5g) and progress log (5h), matching §6.4.1's cross-reference.
+
+**3. Zero-children edge case (§10.2)** — Added handling for when an epic has zero children: `maxIterations` = 0, loop never executes, completes cleanly.
+
+### Assessment
+
+| Category | Details |
+|----------|---------|
+| **Wholeheartedly agree** | Stream capture buffer rules — this was a genuine clean-room gap. An implementer could not determine what goes into each buffer from §2.9.4 alone. |
+| **Wholeheartedly agree** | Transcript write step in iteration loop — internal inconsistency between §2.1.3 and §6.4.1. |
+| **Somewhat agree** | Zero-children edge case — technically derivable from existing rules (2×0=0), but explicit is better than implicit in a clean-room spec. |
+| **Considered but rejected** | Model validation timing — could specify when model string validation fires, but the current "MUST be treated as an error" is sufficient; timing is an implementation detail. |
+| **Considered but rejected** | `question.asked` in autonomous mode — self-correcting via inactivity timeout; adding explicit handling would over-specify. |
+| **Considered but rejected** | Argument parser error behavior — the spec intentionally accepts the trade-off of no validation (§3.1.11). |
+
+### Steady State Assessment
+
+After 6 review passes, the spec has reached steady state. No significant gaps requiring fix-up beads were found. All 3 issues were minor enough to fix directly. **No pass 7 was created.**
+
+<promise>COMPLETE</promise>

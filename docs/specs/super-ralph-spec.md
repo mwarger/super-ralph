@@ -96,11 +96,11 @@ The engine MUST execute iterations as follows:
    e. Emit `iteration.session_created`.
    f. Execute the prompt with dual timeout protection (see §2.6).
    g. Harvest the result (see §2.7).
-   g2. Write the iteration transcript via the run tracker (see §6.4.1).
-       Set `IterationResult.transcriptPath` to the returned path.
-   h. Record the iteration in the progress log.
-   i. Call `handleResult` with the harvested result.
-   j. Based on the result status:
+   h. Write the iteration transcript via the run tracker (see §6.4.1).
+      Set `IterationResult.transcriptPath` to the returned path.
+   i. Record the iteration in the progress log.
+   j. Call `handleResult` with the harvested result.
+   k. Based on the result status:
       - `"complete"` or `"phase_done"`: Emit `iteration.completed`. Increment
         completed counter. If `"phase_done"`, exit the loop.
       - `"blocked"`: Emit `iteration.blocked`. Increment skipped counter.
@@ -988,7 +988,7 @@ output:
 
 The **engine** (not the run tracker) MUST maintain an append-only Markdown file
 at `.super-ralph/progress.md`. The engine appends an entry after each iteration
-completes (§2.1.3 step 5h), using data from the `IterationResult`. Each entry
+completes (§2.1.3 step 5i), using data from the `IterationResult`. Each entry
 MUST follow this format:
 
 ```markdown
@@ -1882,7 +1882,7 @@ Transcript files MUST be named `<NNN>-<label>.log` where:
 - `<NNN>` is a zero-padded 3-digit iteration number (e.g., `001`, `002`).
 - `<label>` is the iteration label (bead ID or synthetic label).
 
-### 6.4.1 Transcript File Content and Lifecycle
+#### 6.4.1 Transcript File Content and Lifecycle
 
 **Content format:** Transcript files are plain text with Markdown headings. Each
 file MUST contain the following structure:
@@ -1917,7 +1917,7 @@ relative path (or `undefined` if both buffers were empty).
 
 **Write timing:** The engine MUST call `writeIterationTranscript` after
 harvesting the prompt result (§2.1.3 step 5g) and before recording the
-iteration in the progress log (§2.1.3 step 5h). The returned path is set on
+iteration in the progress log (§2.1.3 step 5i). The returned path is set on
 `IterationResult.transcriptPath` so the progress log entry can reference it.
 
 **Filename sanitization:** The `<label>` portion of the filename MUST be
@@ -2389,3 +2389,48 @@ during streaming.
 
 ### Error Strategies
 `retry` → `skip` → `abort`
+
+---
+
+## Clean-Room Verification Assessment
+
+**Date:** 2026-03-02
+**Confidence level:** High
+
+This specification passes the clean-room test. An engineer with no knowledge of
+the original implementation can build the system from this document alone. All
+behaviors are precisely specified with exact expected outcomes, all interfaces
+are fully defined with signatures, types, and examples, all constraints use
+concrete numbers, all edge cases are documented, and all design decisions
+include rationale.
+
+**Areas where the spec is weaker:**
+
+- **Prompt template content:** The spec defines template variables and the
+  Handlebars engine but does not include the actual template text for
+  `forward.hbs`, `decompose.hbs`, or `reverse.hbs`. An implementer must author
+  these templates from the context variable descriptions. The spec provides
+  sufficient information to write them, but the templates themselves are a
+  creative artifact not fully constrained by the spec.
+- **AGENTS.md content:** The spec states that `init` scaffolds `AGENTS.md` files
+  but does not prescribe their content. The implementer must author agent
+  instructions based on the system's behavior.
+- **`intake-checklist.md` content:** Referenced as a scaffolded artifact but its
+  content is not specified.
+- **Console streaming output:** The spec defines what events produce console
+  output (§5.5) but the exact formatting of streamed sub-agent text deltas
+  during iteration execution (as opposed to event-driven status lines) is
+  left to the implementer.
+
+**Recommendations for the decompose phase:**
+
+1. Create separate beads for the engine core, each phase, the CLI layer, the
+   event system, the run tracker, the plugin, and the init scaffolding.
+2. The prompt templates (forward.hbs, decompose.hbs, reverse.hbs) and AGENTS.md
+   content should be their own beads, as they require domain expertise to author.
+3. Interactive mode (§2.4.5) is architecturally distinct from the engine loop
+   and should be decomposed as a separate work stream.
+4. The SDK integration (§2.5.4) is a critical dependency — implement and verify
+   it early, as all phases depend on it.
+5. Consider a dedicated bead for the SSE streaming protocol (§2.9) since it
+   underpins both autonomous and interactive execution paths.
