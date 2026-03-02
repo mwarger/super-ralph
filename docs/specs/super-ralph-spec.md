@@ -707,6 +707,11 @@ Used for async prompt submission and SSE streaming:
 - `v2.event.subscribe()` → `{ stream: AsyncIterable<Event> }`
 - `v2.session.abort({ sessionID })` → void
 
+Used exclusively by interactive mode (§2.4.5) for question handling:
+
+- `v2.question.reply({ requestID: string, answers: string[][] })` → void
+- `v2.question.reject({ requestID: string })` → void
+
 ##### Session Creation
 
 ```

@@ -1,0 +1,51 @@
+# Iteration 19 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.25
+- **Task Title**: Fix spec: Answers file format for --answers flag
+- **Description**: §2.4.7 says the --answers flag loads pre-recorded answers from a file, but the file format/schema is never specified. An implementer cannot implement this feature without knowing the file structure.
+
+...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T23:43:38.189Z
+- **Ended At**: 2026-03-02T23:44:22.670Z
+- **Duration**: 44s
+- **Input Tokens**: 29
+- **Output Tokens**: 1822
+- **Total Tokens**: 1851
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by reading the relevant spec section to understand what's already there.
+[94m[Grep][0m pattern: [96m§2\.4\.7|2\.4\.7|answers flag|--answers[0m
+[94m[Grep][0m [95mspec/modules/cli/index.md[0m pattern: [96manswers|--answers[0m
+[94m[Grep][0m [95mdocs/specs/super-ralph-spec.md[0m pattern: [96m2\.4\.7|answers[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now let me see the question batching format referenced around line 438 for context.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now let me also check the question structure to understand headers, etc.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Good. Now I have full context. The answers file format needs to define how pre-recorded answers map to questions. Let me add the specification.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "- This feature exists specifically for automated t..." → "- This feature exists specifically for automated t..."
+The answers file format specification has been added as §2.4.7.1. Let me verify the edit looks correct in context.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Looks good. The new §2.4.7.1 subsection specifies:
+
+- **File type**: JSON array
+- **Schema**: Each element is either a string (single select) or array-of-strings (multiselect)
+- **Matching strategy**: Sequential consumption order (not by question text or header)
+- **Fewer answers than questions**: Defaults to first option for remaining questions
+- **More answers than questions**: Surplus entries silently ignored
+- **Example file content**: Concrete 4-question example with both single and multiselect answers
+
+All existing content in §2.4.7 is preserved; the new subsection is appended after it.
+
+<promise>COMPLETE</promise>
