@@ -1,0 +1,93 @@
+# Iteration 6 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.13
+- **Task Title**: Fix spec: Transcript file content format and write lifecycle
+- **Description**: ## Problem
+§6.3 defines transcript file NAMING (`<NNN>-<label>.log`) and §6.2 says the iterations/ directory contains "per-iteration transcript files", but the spec NEVER defines:
+
+1. **What content g...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T22:59:59.507Z
+- **Ended At**: 2026-03-02T23:02:09.261Z
+- **Duration**: 2m 9s
+- **Input Tokens**: 89
+- **Output Tokens**: 3097
+- **Total Tokens**: 3186
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by reading the spec to understand the current state of transcript-related sections before making changes.
+[94m[Agent][0m Explore transcript spec sections
+[94m[Glob][0m pattern: [96m**/*.md[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec[0m pattern: [96m§6\.3|§6\.2|§2\.9\.4|§2\.1\.3|§5\.6[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec[0m pattern: [96mtranscript[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/README.md[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/persistence-and-io.md[0m pattern: [96mtranscript[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/state-model.md[0m pattern: [96mtranscript[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/run-state.md[0m pattern: [96mtranscript[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/persistence-and-io.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/run-state.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/state-model.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/tasks/prd-ralph-tui-clean-room-spec.md[0m
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework/spec -name "*.md" -type f | head -20
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec[0m pattern: [96m^##\s+[0-9]|^#\s+[0-9][0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96m§|section.*6\.|section.*2\.9|section.*5\.6[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m $ grep -n "^## 6\.3\|^## 6\.2\|^## 2\.9\.4\|^## 2\.1\.3\|^## 5\.6\|^### 6\.3\|^### 6\.2\|^### 2\.9\.4\...
+[94m[Bash][0m $ grep -n "^## 2\|^### 2\|^#### 2" /Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m $ grep -n "step 5h\|progress log recording\|Record the iteration" /Users/mat/dev/farsight/agent-framew...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m $ grep -n "transcript\|Transcript" /Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec...
+[94m[Bash][0m $ grep -n "\.log\|display output\|raw output\|writeIterationTranscript\|Display Stream\|Raw Event" /Us...
+[94m[Bash][0m $ grep -n "^## 4\|^### 4\|^#### 4\|^## 5\|^### 5\|^#### 5" /Users/mat/dev/farsight/agent-framework/doc...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m $ grep -n -A 5 -B 2 "Transcript files MUST\|transcript file\|iteration transcript\|\.log" /Users/mat/d...
+[94m[Bash][0m $ grep -n "^### 6\|^#### 6\|Harvest\|transcript content\|writeIterationTranscript\|transcript format" ...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m $ wc -l /Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m $ grep -n "Display Stream\|Raw Event\|Markdown headings\|plain text" /Users/mat/dev/farsight/agent-fra...
+[94m[Bash][0m $ grep -n "Display Stream\|Raw Event\|Markdown headings\|plain text\|\.log" /Users/mat/dev/farsight/ag...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/state-model.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/state-model.md[0m pattern: [96mtranscript|\.log[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/state-model.md[0m
+Now I have the full picture. The behavior spec has the details but the main spec (§6.3) is missing them. Let me also check where in the iteration loop the transcript gets written relative to other steps.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96mwriteIterationTranscript|writeTranscript[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/engine.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/run-state.ts[0m
+Now I have the complete picture. Let me add §6.3.1 to the spec.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "### 6.4 Dual-Write State Pattern" → "### 6.3.1 Transcript File Content and Lifecycle
+
+*..."
+Now let me verify the edit looks correct in context.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+The new §6.3.1 is cleanly inserted. It addresses all five gaps from the task:
+
+1. **What content goes in transcript files** — both capture buffers (display and raw), formatted as plain text with Markdown headings
+2. **When transcript files are written** — after harvesting the prompt result (step 5g), before recording progress (step 5h)
+3. **Which component writes them** — the run tracker via `writeIterationTranscript`
+4. **Encoding/format** — plain text with Markdown headings, specific template shown
+5. **Truncation handling** — `[truncated]` marker preserved as-is
+6. **Empty buffer handling** — sections omitted if empty; no file written if both empty
+7. **Filename sanitization** — lowercase, hyphen-separated, truncated to 80 chars
+
+<promise>COMPLETE</promise>

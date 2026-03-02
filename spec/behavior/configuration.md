@@ -67,7 +67,7 @@ default value. The full default table is:
 | `engine.iteration_delay_ms` | `2000` |
 | `engine.strategy` | `"retry"` |
 | `engine.max_retries` | `3` |
-| `opencode.url` | `"http://localhost:4096"` |
+| `opencode.attach_url` | `"http://localhost:4096"` |
 | `cli.path` | `""` (empty string) |
 | `models.default` | `"anthropic/claude-sonnet-4-6"` |
 | `models.areas` | `{}` (empty map) |
@@ -171,9 +171,11 @@ produces its own `LoopConfig` snapshot.
 
 ## Open Questions
 
-- Whether `opencode.url` is ever used in practice: the server is spawned on
-  a random port and the URL is discovered dynamically. The configured URL
-  value appears to be unused. [INFERRED]
+- ~~Whether `opencode.url` is ever used in practice~~ **RESOLVED**: Renamed
+  to `opencode.attach_url`. In ephemeral mode (default), the SDK spawns the
+  server on a random port via `createOpencode({ port: 0 })` and discovers the
+  URL dynamically — the config value is not used. `opencode.attach_url` is
+  the default URL used by `--attach` mode when no explicit URL is provided.
 - The `cli.path` key purpose is not fully documented in source comments.
   [UNKNOWN]
 - Merge behavior for array-valued config keys is undefined in source. [UNKNOWN]

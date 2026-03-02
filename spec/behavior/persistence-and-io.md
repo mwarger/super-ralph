@@ -276,6 +276,8 @@ within a run is:
 - The maximum number of `events.jsonl` lines per run is unbounded; very
   long runs may produce large files. Whether any rotation or cap is applied
   is not observable from source. [UNKNOWN]
-- The `opencode.url` config key is loaded but the actual server URL is
-  determined at spawn time from the random port. The relationship between
-  the configured URL and the runtime URL is not documented. [UNKNOWN]
+- ~~The `opencode.url` config key is loaded but the actual server URL is
+  determined at spawn time from the random port.~~ **RESOLVED**: Renamed to
+  `opencode.attach_url`. In ephemeral mode, the server URL is always
+  discovered dynamically from `server.url`. The config value is only used
+  as the default URL for `--attach` mode.

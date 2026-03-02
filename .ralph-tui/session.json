@@ -3,10 +3,10 @@
   "sessionId": "acb217ce-7a83-430c-90db-97c9c144f5c4",
   "status": "running",
   "startedAt": "2026-03-02T22:44:36.575Z",
-  "updatedAt": "2026-03-02T23:02:09.330Z",
-  "currentIteration": 5,
+  "updatedAt": "2026-03-02T23:05:20.407Z",
+  "currentIteration": 6,
   "maxIterations": 10,
-  "tasksCompleted": 3,
+  "tasksCompleted": 4,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -138,6 +138,16 @@
       "durationMs": 246532,
       "startedAt": "2026-03-02T22:55:51.707Z",
       "endedAt": "2026-03-02T22:59:58.239Z"
+    },
+    {
+      "iteration": 6,
+      "status": "completed",
+      "taskId": "bd-3hv.13",
+      "taskTitle": "Fix spec: Transcript file content format and write lifecycle",
+      "taskCompleted": true,
+      "durationMs": 129754,
+      "startedAt": "2026-03-02T22:59:59.507Z",
+      "endedAt": "2026-03-02T23:02:09.261Z"
     }
   ],
   "skippedTaskIds": [],

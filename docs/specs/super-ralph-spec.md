@@ -369,17 +369,19 @@ answers are loaded:
 
 #### 2.5.1 Ephemeral Server (Default)
 
-1. The engine MUST start a new OpenCode server as a subprocess.
-2. The server URL MUST default to `config.opencode.url` (default:
-   `http://localhost:4096`).
-3. After starting, the engine MUST verify the server is reachable by calling
+1. The engine MUST start a new OpenCode server as a subprocess using the SDK's
+   `createOpencode({ port: 0 })` factory (see §2.5.4). The OS assigns a random
+   available port; the server URL is discovered from the returned
+   `server.url` property.
+2. After starting, the engine MUST verify the server is reachable by calling
    `client.session.list()`.
-4. If the server is unreachable, the engine MUST close the server process and
+3. If the server is unreachable, the engine MUST close the server process and
    throw an error.
-5. On cleanup, the engine MUST kill the server process.
+4. On cleanup, the engine MUST kill the server process via `server.close()`.
 
 **Rationale:** Starting a fresh server per run prevents state pollution across
-runs.
+runs. Using `port: 0` avoids port conflicts when multiple runs execute
+concurrently.
 
 #### 2.5.2 Attach Mode (`--attach <url>`)
 
@@ -1596,7 +1598,10 @@ successive requests. See §2.1.3 step 5a for placement within the loop.
 |------|---------|-------------|
 | `bun` | JavaScript runtime and package manager | All operations |
 | `br` | Beads CLI for dependency-aware task tracking | Forward, Decompose, Init |
-| `opencode` | AI coding agent server (started as subprocess or attached) | All phase executions |
+
+> **Note:** The OpenCode server is NOT an external CLI tool. It is managed
+> internally by the `@opencode-ai/sdk` npm package (listed in §8.2), which
+> spawns the server as a subprocess. No `opencode` binary needs to be on PATH.
 
 ### 8.4 Beads CLI Commands
 
