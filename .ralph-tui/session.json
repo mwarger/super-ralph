@@ -3,10 +3,10 @@
   "sessionId": "19cdf538-e65c-4a24-be03-beb31e2fabf2",
   "status": "running",
   "startedAt": "2026-03-02T22:15:24.790Z",
-  "updatedAt": "2026-03-02T22:27:39.414Z",
-  "currentIteration": 1,
+  "updatedAt": "2026-03-02T22:32:30.126Z",
+  "currentIteration": 2,
   "maxIterations": 10,
-  "tasksCompleted": 1,
+  "tasksCompleted": 2,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -23,8 +23,8 @@
       {
         "id": "bd-3hv.2",
         "title": "Draft clean-room specification",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "bd-3hv.3",
@@ -62,6 +62,16 @@
       "durationMs": 423556,
       "startedAt": "2026-03-02T22:15:28.547Z",
       "endedAt": "2026-03-02T22:22:32.103Z"
+    },
+    {
+      "iteration": 2,
+      "status": "completed",
+      "taskId": "bd-3hv.2",
+      "taskTitle": "Draft clean-room specification",
+      "taskCompleted": true,
+      "durationMs": 305731,
+      "startedAt": "2026-03-02T22:22:33.630Z",
+      "endedAt": "2026-03-02T22:27:39.361Z"
     }
   ],
   "skippedTaskIds": [],

@@ -86,15 +86,17 @@ The engine MUST execute iterations as follows:
    all remaining steps.
 4. Start or attach to the OpenCode server (see §2.5).
 5. Enter the iteration loop. For each iteration from 1 to `maxIterations`:
-   a. Call `nextIteration`. If it returns `null`, exit the loop.
-   b. Emit `iteration.started`.
-   c. Create an OpenCode session with a descriptive name.
-   d. Emit `iteration.session_created`.
-   e. Execute the prompt with dual timeout protection (see §2.6).
-   f. Harvest the result (see §2.7).
-   g. Record the iteration in the progress log.
-   h. Call `handleResult` with the harvested result.
-   i. Based on the result status:
+   a. If iteration > 1, pause for `config.engine.iteration_delay_ms` (default:
+      2000ms). This prevents overwhelming the AI server.
+   b. Call `nextIteration`. If it returns `null`, exit the loop.
+   c. Emit `iteration.started`.
+   d. Create an OpenCode session with a descriptive name.
+   e. Emit `iteration.session_created`.
+   f. Execute the prompt with dual timeout protection (see §2.6).
+   g. Harvest the result (see §2.7).
+   h. Record the iteration in the progress log.
+   i. Call `handleResult` with the harvested result.
+   j. Based on the result status:
       - `"complete"` or `"phase_done"`: Emit `iteration.completed`. Increment
         completed counter. If `"phase_done"`, exit the loop.
       - `"blocked"`: Emit `iteration.blocked`. Increment skipped counter.
@@ -128,9 +130,16 @@ When an iteration fails (status is not `"complete"`, `"phase_done"`, or
 3. Exit the loop immediately.
 
 **Retry tracking:** Retry counts MUST be keyed by `iterationLabel` (the bead
-title or task identifier), not by iteration number. This ensures that when the
+ID or task identifier), not by iteration number. This ensures that when the
 iteration counter is decremented for a retry, the same logical task is tracked
 consistently.
+
+**Retry invariant:** When the iteration counter is decremented for a retry,
+`nextIteration` MUST return the same logical task on the next call. For the
+Forward phase, this holds because `br ready` returns the same first-priority
+unblocked bead as long as it hasn't been closed. If the ready list changes
+between retry attempts (e.g., due to external bead closure), the engine will
+simply pick the next available bead — this is acceptable and self-correcting.
 
 #### 2.1.5 Exception Handling
 
@@ -870,8 +879,8 @@ CompletionResult {
 ### 4.9 Run ID Format
 
 Run IDs MUST be generated as `"<timestamp>-<random6chars>"` where:
-- `<timestamp>` is a numeric timestamp (e.g., Unix milliseconds or similar).
-- `<random6chars>` is 6 random alphanumeric characters.
+- `<timestamp>` is `Date.now()` (Unix epoch milliseconds).
+- `<random6chars>` is 6 random alphanumeric characters (lowercase a-z, 0-9).
 
 ---
 
@@ -1059,9 +1068,10 @@ configuration file is missing entirely, the system MUST use all defaults.
 
 ### 7.5 Iteration Delay
 
-Between consecutive iterations, the engine MUST pause for
-`config.engine.iteration_delay_ms` milliseconds (default: 2000ms). This
-prevents overwhelming the AI server with rapid successive requests.
+Between consecutive iterations (starting from the second iteration), the
+engine MUST pause for `config.engine.iteration_delay_ms` milliseconds
+(default: 2000ms). This prevents overwhelming the AI server with rapid
+successive requests. See §2.1.3 step 5a for placement within the loop.
 
 ---
 
