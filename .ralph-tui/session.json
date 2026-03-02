@@ -3,10 +3,10 @@
   "sessionId": "acb217ce-7a83-430c-90db-97c9c144f5c4",
   "status": "running",
   "startedAt": "2026-03-02T22:44:36.575Z",
-  "updatedAt": "2026-03-02T23:26:08.193Z",
-  "currentIteration": 11,
+  "updatedAt": "2026-03-02T23:30:18.185Z",
+  "currentIteration": 12,
   "maxIterations": 10,
-  "tasksCompleted": 9,
+  "tasksCompleted": 10,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -198,6 +198,16 @@
       "durationMs": 476507,
       "startedAt": "2026-03-02T23:15:10.609Z",
       "endedAt": "2026-03-02T23:23:07.116Z"
+    },
+    {
+      "iteration": 12,
+      "status": "completed",
+      "taskId": "bd-3hv.18",
+      "taskTitle": "Fix spec: System prompt sourcing and AGENTS.md integration",
+      "taskCompleted": true,
+      "durationMs": 179723,
+      "startedAt": "2026-03-02T23:23:08.388Z",
+      "endedAt": "2026-03-02T23:26:08.111Z"
     }
   ],
   "skippedTaskIds": [],

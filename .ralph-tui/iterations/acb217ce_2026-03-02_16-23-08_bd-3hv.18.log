@@ -1,0 +1,119 @@
+# Iteration 12 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.18
+- **Task Title**: Fix spec: System prompt sourcing and AGENTS.md integration
+- **Description**: ## Problem
+§2.5.4 (OpenCode SDK Integration Reference) shows the promptAsync call includes an optional `system` parameter: `system: systemPromptOrUndefined`. However, the spec NEVER defines:
+
+1. **Whe...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T23:23:08.388Z
+- **Ended At**: 2026-03-02T23:26:08.111Z
+- **Duration**: 2m 59s
+- **Input Tokens**: 103
+- **Output Tokens**: 4473
+- **Total Tokens**: 4576
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by invoking the brainstorming skill since this is a spec modification task that requires understanding the codebase before making changes.
+
+Actually, looking at this more carefully, this is a focused spec fix task with clear requirements. Let me first understand the current state of the spec and AGENTS.md references.
+[94m[Agent][0m Explore spec for system prompt and AGENTS.md
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework -type f -name "*.md" | head -20
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework -maxdepth 3 -type f \( -name "*spec*.md" -o -name "*SPE...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m(?i)system prompt|systemPrompt|system:[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96mAGENTS\.md[0m
+[94m[Bash][0m $ wc -l /Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md
+[94m[Bash][0m $ grep -n "§2.5.4\|promptAsync\|§3.1.7\|§3.4\|§6.1" /Users/mat/dev/farsight/agent-framework/docs/specs...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m $ grep -n "§3.1.7\|### 3.1.7\|init command\|§3.4\|### 3.4\|Prompt Template\|§6.1\|### 6.1\|directory s...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/AGENTS.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/.super-ralph/AGENTS.md[0m
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework -maxdepth 3 -type f \( -name "*opencode*" -o -name "*sd...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/opencode.ts[0m
+[94m[Bash][0m $ grep -rn "systemPrompt\|system.*prompt\|systemPromptOrUndefined" /Users/mat/dev/farsight/agent-frame...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/forward.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/reverse.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/decompose.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/interactive.ts[0m
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework -name "*.hbs" | head -10
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/forward.hbs[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/reverse.hbs[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/decompose.hbs[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/engine.ts[0m
+[94m[Bash][0m $ grep -rn "AGENTS.md\|readFileSync.*AGENTS\|Markdown\|instructions\|agent.*instruction" /Users/mat/de...
+[94m[Bash][0m $ grep -n "AGENTS\|systemPrompt\|agent instruction\|project context\|Step 0" /Users/mat/dev/farsight/a...
+[94m[Bash][0m $ grep -n "Step 0\|Explore\|context\|Read.*AGENTS\|Read.*README" /Users/mat/dev/farsight/agent-framewo...
+[94m[Bash][0m $ grep -n "§3.4\|Template context\|renderPrompt\|context variable" /Users/mat/dev/farsight/agent-frame...
+[94m[Bash][0m $ grep -rn "renderPrompt\|function.*render" /Users/mat/dev/farsight/agent-framework/src --include="*.t...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/template.ts[0m
+Now let me read the specific spec sections I need to edit.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Let me also check the §2.5 section heading and the PhaseIteration interface in the spec.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96mPhaseIteration|systemPrompt|system.?prompt|### 2\.5|#### 2\.5[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96mPhaseIteration|systemPrompt[0m
+Now let me find the engine section that discusses PhaseIteration and iteration callbacks.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96mPhaseIteration|iteration callback|phase callback|systemPrompt|system prompt[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96miteration callback|iterationCallback|onIteration|phase.*return[0m
+Now I see the full picture. The `nextIteration` callback returns `{ label, model, prompt }` — no `systemPrompt` field. Let me check lines around 60-80 more carefully.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Let me check how the engine executes prompts - step 'f' references §2.6.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m### 2\.6|#### 2\.6|execute.*prompt|runPrompt[0m
+Now let me see the section right after §2.5.4 and before §2.6 to understand the full structure and find the right insertion point.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now I have all the context I need. Let me make the three required changes:
+
+1. Add a new subsection §2.5.5 explaining system prompt sourcing
+2. Update §3.1.7 to clarify AGENTS.md is for OpenCode's consumption
+3. Update §3.4 to note the relationship between templates and system prompts
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "The `parts` array uses `TextPartInput` objects: `{..." → "The `parts` array uses `TextPartInput` objects: `{..."
+Now update the `nextIteration` callback signature in §2.1.2 to include the optional `systemPrompt` field:
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "| `nextIteration` | `(context, iterationNumber) → ..." → "| `nextIteration` | `(context, iterationNumber) → ..."
+Now update §3.1.7 to clarify AGENTS.md's role:
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "- Root `AGENTS.md` MUST be updated with a referenc..." → "- Root `AGENTS.md` MUST be updated with a referenc..."
+Now update §6.1 to add a clarifying comment on the AGENTS.md entry:
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "    AGENTS.md                      # Agent instruc..." → "    AGENTS.md                      # Agent instruc..."
+Let me verify the changes look correct by reading the key sections.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+All changes look correct. Here's a summary of what was done:
+
+## Changes Made
+
+**Problem:** The spec showed `system: systemPromptOrUndefined` in the SDK example (§2.5.4) but never defined where the system prompt comes from, how AGENTS.md integrates with prompt execution, or whether OpenCode handles AGENTS.md independently.
+
+**Changes across 4 locations in `docs/specs/super-ralph-spec.md`:**
+
+1. **§2.1.2 (Callback Interface)** — Updated `nextIteration` signature to include optional `systemPrompt?: string` field, with a cross-reference to §2.5.4.
+
+2. **§2.5.4 (new "System Prompt Sourcing" subsection)** — Added comprehensive documentation specifying:
+   - Each phase constructs its own hardcoded system prompt (not loaded from files/config/templates)
+   - The `nextIteration` return type includes optional `systemPrompt`
+   - The engine passes it to `promptAsync` via the `system` parameter (or omits it when undefined)
+   - AGENTS.md is NOT used as the system prompt — OpenCode loads it independently
+   - Clarifies the distinction between template content (user message) and system prompt
+
+3. **§3.1.7 (init command)** — Added "AGENTS.md purpose" paragraph clarifying these files are for OpenCode's consumption, not super-ralph's prompt pipeline.
+
+4. **§6.1 (directory structure)** — Updated the AGENTS.md comment to indicate it's for OpenCode, not super-ralph prompts.
+
+<promise>COMPLETE</promise>

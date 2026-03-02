@@ -16,6 +16,20 @@ terminal prompts (select, multiselect, or text input). It supports
 pre-recorded mock answers for automated testing, accumulating a Q&A log
 for inspection after the session.
 
+## Infrastructure Scope
+
+Interactive mode bypasses the engine entirely (§2.4.5.1). It does NOT use:
+- The event system (§5) — no event emitter, no engine events
+- The run tracker (§5.6) — no run directory, no `events.jsonl`, no `session.json`
+- The progress log (§2.10) — no `.super-ralph/progress.md` entries
+- The transcript system (§6.4.1) — no transcript files
+- The console renderer (§5.5) — streams output directly to stdout
+
+Cleanup guarantees (§2.4.5.2): on all exit paths, the session MUST be aborted
+(best-effort) and the server MUST be closed (kill ephemeral; no-op for attached).
+
+Returns `InteractiveResult` (not `LoopResult`); the `--json` flag has no effect.
+
 ## Triggers
 
 - `runInteractiveSession(...)` — called by `src/reverse.ts:runInteractive`

@@ -392,6 +392,60 @@ question MUST be rejected, and the session MUST return a `"blocked"` result.
 **Timeout:** Interactive mode MUST still enforce the absolute timeout. On
 timeout, the session MUST be aborted (best-effort) and the error re-thrown.
 
+##### 2.4.5.1 Infrastructure Scope
+
+Interactive mode bypasses the engine, so it MUST NOT use any engine-managed
+infrastructure:
+
+- **No event system.** Interactive mode MUST NOT create an event emitter or emit
+  any of the events defined in §5.1. There is no iteration loop to report on.
+- **No run tracker.** Interactive mode MUST NOT create a run tracker (§5.6).
+  There is no run directory, no `events.jsonl`, no `session.json`, and no
+  `SessionState` tracking.
+- **No progress log.** Interactive mode MUST NOT append to `.super-ralph/progress.md`
+  (§2.10). There are no iterations to log.
+- **No transcripts.** Interactive mode MUST NOT write transcript files (§6.4.1).
+  The run tracker (which owns transcript writing) does not exist.
+- **No console renderer.** The console renderer (§5.5) is an event listener and
+  MUST NOT be instantiated. Interactive mode writes its own streaming output
+  directly to stdout.
+
+##### 2.4.5.2 Cleanup Guarantees
+
+Interactive mode MUST guarantee resource cleanup on ALL exit paths (normal
+completion, timeout, user cancellation, unexpected error):
+
+1. Abort the session (best-effort; no-op if already idle).
+2. Close the server (kill ephemeral server process; no-op for attached server).
+
+This is a simplified version of the engine's cleanup (§2.8) — only server and
+session cleanup apply because run tracker, event listeners, and other engine
+infrastructure do not exist.
+
+##### 2.4.5.3 Return Value and Exit Behavior
+
+Interactive mode does NOT return a `LoopResult` (§4.1). The reverse command in
+interactive mode MUST return an `InteractiveResult` containing:
+
+```
+InteractiveResult {
+  completion: CompletionResult  // Session completion status and reason
+  cost: number                  // Total cost of the session
+  tokens: { input, output }     // Token usage
+  filesChanged: string[]        // Files modified during the session
+  rawOutput: string             // Raw SSE event stream captured during session
+  displayOutput: string         // Human-readable display output captured during session
+}
+```
+
+The CLI exit code MUST be:
+- `0` if `completion.status` is `"complete"`.
+- `1` if `completion.status` is `"blocked"` (user cancellation) or any error.
+
+The `--json` flag MUST have no effect in interactive mode. Since interactive mode
+does not produce a `LoopResult`, there is nothing to write. If `--json` is
+provided alongside `--interactive`, it MUST be silently ignored.
+
 #### 2.4.6 Mixed Mode
 
 Mixed mode MUST behave like interactive mode, but the initial prompt MUST
@@ -2005,6 +2059,13 @@ loop. Interactive Q&A requires a single long-lived session with real-time
 human interaction, which is fundamentally incompatible with the engine's
 many-short-sessions model. This architectural divergence is accepted to avoid
 forcing mismatched paradigms.
+
+The consequences of this divergence are fully specified in §2.4.5.1
+(infrastructure exclusions), §2.4.5.2 (cleanup guarantees), and §2.4.5.3
+(return value). These subsections exist because an implementer cannot safely
+infer what to omit from a "MUST NOT use the engine" statement alone — explicit
+exclusions prevent both over-engineering (replicating engine infrastructure that
+doesn't apply) and under-engineering (skipping cleanup that still applies).
 
 ### 11.3 task_complete Convention
 
