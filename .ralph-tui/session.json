@@ -3,10 +3,10 @@
   "sessionId": "acb217ce-7a83-430c-90db-97c9c144f5c4",
   "status": "running",
   "startedAt": "2026-03-02T22:44:36.575Z",
-  "updatedAt": "2026-03-02T22:55:50.471Z",
-  "currentIteration": 3,
+  "updatedAt": "2026-03-02T22:59:58.287Z",
+  "currentIteration": 4,
   "maxIterations": 10,
-  "tasksCompleted": 1,
+  "tasksCompleted": 2,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -83,8 +83,8 @@
       {
         "id": "bd-3hv.12",
         "title": "Fix spec: Init command AGENTS.md and template source paths",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       }
     ]
   },
@@ -118,6 +118,16 @@
       "durationMs": 185407,
       "startedAt": "2026-03-02T22:49:35.644Z",
       "endedAt": "2026-03-02T22:52:41.051Z"
+    },
+    {
+      "iteration": 4,
+      "status": "completed",
+      "taskId": "bd-3hv.12",
+      "taskTitle": "Fix spec: Init command AGENTS.md and template source paths",
+      "taskCompleted": true,
+      "durationMs": 188074,
+      "startedAt": "2026-03-02T22:52:42.311Z",
+      "endedAt": "2026-03-02T22:55:50.385Z"
     }
   ],
   "skippedTaskIds": [],

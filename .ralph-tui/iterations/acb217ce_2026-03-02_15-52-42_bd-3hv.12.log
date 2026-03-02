@@ -1,0 +1,111 @@
+# Iteration 4 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.12
+- **Task Title**: Fix spec: Init command AGENTS.md and template source paths
+- **Description**: ## Problem
+§3.1.7 (init command) describes several artifacts but leaves key details unspecified.
+
+### Gaps:
+1. **AGENTS.md content**: The init creates .super-ralph/AGENTS.md but the spec never says wh...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T22:52:42.311Z
+- **Ended At**: 2026-03-02T22:55:50.385Z
+- **Duration**: 3m 8s
+- **Input Tokens**: 226
+- **Output Tokens**: 5884
+- **Total Tokens**: 6110
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I need to read AGENTS.md first as instructed after context compaction.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/AGENTS.md[0m
+AGENTS.md is minimal - just points to README.md. Now let me work on the task.
+[94m[Skill][0m
+This is a directed spec-fixing task with clear requirements already specified. Let me explore the project context to understand the current spec state before making edits.
+[94m[TodoWrite][0m
+[94m[Agent][0m Explore spec and init command
+[94m[Glob][0m pattern: [96m**/{spec.md,SPEC.md,spec.txt,SPEC.txt}[0m
+[94m[Glob][0m pattern: [96m**/{AGENTS.md,agents.md}[0m
+[94m[Glob][0m pattern: [96m**/{intake-checklist.md,intake.md}[0m
+[94m[Glob][0m pattern: [96m**/.super-ralph/**[0m
+[94m[Glob][0m pattern: [96m**/*.hbs[0m
+[94m[Bash][0m Find markdown files to locate spec documentation $ find /Users/mat/dev/farsight/agent-framework -maxdepth 3 -name "*.md" -type f | head -20
+[94m[Bash][0m Look for spec files in the root directory $ ls -la /Users/mat/dev/farsight/agent-framework/ | grep -i spec
+[94m[Bash][0m List all spec files in the spec directory $ find /Users/mat/dev/farsight/agent-framework/spec -type f -name "*.md" | sort
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec[0m pattern: [96m§3\.1\.7|init command|super-ralph[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/cli/index.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/init.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/README.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/config.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/forward.hbs[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/decompose.hbs[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/reverse.hbs[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/agents.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/intake-checklist.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/.super-ralph/config.toml[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/AGENTS.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/.super-ralph/AGENTS.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/init.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/workflows/core-workflows.md[0m
+[94m[Bash][0m List template files directory $ ls -la /Users/mat/dev/farsight/agent-framework/templates/ | head -20
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates[0m
+
+[91m[Error: EISDIR: illegal operation on a directory, read '/Users/mat/dev/farsight/agent-framework/templates'][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/super-ralph-config.toml[0m
+Excellent context. Now let me read the actual spec file and the template files to see exactly what needs updating.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/init.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/agents.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/intake-checklist.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/super-ralph-config.toml[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/init.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/skills.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src/skills.ts[0m pattern: [96mgetCliDir[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/skills.ts[0m
+Now I have all the information I need. The spec at `spec/modules/infrastructure/init.md` has gaps that the source code and templates already answer. Let me update the spec.
+[94m[TodoWrite][0m
+Now I'll update the init spec to fill in all five gaps identified in the task.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/init.md[0m
+Now I'll make the edits. I need to add detailed sections covering all five gaps. I'll restructure the spec to add the missing detail inline and as new sections.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/init.md[0m edit: "## Side Effects
+
+All side effects are idempotent (..." → "## Side Effects
+
+All side effects are idempotent (..."
+Now update the Open Questions section — the second question is now resolved, and the first can be clarified:
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/init.md[0m edit: "## Open Questions
+
+- The plugin file written to `...." → "## Open Questions
+
+- The plugin file written to `...."
+Now let me verify the final file reads correctly:
+[94m[TodoWrite][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/init.md[0m
+The spec looks good. Let me verify it cross-references correctly with other spec files.
+[94m[Glob][0m pattern: [96mspec/modules/phases/*.md[0m
+Good — the three phase spec files exist, so the cross-references in the Handlebars Templates section are valid. Let me also check if the workflows spec references init:
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec/workflows/core-workflows.md[0m pattern: [96mAGENTS\.md|intake-checklist|cli\.path|template.*source|getCliDir[0m
+[94m[TodoWrite][0m
+All five gaps from the task are now addressed in the spec:
+
+1. **AGENTS.md content** — Full content shown inline with explanation of its purpose as a quick-reference signpost for sub-agents (§Template File Contents)
+
+2. **Root AGENTS.md update** — Three-case logic table (create / append / skip), exact text for both create and append scenarios, substring detection mechanism (§Root AGENTS.md Update)
+
+3. **Template source location** — Bundled in `templates/` at CLI repo root, located via `getCliDir()` using `import.meta.url`, with source→destination mapping table (§Template Source Paths)
+
+4. **cli.path patching** — Three-step process: `getCliDir()` → join with `src/index.ts` → regex substitution on the template placeholder (§cli.path Resolution)
+
+5. **intake-checklist.md content** — Purpose as "learned questions" for reverse Phase C, seed categories listed, lifecycle via `LEARN-001` bead (§Template File Contents)
+
+Also resolved one of the two open questions (root AGENTS.md merge strategy is now fully documented).
+
+<promise>COMPLETE</promise>

@@ -188,7 +188,9 @@ The forward prompt template MUST receive:
 - `beadTitle`: The bead's title.
 - `beadDescription`: The bead's full description.
 - `closingCommand`: The `br close` command the sub-agent must run on
-  completion.
+  completion. Constructed as:
+  `br close <beadId> --suggest-next --json --reason "<reason>"`. The sub-agent
+  fills in the `<reason>` based on what it accomplished.
 - `progressTail`: The last 5 entries from the progress log (for cross-iteration
   memory).
 
@@ -1714,7 +1716,7 @@ are used, keeping templates portable and auditable across projects.
 
 ### 11.8 Retry Keyed by Label, Not Iteration Number
 
-Retry tracking by iteration label (bead title) ensures the same logical task
+Retry tracking by iteration label (bead ID) ensures the same logical task
 is retried. The iteration counter is decremented on retry so `nextIteration`
 sees the same iteration number and selects the same task again.
 
