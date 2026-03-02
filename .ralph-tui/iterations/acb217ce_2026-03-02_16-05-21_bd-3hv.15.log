@@ -1,0 +1,112 @@
+# Iteration 8 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.15
+- **Task Title**: Fix spec: Skills system resolution and storage mechanism
+- **Description**: ## Problem
+§3.5 (Skills System) is one of the thinnest sections in the spec. It says built-in skills are `feature`, `bug`, `hotfix`, `refactor` and that custom skills use `--skill <name-or-path>`, but...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T23:05:21.673Z
+- **Ended At**: 2026-03-02T23:08:27.502Z
+- **Duration**: 3m 5s
+- **Input Tokens**: 78
+- **Output Tokens**: 4958
+- **Total Tokens**: 5036
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by reading the spec file to understand the current state of the skills system documentation.
+[94m[Agent][0m Explore skills system in spec
+[94m[Glob][0m pattern: [96m**/*.md[0m
+[94m[Grep][0m pattern: [96mSkills System[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/skills.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/phases/reverse.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/phases/forward.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/phases/decompose.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/template.md[0m
+[94m[Read][0m [95m/Users/mat/.claude/projects/-Users-mat-dev-farsight-agent-framework/41e81a79-d5cf-43e8-9616-2468426f23ca/tool-results/toolu_01HZJsuHrz1zTN2hTMjemBS4.txt[0m
+
+[91m[Error: File content (26640 tokens) exceeds maximum allowed tokens (25000). Please use offset and limit parameters to read specific portions of the file, or use the GrepTool to search for specific content.][0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96mskill[0m
+
+[91m[Error: <tool_use_error>Sibling tool call errored</tool_use_error>][0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96mskill[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m^## [0-9]|^### [0-9][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now let me read the specific sections I need to modify.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now I have all the context I need. Let me also check the dedicated skills module spec to make sure I align with it.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/skills.md[0m
+Now I have full context. Let me make the edits. I need to:
+
+1. Expand §3.5 with resolution algorithm, storage location, file format, and scope details
+2. Update §6.1 to show where built-in skills live in the CLI package
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "### 3.5 Skills System
+
+Skills are Markdown files t..." → "### 3.5 Skills System
+
+Skills are Markdown files t..."
+Now update §6.1 to show built-in skills in the CLI package structure. I need to add a note or a separate section showing where skills live, since §6.1 is the *project* directory structure and skills are bundled in the CLI, not the project. Let me add a brief note after the project structure.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "### 6.2 Run Artifact Directory" → "### 6.2 CLI Package Assets
+
+The CLI package bundle..."
+Now I need to renumber the subsequent sections (6.3 Transcript → 6.4, etc.). Let me check what follows.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m^### 6\.\d[0m
+I see there are now two `### 6.3` sections. The old 6.3 (Transcript File Naming) needs to become 6.4, and 6.3.1 becomes 6.4.1. The old 6.4 and 6.5 become 6.5 and 6.6.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "### 6.3 Transcript File Naming" → "### 6.4 Transcript File Naming"
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "### 6.3.1 Transcript File Content and Lifecycle" → "### 6.4.1 Transcript File Content and Lifecycle"
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "### 6.4 Dual-Write State Pattern" → "### 6.5 Dual-Write State Pattern"
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "### 6.5 Filesystem I/O" → "### 6.6 Filesystem I/O"
+Now let me check if there are any cross-references to the old section numbers (6.3, 6.4, 6.5) elsewhere in the spec.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m§6\.[3-5]|section 6\.[3-5][0m
+Those references to §6.4 (the old Dual-Write State Pattern) need to become §6.5.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "(§6.4)" → "(§6.5)"
+Now let me check for references to §6.3 or §6.5 that might need updating.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m§6\.[2-6][^.][0m
+Good - no stale references to old §6.3 or §6.5. Let me also verify the updated sections look correct.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now let me also update the module spec to align — specifically removing the open question about resolution since the main spec now documents it, and adding a reference to the resolution algorithm.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/skills.md[0m edit: "## Open Questions
+
+- The `BUILT_IN_SKILLS` set is ..." → "## Resolution Algorithm
+
+See §3.5.3 of the main sp..."
+Let me verify the final state of both files looks clean.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m^### 6\.\d[0m
+All section numbers are sequential and consistent. Let me do a final summary of all changes made:
+
+**Changes to `docs/specs/super-ralph-spec.md`:**
+
+1. **§3.5 expanded** from 6 lines to 5 subsections:
+   - §3.5.1 Built-in Skills — storage location (`src/skills/<name>.md` in CLI package, resolved via `getCliDir()`)
+   - §3.5.2 Custom Skills — brief note on `--skill` flag
+   - §3.5.3 Name-to-Path Resolution — 3-step algorithm: undefined→null, path separator or `.md` suffix→file path, otherwise→built-in name lookup
+   - §3.5.4 Skill File Format — raw Markdown, no structure required, injected verbatim as `skillContent`
+   - §3.5.5 Skill Injection Scope — reverse phase only, with rationale for why forward/decompose don't need skills
+
+2. **§6.2 CLI Package Assets added** — shows `src/skills/` directory with the four built-in skill files
+
+3. **§6.3–6.6 renumbered** (was 6.3–6.5) to accommodate the new §6.2, with all cross-references updated
+
+**Changes to `spec/modules/infrastructure/skills.md`:**
+
+4. **Resolution Algorithm section added** — references §3.5.3 and summarizes the 3-step algorithm
+5. **Open Questions trimmed** — removed the question about undocumented resolution (now documented)
+
+<promise>COMPLETE</promise>

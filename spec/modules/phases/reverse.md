@@ -27,7 +27,7 @@ The module dispatches to one of two internal handlers based on the
 | Name | Type | Source | Description |
 | --- | --- | --- | --- |
 | `projectDir` | `string` | CLI caller | Absolute path to the project root |
-| `flags` | `ReverseFlags` | CLI parser | `dryRun`, `maxIterations?`, `modelOverride?`, `attach?`, `inputs[]`, `outputDir?`, `skill?`, `interactive?`, `answersFile?` |
+| `flags` | `ReverseFlags` | CLI parser | `dryRun`, `maxIterations?`, `modelOverride?`, `attach?`, `inputs[]`, `outputDir?`, `skill?`, `interactive?`, `answersFile?` — `inputs` are raw CLI argument strings, not pre-processed content (see §2.4.4 Input Processing) |
 | `skillContent` | `string \| null` | `src/skills.ts` | Optional skill file content prepended to the prompt |
 | `specContent` (autonomous, per iteration) | `string` | file system | Most recently modified `.md` file in `outputDir`, read each iteration |
 | `answersFile` | `string` | file system | JSON file of mock answers loaded when `flags.answersFile` is set |

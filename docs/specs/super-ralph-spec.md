@@ -282,7 +282,44 @@ Uses the standard engine loop.
 **Setup:**
 1. Collect all input materials (file paths, URLs, descriptions).
 2. Set `maxIterations` to 20.
-3. Return description: `"Reverse (autonomous): <inputSummary>"`.
+3. Return description: `"Reverse loop: <inputSummary> -> spec in <outputDir>"`.
+
+**Input Processing:**
+
+All positional arguments to `reverse` are passed as raw strings in the
+`inputs` array. The reverse phase does **not** pre-process inputs — it does
+not read file contents, fetch URLs, or transform descriptions. The sub-agent
+receives the raw argument strings and is responsible for accessing their
+content using its own tool capabilities (e.g., reading files from disk,
+fetching URLs).
+
+Rationale: the sub-agent runs inside an opencode session with full tool access
+(file reads, shell commands, web fetch). Pre-loading file or URL content into
+the prompt would bloat token usage and duplicate capability the agent already
+has. Passing raw references lets the agent decide what to read and when.
+
+The processing rules are:
+
+1. **No type detection at the CLI layer.** The system does not distinguish
+   file paths from URLs from free-text descriptions. All arguments are
+   strings.
+2. **No file reading.** File paths are passed as-is (e.g., `"src/main.ts"`).
+   The sub-agent reads file contents using its tools during execution.
+3. **No URL fetching.** URLs are passed as-is (e.g.,
+   `"https://example.com/api"`). The sub-agent fetches URL contents using its
+   tools if needed.
+4. **Descriptions pass through.** Free-text descriptions (e.g., `"a REST API
+   for user management"`) are passed as-is.
+
+**`inputSummary` construction:** The summary string is the inputs joined with
+`", "` — i.e., `flags.inputs.join(", ")`. The full description string is
+`"Reverse loop: <inputSummary> -> spec in <outputDir>"`.
+
+**Template variable semantics:** The `inputs` template variable (`string[]`)
+contains the raw CLI argument strings. The template does not need to
+distinguish input types — it renders all inputs uniformly as context for the
+sub-agent, which interprets and accesses them as needed. The `hasInputs`
+boolean is `true` when `inputs.length > 0`.
 
 **Output File Lifecycle:**
 
