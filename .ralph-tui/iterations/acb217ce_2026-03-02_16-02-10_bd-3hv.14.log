@@ -1,0 +1,144 @@
+# Iteration 7 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.14
+- **Task Title**: Fix spec: Server URL config vs SDK port assignment contradiction
+- **Description**: ## Problem
+§2.5.1 says 'The server URL MUST default to config.opencode.url (default: http://localhost:4096)' but §2.5.4 shows `createOpencode({ port: 0 })` where the OS assigns a RANDOM port and the s...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T23:02:10.531Z
+- **Ended At**: 2026-03-02T23:05:20.326Z
+- **Duration**: 3m 9s
+- **Input Tokens**: 235
+- **Output Tokens**: 6817
+- **Total Tokens**: 7052
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by invoking the brainstorming skill since this is a spec modification task that requires understanding the design intent before making changes.
+
+Actually, looking at this more carefully, this is a spec fix task - I need to understand the current spec and fix contradictions. Let me first explore the relevant spec sections.
+[94m[Agent][0m Explore spec sections for opencode
+[94m[Glob][0m pattern: [96m**/*.md[0m
+[94m[Bash][0m List markdown files to find spec documents $ find /Users/mat/dev/farsight/agent-framework -type f -name "*.md" | head -20
+[94m[Grep][0m pattern: [96mopencode[0m
+[94m[Bash][0m List all spec markdown files $ find /Users/mat/dev/farsight/agent-framework/spec -type f -name "*.md" | sort
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/opencode.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/config.md[0m
+[94m[Grep][0m pattern: [96m2\.5\.|§2\.5|opencode server|createOpencode[0m
+[94m[Grep][0m pattern: [96mport: 0|4096|createOpencode|config\.opencode\.url[0m
+[94m[Grep][0m pattern: [96m§3\.1\.9|doctor|check[0m
+[94m[Grep][0m pattern: [96mexternal dependencies|External dependencies|§8\.3[0m
+[94m[Grep][0m pattern: [96mdoctor[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/configuration.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/cli/index.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/workflows/core-workflows.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/architecture/runtime-lifecycle.md[0m
+[94m[Grep][0m pattern: [96m§|section|2\.5|3\.1|8\.3[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/tasks/prd-ralph-tui-clean-room-spec.md[0m
+[94m[Bash][0m Search for files with section number notation $ grep -l "§2\.5\|§3\.1\|§8\.3" /Users/mat/dev/farsight/agent-framework/**/*.md 2>/dev/null | head -5
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Search for specific section numbers and keywords in the spec $ grep -n "§2\.5\|2\.5\.1\|2\.5\.4\|§3\.1\|3\.1\.9\|§8\.3\|opencode.*url\|createOpencode\|config\.open...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Search for section 8 about external dependencies $ grep -n "§8\|8\.3\|external dependencies\|External Dependencies" /Users/mat/dev/farsight/agent-frame...
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Good, I have a clear picture. Let me read the specific sections I need to modify.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/configuration.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/opencode.md[0m
+Now I have a complete picture of all the contradictions. Let me also check the runtime-lifecycle.md briefly.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec/architecture/runtime-lifecycle.md[0m pattern: [96mopencode|createOpencode|port[0m
+Now I have everything I need. Let me make the fixes.
+[94m[TodoWrite][0m
+**Fix 1: §2.5.1 — Remove the misleading `config.opencode.url` reference from ephemeral mode.**
+
+The ephemeral server always uses `port: 0` (OS-assigned). The config URL is only relevant for attach mode fallback, if at all. Let me rewrite §2.5.1 to be consistent with §2.5.4.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "#### 2.5.1 Ephemeral Server (Default)
+
+1. The engi..." → "#### 2.5.1 Ephemeral Server (Default)
+
+1. The engi..."
+[94m[TodoWrite][0m
+**Fix 2: §8.3 — Move `opencode` from External CLI Tools to Libraries.**
+
+The SDK handles server spawning internally — there's no `opencode` binary on PATH.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "| `bun` | JavaScript runtime and package manager |..." → "| `bun` | JavaScript runtime and package manager |..."
+[94m[TodoWrite][0m
+**Fix 3: Config defaults — Replace `opencode.url` with `opencode.attach_url`.**
+
+The config URL value is only meaningful for attach mode (connecting to a pre-existing server). For ephemeral mode, the SDK discovers the URL dynamically. Let me update both the main spec's config table and the configuration behavior doc.
+
+First, let me find where config defaults are listed in the main spec.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96mopencode\.url[0m
+Good — the main spec no longer references `config.opencode.url` after my §2.5.1 fix. Now update the configuration behavior doc.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/configuration.md[0m edit: "| `opencode.url` | `"http://localhost:4096"` |" → "| `opencode.attach_url` | `"http://localhost:4096"..."
+Now update the open questions to resolve the one about `opencode.url`:
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/configuration.md[0m edit: "## Open Questions
+
+- Whether `opencode.url` is eve..." → "## Open Questions
+
+- ~~Whether `opencode.url` is e..."
+Now let me check if `--attach` references the config URL anywhere in the main spec.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96mattach[0m
+[94m[TodoWrite][0m
+**Fix 4: Doctor checks — no `opencode` CLI check needed.**
+
+Looking at the doctor checks table (§3.1.9), there's no check for `opencode` on PATH, which is correct since it's an SDK dependency, not a CLI tool. The existing check #8 (broken symlinks in `~/.config/opencode/`) is appropriate. No changes needed here.
+[94m[TodoWrite][0m
+**Fix 5: Check for any remaining `opencode.url` references across the spec.**
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec[0m pattern: [96mopencode\.url[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs[0m pattern: [96mopencode\.url[0m
+One more reference in `persistence-and-io.md`. Let me fix it.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/persistence-and-io.md[0m
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/spec/behavior/persistence-and-io.md[0m edit: "- The `opencode.url` config key is loaded but the ..." → "- ~~The `opencode.url` config key is loaded but th..."
+Now let me also check for any remaining references to `opencode` as CLI tool in the spec files.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96mconfig\.opencode[0m
+Good — no more references to `config.opencode.url` in any markdown files.
+
+Let me also check the types spec to see if `LoopConfig` defines `opencode.url`.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/types.md[0m pattern: [96mopencode[0m
+All references are clean. Let me finalize the todo list.
+[94m[TodoWrite][0m
+Now let me use the verification skill before claiming completion.
+[94m[Skill][0m
+
+
+Let me verify my changes are consistent and complete by reviewing what was actually changed.
+[94m[Bash][0m Check what files were modified $ git diff --stat
+[94m[Bash][0m Review all spec changes $ git diff -- docs/specs/super-ralph-spec.md spec/behavior/configuration.md spec/behavior/persistence-...
+All changes look correct and consistent. Let me do a final cross-check for any remaining contradictions.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96m"opencode\.url"|config\.opencode\.url|opencode\.url[^_][0m
+Only strikethrough references remain — those are the resolved open questions. No live references to `opencode.url`.
+
+Here's a summary of all changes made:
+
+### Changes Summary
+
+**Problem:** §2.5.1, §2.5.4, §8.3, and the config defaults told contradictory stories about how the OpenCode server is started, configured, and depended upon.
+
+**Files modified (3):**
+
+1. **`docs/specs/super-ralph-spec.md`**
+   - **§2.5.1**: Removed the misleading `config.opencode.url` reference. Now explicitly states the SDK's `createOpencode({ port: 0 })` factory is used, the OS assigns a random port, and the URL is discovered from `server.url`. Added rationale for why `port: 0` is used (avoids conflicts in concurrent runs).
+   - **§8.3**: Removed `opencode` from the External CLI Tools table. Added a note clarifying the OpenCode server is managed internally by the `@opencode-ai/sdk` npm package (already listed in §8.2), not an external binary on PATH.
+
+2. **`spec/behavior/configuration.md`**
+   - Renamed `opencode.url` → `opencode.attach_url` in the defaults table to clarify it's only used as the default URL for `--attach` mode.
+   - Resolved the open question about whether `opencode.url` was ever used.
+
+3. **`spec/behavior/persistence-and-io.md`**
+   - Resolved the open question about the relationship between the configured URL and the runtime URL.
+
+<promise>COMPLETE</promise>

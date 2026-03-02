@@ -56,10 +56,21 @@ path, which other modules use to locate bundled assets.
 | `fs` | node | Reads skill file contents synchronously |
 | `path` | node | Resolves skill file paths relative to CLI install directory |
 
+## Resolution Algorithm
+
+See §3.5.3 of the main spec for the full name-to-path resolution
+algorithm. In summary:
+
+1. `undefined` → return `null`.
+2. Value contains `/`, `\`, or ends with `.md` → treat as explicit file
+   path; read directly.
+3. Otherwise → treat as built-in name; read from
+   `<cliDir>/src/skills/<name>.md`.
+
 ## Open Questions
 
-- The `BUILT_IN_SKILLS` set is `["feature", "bug", "hotfix", "refactor"]`.
-  The content and intended use of each skill file are not documented in
-  source beyond the file names.
+- The content and intended use of each built-in skill file (`feature`,
+  `bug`, `hotfix`, `refactor`) are not documented in source beyond the
+  file names.
 - `getCliDir()` resolves via `import.meta.url`. The behavior when the
   module is bundled or relocated after install is not confirmed.

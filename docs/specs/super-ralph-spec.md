@@ -950,16 +950,60 @@ The system MUST use Handlebars for prompt template rendering.
 
 ### 3.5 Skills System
 
-Skills are Markdown files that provide additional context injected into
-prompts.
+Skills are Markdown files that provide additional domain-specific context
+(question banks, focus areas) injected into reverse phase prompts.
 
-**Built-in skills:** `feature`, `bug`, `hotfix`, `refactor`.
+#### 3.5.1 Built-in Skills
 
-**Custom skills:** Specified via file path using the `--skill` flag on the
-`reverse` command.
+The CLI bundles four built-in skills: `feature`, `bug`, `hotfix`,
+`refactor`. These files are stored in the CLI package at
+`src/skills/<name>.md` and are located at runtime via `getCliDir()`
+(which resolves the CLI install directory using `import.meta.url`).
 
-Skills MUST be injected into the prompt template context so that templates
-can include skill content.
+#### 3.5.2 Custom Skills
+
+Custom skills are specified via the `--skill` flag on the `reverse`
+command. The flag accepts either a built-in skill name or a file path.
+
+#### 3.5.3 Name-to-Path Resolution
+
+The `loadSkill(skillNameOrPath, cliDir)` function resolves a `--skill`
+value to file contents using this algorithm:
+
+1. If `skillNameOrPath` is `undefined`, return `null` (no skill).
+2. If the value contains a path separator (`/` or `\`) OR the value
+   ends with `.md`, treat it as an **explicit file path**. Read the file
+   at that path. Throw if the file does not exist.
+3. Otherwise, treat the value as a **built-in skill name**. Read the
+   file at `<cliDir>/src/skills/<name>.md`. Throw if the file does not
+   exist.
+
+This means built-in skill names MUST NOT contain path separators or end
+with `.md`. All four current built-in names (`feature`, `bug`, `hotfix`,
+`refactor`) satisfy this constraint.
+
+#### 3.5.4 Skill File Format
+
+Skill files are raw Markdown with no required structure — no frontmatter,
+no mandatory sections. The entire file content is read as a string and
+injected verbatim into the prompt template context as `skillContent`.
+
+#### 3.5.5 Skill Injection Scope
+
+Skills apply exclusively to the **reverse phase**. The `reverse.hbs`
+template receives `skillContent` (typed `string or null`) as a context
+variable. The `forward.hbs` and `decompose.hbs` templates do not receive
+skill content because:
+
+- **Forward phase** operates on beads with well-defined scope; additional
+  skill context is unnecessary since the bead title and description
+  already constrain the task.
+- **Decompose phase** breaks a completed spec into beads; the spec itself
+  provides all necessary domain context.
+
+The reverse phase, by contrast, generates a spec from potentially sparse
+inputs where domain-specific guidance (what questions to ask, what areas
+to focus on) materially improves output quality.
 
 ### 3.6 task_complete Plugin Interface
 
@@ -1335,7 +1379,7 @@ Creation sequence:
 4. Initialize a `SessionState` with `status: "running"`, the description,
    maxIterations, `startedAt` set to the current ISO 8601 timestamp, and all
    counters at zero.
-5. Write the initial `session.json` to both per-run and global locations (§6.4).
+5. Write the initial `session.json` to both per-run and global locations (§6.5).
 6. Register as an event listener on the emitter.
 
 #### 5.6.2 events.jsonl Entry Schema
@@ -1375,7 +1419,7 @@ When the run tracker receives an event via its listener, it MUST update
 
 After every event (regardless of whether counters changed), the run tracker
 MUST write the updated `SessionState` to both per-run and global locations
-(§6.4). This ensures external observers always see the latest state.
+(§6.5). This ensures external observers always see the latest state.
 
 #### 5.6.4 Finalization
 
@@ -1383,7 +1427,7 @@ Finalization sets the run's terminal status. The `finalize` method accepts a
 status of `"completed"` or `"failed"` and MUST:
 
 1. Set `SessionState.status` to the provided status.
-2. Write `SessionState` to both per-run and global locations (§6.4), which also
+2. Write `SessionState` to both per-run and global locations (§6.5), which also
    updates `updatedAt` to the current timestamp.
 
 Finalization is called in two contexts:
@@ -1433,7 +1477,25 @@ prevent the `finally` block from overwriting a successful finalization with
     ...
 ```
 
-### 6.2 Run Artifact Directory
+### 6.2 CLI Package Assets
+
+The CLI package bundles assets that are NOT copied into the project
+directory but are read at runtime from the CLI install directory:
+
+```
+<cli-install>/
+  src/
+    skills/
+      feature.md                   # Built-in skill: feature development
+      bug.md                       # Built-in skill: bug investigation
+      hotfix.md                    # Built-in skill: hotfix workflow
+      refactor.md                  # Built-in skill: refactoring guidance
+```
+
+The CLI install directory is resolved at runtime via `getCliDir()` using
+`import.meta.url` (see §3.5.3).
+
+### 6.3 Run Artifact Directory
 
 Each run MUST create a directory at `.super-ralph/runs/<runId>/` containing:
 
@@ -1442,13 +1504,13 @@ Each run MUST create a directory at `.super-ralph/runs/<runId>/` containing:
   `type` field discriminating the event variant.
 - `iterations/` — Directory containing per-iteration transcript files.
 
-### 6.3 Transcript File Naming
+### 6.4 Transcript File Naming
 
 Transcript files MUST be named `<NNN>-<label>.log` where:
 - `<NNN>` is a zero-padded 3-digit iteration number (e.g., `001`, `002`).
 - `<label>` is the iteration label (bead ID or synthetic label).
 
-### 6.3.1 Transcript File Content and Lifecycle
+### 6.4.1 Transcript File Content and Lifecycle
 
 **Content format:** Transcript files are plain text with Markdown headings. Each
 file MUST contain the following structure:
@@ -1490,7 +1552,7 @@ iteration in the progress log (§2.1.3 step 5h). The returned path is set on
 lowercased, have non-alphanumeric characters replaced with hyphens, and be
 truncated to 80 characters.
 
-### 6.4 Dual-Write State Pattern
+### 6.5 Dual-Write State Pattern
 
 The system MUST write SessionState to two locations on every update:
 1. Per-run: `.super-ralph/runs/<runId>/session.json`
@@ -1502,7 +1564,7 @@ resolving the latest run directory.
 **Rationale:** Supports both historical per-run inspection and quick current-
 state queries.
 
-### 6.5 Filesystem I/O
+### 6.6 Filesystem I/O
 
 - All state writes MUST use synchronous I/O for reliability. These operations
   occur between iterations, not during streaming, so blocking is acceptable.
