@@ -1,0 +1,112 @@
+# Iteration 3 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.3
+- **Task Title**: Fresh eyes review pass 1
+- **Description**: ## Objective
+Carefully review this entire spec with completely fresh eyes. You have
+NOT seen this spec before. You are reviewing it as a clean-room
+specification — a document that must be complete eno...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T22:27:40.631Z
+- **Ended At**: 2026-03-02T22:32:30.090Z
+- **Duration**: 4m 49s
+- **Input Tokens**: 88
+- **Output Tokens**: 11765
+- **Total Tokens**: 11853
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by reading the spec and checking for any existing fix-up beads to avoid duplicating work.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Show parent bead and children $ br show bd-3hv 2>/dev/null || echo "br show failed"
+[94m[Read][0m [95m/Users/mat/.claude/projects/-Users-mat-dev-farsight-agent-framework/7c953d5c-a8a9-4093-b052-49e52467cc9d/tool-results/toolu_01YaW5sTGSZKA2yAEENCNdac.txt[0m
+Let me read the full spec in sections.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now I've read the full spec. Let me create a todo list to track my review work, then systematically analyze each section.
+[94m[TodoWrite][0m
+[94m[TodoWrite][0m
+Let me fix several minor issues directly in the spec.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "Run IDs MUST be generated as `"<timestamp>-<random..." → "Run IDs MUST be generated as `"<timestamp>-<random..."
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "5. Enter the iteration loop. For each iteration fr..." → "5. Enter the iteration loop. For each iteration fr..."
+Now update the subsequent step letters to remain consistent:
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "   c. Emit `iteration.started`.
+   c. Create an Op..." → "   c. Emit `iteration.started`.
+   d. Create an Op..."
+Now let me fix a clarification in the retry mechanism about the race condition:
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "**Retry tracking:** Retry counts MUST be keyed by ..." → "**Retry tracking:** Retry counts MUST be keyed by ..."
+Now add a clarification to the iteration delay section since I've already embedded it in the loop:
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "### 7.5 Iteration Delay
+
+Between consecutive itera..." → "### 7.5 Iteration Delay
+
+Between consecutive itera..."
+Now let me move on to creating fix-up beads for the significant gaps.
+[94m[TodoWrite][0m
+Now let me create the fix-up beads for the significant gaps I've identified. I'll create them in parallel:
+[94m[Bash][0m Create bead: OpenCode integration protocol $ br create --parent bd-3hv \   --title "Fix spec: OpenCode server startup and SDK integration protoco...
+[94m[Bash][0m Create bead: reverse phase output lifecycle $ br create --parent bd-3hv \   --title "Fix spec: Reverse phase output file lifecycle" \   --type tas...
+[94m[Bash][0m Create bead: interactive question protocol $ br create --parent bd-3hv \   --title "Fix spec: Interactive mode question tool protocol" \   --type...
+[94m[Bash][0m Create bead: console renderer and run tracker $ br create --parent bd-3hv \   --title "Fix spec: Console renderer and run tracker details" \   --typ...
+[94m[Bash][0m Create bead: task_complete plugin contract $ br create --parent bd-3hv \   --title "Fix spec: task_complete plugin implementation contract" \   -...
+[94m[Bash][0m Create bead: init command details $ br create --parent bd-3hv \   --title "Fix spec: Init command AGENTS.md and template source paths" \...
+Now let me wire up all the dependencies — each fix-up bead blocks bd-3hv.3, and bd-3hv.4 is blocked on all fix-up beads:
+[94m[Bash][0m Wire fix-up beads as dependents of bd-3hv.3 $ br dep add bd-3hv.7 bd-3hv.3 && \ br dep add bd-3hv.8 bd-3hv.3 && \ br dep add bd-3hv.9 bd-3hv.3 && ...
+Now wire bd-3hv.4 (review pass 2) to be blocked on all fix-up beads:
+[94m[Bash][0m Block review pass 2 on all fix-up beads $ br dep add bd-3hv.4 bd-3hv.7 && \ br dep add bd-3hv.4 bd-3hv.8 && \ br dep add bd-3hv.4 bd-3hv.9 && ...
+Let me verify the dependency wiring:
+[94m[Bash][0m Verify review pass 2 dependencies $ br show bd-3hv.4
+All 6 fix-up beads are properly wired. Now let me close the review bead.
+[94m[TodoWrite][0m
+[94m[Bash][0m Close review pass 1 bead $ br close bd-3hv.3 --reason "Review pass 1: found 9 issues, created 6 fix-up beads (bd-3hv.7 through ...
+[94m[TodoWrite][0m
+## Review Pass 1 Summary
+
+### Minor fixes applied directly:
+1. **Run ID format** (§4.9): Changed vague "Unix milliseconds or similar" to precise `Date.now()` and specified character set
+2. **Iteration delay placement** (§2.1.3): Added step 5a making the delay explicit within the loop, re-lettered subsequent steps
+3. **Retry invariant** (§2.1.4): Documented why the retry mechanism is safe — `nextIteration` returns the same bead because it hasn't been closed
+
+### Significant gaps → 6 fix-up beads created:
+
+| Bead | Issue | Impact |
+|------|-------|--------|
+| **bd-3hv.7** | OpenCode server startup command, SDK API surface, prompt execution flow, SSE subscription mechanics | **Critical** — without this, the core loop can't be built |
+| **bd-3hv.8** | Reverse phase output file naming, first-iteration behavior, who writes the spec file | **High** — autonomous reverse mode unimplementable |
+| **bd-3hv.9** | Interactive mode question tool protocol: schema, SSE payload, answer return mechanism | **High** — interactive mode unimplementable |
+| **bd-3hv.10** | Console renderer output format, run tracker initialization, events.jsonl schema | **Medium** — observable behavior undefined |
+| **bd-3hv.11** | task_complete plugin API contract, tool state vs input status confusion | **Medium** — plugin can't be written correctly |
+| **bd-3hv.12** | Init command: AGENTS.md content, template source paths, cli.path resolution | **Medium** — init produces wrong artifacts |
+
+### Assessment:
+
+**Wholeheartedly agree these improve the spec:**
+- All 6 fix-up beads. Every one addresses a genuine clean-room test failure — an implementer would have to guess or reverse-engineer these details.
+- The iteration delay placement fix. It was mentioned in §7.5 but not in the actual loop algorithm.
+- The retry invariant documentation. The mechanism is clever but subtle; making it explicit prevents misimplementation.
+
+**Somewhat agree:**
+- The run ID format fix. Minor, but precision helps.
+
+**Considered but rejected:**
+- Adding a section on circular dependency detection in beads. The `br` CLI handles this externally — it's out of scope for super-ralph.
+- Specifying exact terminal colors/icons for console output. This is better left to the fix-up bead (bd-3hv.10) which can propose the full rendering spec.
+- Adding a "graceful shutdown" section for signal handling. Explicitly out of scope per §1.3.
+
+<promise>COMPLETE</promise>

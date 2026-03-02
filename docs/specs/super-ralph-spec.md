@@ -370,6 +370,199 @@ The system MUST instantiate two OpenCode SDK clients simultaneously:
 
 Both clients MUST connect to the same server URL.
 
+#### 2.5.4 OpenCode SDK Integration Reference
+
+This section provides the concrete API surface an implementer needs to integrate
+with the OpenCode SDK (`@opencode-ai/sdk`).
+
+##### Server Startup (Ephemeral Mode)
+
+The SDK provides a factory function that starts an embedded server as a
+subprocess and returns a connected client:
+
+```
+import { createOpencode } from "@opencode-ai/sdk"
+
+const { client, server } = await createOpencode({ port: 0 })
+// port: 0 → OS assigns a random available port
+// server.url  → "http://127.0.0.1:<assigned-port>"
+// server.close() → kills the subprocess
+```
+
+There is no separate `opencode serve` command. The `createOpencode` factory
+handles server process management internally.
+
+##### Server Readiness Verification
+
+After startup, the engine MUST verify reachability with a single
+`client.session.list()` call. The `createOpencode` factory blocks until the
+server is ready, so no polling loop is needed — a single list call confirms
+connectivity. If it throws, close the server and propagate the error.
+
+```
+try {
+  await client.session.list()
+} catch (err) {
+  server.close()
+  throw new Error(`Server started but not responding: ${err.message}`)
+}
+```
+
+For attach mode, construct a standalone client:
+
+```
+import { createOpencodeClient } from "@opencode-ai/sdk"
+
+const client = createOpencodeClient({ baseUrl: url })
+await client.session.list()  // verify reachability
+```
+
+##### SDK Client Construction
+
+**v1 client** — the `client` returned by `createOpencode()`, or constructed via
+`createOpencodeClient({ baseUrl })`. Used for session lifecycle:
+
+- `client.session.create({ body: { title } })` → `{ data: Session }`
+- `client.session.list()` → `{ data: Session[] }`
+- `client.session.messages({ path: { id } })` → `{ data: Array<{ info: Message, parts: Part[] }> }`
+- `client.session.diff({ path: { id } })` → `{ data: Array<{ file: string, ... }> }`
+- `client.session.abort({ path: { id } })` → void
+- `client.tui.showToast({ body: { message, variant, duration } })` → void
+
+**v2 client** — separate import, flat parameter style:
+
+```
+import { createOpencodeClient as createV2Client } from "@opencode-ai/sdk/v2"
+
+const v2 = createV2Client({ baseUrl: serverUrl })
+```
+
+Used for async prompt submission and SSE streaming:
+
+- `v2.session.promptAsync({ sessionID, model, parts, system? })` → 204 (no body)
+- `v2.event.subscribe()` → `{ stream: AsyncIterable<Event> }`
+- `v2.session.abort({ sessionID })` → void
+
+##### Session Creation
+
+```
+const response = await client.session.create({
+  body: { title: "<loop-name> iteration <N>" }
+})
+const sessionId = response.data.id  // opaque string
+```
+
+The title is informational (visible in the TUI). Format:
+`"<loop-description> iteration <N>"`, e.g.
+`"deploy-pipeline iteration 3"`.
+
+##### Prompt Execution
+
+Prompts are sent via the v2 client's non-blocking `promptAsync`. It returns
+HTTP 204 immediately — the actual work happens server-side. Results are observed
+through the SSE stream.
+
+```
+await v2.session.promptAsync({
+  sessionID: sessionId,
+  model: { providerID: "anthropic", modelID: "claude-sonnet-4-20250514" },
+  parts: [{ type: "text", text: promptContent }],
+  system: systemPromptOrUndefined,
+})
+```
+
+The `parts` array uses `TextPartInput` objects: `{ type: "text", text: string }`.
+The `model` field requires both `providerID` and `modelID`.
+
+##### SSE Event Subscription
+
+The system MUST subscribe to the SSE stream BEFORE calling `promptAsync` to
+avoid missing early events:
+
+```
+const { stream } = await v2.event.subscribe()
+const iterator = stream[Symbol.asyncIterator]()
+
+// Then send the prompt...
+await v2.session.promptAsync({ ... })
+
+// Then consume events:
+while (true) {
+  const { value: event, done } = await iterator.next()
+  if (done) break
+  // process event...
+}
+```
+
+The stream is global (not session-scoped), so the consumer MUST filter events
+by `sessionID` matching the current session.
+
+**Event types the engine MUST handle:**
+
+| Event type | Key properties | Meaning |
+|---|---|---|
+| `message.part.delta` | `sessionID`, `field: "text"`, `delta: string` | Real-time text chunk from the assistant |
+| `message.part.updated` | `part: { type, tool, state }` | Tool call status change (pending → running → completed/error) |
+| `session.idle` | `sessionID` | Session finished normally — exit the event loop |
+| `session.error` | `sessionID`, `error: string \| { name, data: { message } }` | Session failed — exit the event loop |
+
+On stream completion, the engine MUST explicitly close the iterator
+(`stream.return(undefined)`) to avoid lingering SSE connections that delay
+process exit.
+
+##### Session Abort
+
+Two equivalent APIs exist (v1 uses nested path, v2 uses flat params):
+
+```
+// v1 (used for explicit abort via engine API)
+await client.session.abort({ path: { id: sessionId } })
+
+// v2 (used for best-effort abort on inactivity timeout)
+await v2.session.abort({ sessionID: sessionId })
+```
+
+Abort is best-effort — failures MUST be caught and ignored.
+
+##### Session Message Format and Result Extraction
+
+After the SSE loop ends, fetch the full message history via v1:
+
+```
+const allMsgs = await client.session.messages({ path: { id: sessionId } })
+// allMsgs.data: Array<{ info: Message, parts: Part[] }>
+```
+
+**Message structure:**
+
+- `info.role`: `"user"` or `"assistant"`
+- `info.cost`: number (USD cost of this message)
+- `info.tokens`: `{ input, output, reasoning, cache: { read, write } }`
+
+**Part types** (union — check `part.type`):
+
+- `"text"` — `{ type: "text", text: string }`
+- `"tool"` — `{ type: "tool", tool: string, callID: string, state: ToolState }`
+- Other types exist (reasoning, file, step, etc.) but are not needed for result
+  extraction.
+
+**ToolState** (when `state.status === "completed"`):
+
+- `state.input`: `Record<string, unknown>` — the tool call arguments
+- `state.output`: string — the tool's return value
+- `state.title`: string — display title
+
+**Result extraction:** Scan all messages for a part where
+`part.type === "tool"` AND `part.tool === "task_complete"` AND
+`part.state.status === "completed"`. Extract `state.input.status` (one of
+`"complete"`, `"phase_done"`, `"blocked"`, `"failed"`) and
+`state.input.reason` (optional string). If no `task_complete` tool call is
+found, classify the iteration as `"stalled"`.
+
+**Cost aggregation:** Sum `info.cost`, `info.tokens.input`,
+`info.tokens.output`, and `info.tokens.reasoning` across all assistant messages
+in the session.
+
 ### 2.6 Dual Timeout Architecture
 
 Two independent timeout mechanisms MUST protect against stuck sessions:
