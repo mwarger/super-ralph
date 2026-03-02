@@ -2,13 +2,13 @@
   "id": "acb217ce-7a83-430c-90db-97c9c144f5c4",
   "status": "running",
   "startedAt": "2026-03-02T22:44:36.060Z",
-  "updatedAt": "2026-03-02T23:44:22.815Z",
+  "updatedAt": "2026-03-02T23:44:57.003Z",
   "agentPlugin": "claude",
   "trackerPlugin": "beads-rust",
   "epicId": "bd-3hv",
-  "currentIteration": 19,
+  "currentIteration": 20,
   "maxIterations": 50,
   "totalTasks": 0,
-  "tasksCompleted": 17,
+  "tasksCompleted": 18,
   "cwd": "/Users/mat/dev/farsight/agent-framework"
 }

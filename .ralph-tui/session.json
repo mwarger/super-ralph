@@ -3,10 +3,10 @@
   "sessionId": "acb217ce-7a83-430c-90db-97c9c144f5c4",
   "status": "running",
   "startedAt": "2026-03-02T22:44:36.575Z",
-  "updatedAt": "2026-03-02T23:44:56.940Z",
-  "currentIteration": 19,
+  "updatedAt": "2026-03-02T23:49:19.227Z",
+  "currentIteration": 20,
   "maxIterations": 10,
-  "tasksCompleted": 17,
+  "tasksCompleted": 18,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -278,6 +278,16 @@
       "durationMs": 44481,
       "startedAt": "2026-03-02T23:43:38.189Z",
       "endedAt": "2026-03-02T23:44:22.670Z"
+    },
+    {
+      "iteration": 20,
+      "status": "completed",
+      "taskId": "bd-3hv.26",
+      "taskTitle": "Fix spec: Question API methods missing from SDK reference",
+      "taskCompleted": true,
+      "durationMs": 32863,
+      "startedAt": "2026-03-02T23:44:24.021Z",
+      "endedAt": "2026-03-02T23:44:56.884Z"
     }
   ],
   "skippedTaskIds": [],

@@ -96,6 +96,8 @@ The engine MUST execute iterations as follows:
    e. Emit `iteration.session_created`.
    f. Execute the prompt with dual timeout protection (see §2.6).
    g. Harvest the result (see §2.7).
+   g2. Write the iteration transcript via the run tracker (see §6.4.1).
+       Set `IterationResult.transcriptPath` to the returned path.
    h. Record the iteration in the progress log.
    i. Call `handleResult` with the harvested result.
    j. Based on the result status:
@@ -963,6 +965,17 @@ Unknown event types MUST be silently ignored.
 The system MUST maintain two independent capture buffers for raw and display
 output:
 
+- **Display buffer:** Captures the human-readable output that the user sees
+  during iteration execution. This includes text deltas from
+  `message.part.delta` events (the assistant's streamed text) and tool status
+  lines from `message.part.updated` events (formatted as
+  `[tool: <name>] <status>`). This is the same content streamed to stdout
+  during the iteration.
+- **Raw buffer:** Captures the raw SSE event data as received from the event
+  stream. Each SSE event MUST be appended as its JSON-serialized form
+  (one line per event), preserving the full event structure including type,
+  sessionID, and all payload fields. This provides a complete, machine-
+  parseable record of all server communication during the iteration.
 - **Maximum size:** 250,000 characters per buffer.
 - **Truncation strategy:** Tail-preserving. When the buffer exceeds the
   maximum, truncate from the head and prepend a `[truncated]` marker.
@@ -2208,6 +2221,7 @@ The system MUST handle both formats.
 
 | Scenario | Expected Behavior |
 |----------|-------------------|
+| Epic has zero children | `totalBeadCount` is 0, `maxIterations` is 0 (2 × 0). Loop body never executes. `loop.completed` emits with all counters at zero. |
 | No ready beads but remaining > 0 | Log stall warning (blocked beads with unmet dependencies). Return `null` to stop loop gracefully. |
 | Max iterations reached | Loop exits naturally. `loop.completed` event emitted with current counts. |
 

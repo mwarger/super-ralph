@@ -1,0 +1,47 @@
+# Iteration 20 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.26
+- **Task Title**: Fix spec: Question API methods missing from SDK reference
+- **Description**: §2.4.5 references v2 client methods for answering and rejecting questions:
+- client.question.reply({ requestID, answers })
+- client.question.reject({ requestID })
+
+But §2.5.4 (OpenCode SDK Integration...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T23:44:24.021Z
+- **Ended At**: 2026-03-02T23:44:56.884Z
+- **Duration**: 32s
+- **Input Tokens**: 61
+- **Output Tokens**: 937
+- **Total Tokens**: 998
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by finding the relevant spec file and understanding the current content.
+[94m[Agent][0m Find spec file with SDK sections
+[94m[Grep][0m pattern: [96mquestion\.reply|question\.reject|v2\.session\.promptAsync|SDK Client Construction[0m
+[94m[Grep][0m pattern: [96m§2\.4\.5|§2\.5\.4[0m
+[94m[Grep][0m pattern: [96mOpenCode SDK Integration Reference[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+
+[91m[Error: File content (25781 tokens) exceeds maximum allowed tokens (25000). Please use offset and limit parameters to read specific portions of the file, or use the GrepTool to search for specific content.][0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m§2\.4\.5|2\.4\.5[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m§2\.5\.4|2\.5\.4[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now I can see the exact content. I need to add `question.reply()` and `question.reject()` to the v2 client methods listing (after line 708).
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "Used for async prompt submission and SSE streaming..." → "Used for async prompt submission and SSE streaming..."
+The fix is done. I added `question.reply()` and `question.reject()` to the v2 client method listing in §2.5.4 under "SDK Client Construction", with their full parameter signatures and return types, plus a note that they're used exclusively by interactive mode (§2.4.5).
+
+<promise>COMPLETE</promise>
