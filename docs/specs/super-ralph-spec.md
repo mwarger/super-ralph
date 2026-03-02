@@ -67,7 +67,7 @@ Each phase MUST provide a `PhaseCallbacks` object with three functions:
 | Callback | Signature | Purpose |
 |----------|-----------|---------|
 | `setup` | `(context) → Promise<{ description: string, maxIterations: number }>` | Initialize phase-specific state. Returns a human-readable description and the maximum iteration count. |
-| `nextIteration` | `(context, iterationNumber) → Promise<{ label: string, model: string, prompt: string } \| null>` | Produce the next iteration's work. Returns `null` to signal loop termination. |
+| `nextIteration` | `(context, iterationNumber) → Promise<{ label: string, model: string, prompt: string, systemPrompt?: string } \| null>` | Produce the next iteration's work. Returns `null` to signal loop termination. The optional `systemPrompt` is a phase-specific directive passed to the SDK's `system` parameter (see §2.5.4). |
 | `handleResult` | `(context, iterationNumber, label, result) → Promise<void>` | Process the result of a completed iteration. |
 
 The `context` object MUST provide access to:
@@ -551,6 +551,35 @@ await v2.session.promptAsync({
 The `parts` array uses `TextPartInput` objects: `{ type: "text", text: string }`.
 The `model` field requires both `providerID` and `modelID`.
 
+##### System Prompt Sourcing
+
+Each phase MUST construct its own system prompt — a short, hardcoded string
+that defines the agent's role and the available `task_complete` statuses for
+that phase. System prompts are NOT loaded from files, templates, or
+configuration. They are phase-specific constants defined in the phase callback
+implementation.
+
+The `nextIteration` callback return type MUST include an optional
+`systemPrompt` field:
+
+```
+{ label: string, model: string, prompt: string, systemPrompt?: string }
+```
+
+The engine MUST pass `systemPrompt` (when present) to `promptAsync` via the
+`system` parameter. When `systemPrompt` is `undefined`, the `system` parameter
+MUST be omitted from the call.
+
+**AGENTS.md is NOT used as the system prompt.** OpenCode automatically loads
+project-level `AGENTS.md` files as part of its own agent instruction mechanism
+(independent of the `system` parameter). Super-ralph does not read or inject
+`AGENTS.md` content into prompts. See §3.1.7 for AGENTS.md's role.
+
+**Prompt template content vs. system prompt:** The rendered Handlebars template
+(§3.4) becomes the `parts` text (the user message). The system prompt is a
+separate, phase-specific directive passed via the `system` parameter. These are
+distinct — templates are NOT system prompts.
+
 ##### SSE Event Subscription
 
 The system MUST subscribe to the SSE stream BEFORE calling `promptAsync` to
@@ -888,6 +917,13 @@ super-ralph init
 - `.beads/` workspace (via `br init`).
 - Root `AGENTS.md` MUST be updated with a reference to
   `.super-ralph/AGENTS.md`.
+
+**AGENTS.md purpose:** These files are for OpenCode's consumption, not
+super-ralph's prompt pipeline. OpenCode automatically loads project-level
+`AGENTS.md` files as agent instructions, giving the AI context about the
+project and available CLI commands. Super-ralph does NOT read or inject
+`AGENTS.md` content into prompts or system messages — it only creates and
+scaffolds the files during `init`.
 
 **Idempotency:** The command MUST be safe to re-run. It MUST NEVER overwrite
 existing files. It MUST only create files that do not already exist.
@@ -1517,7 +1553,7 @@ prevent the `finally` block from overwriting a successful finalization with
 <project>/
   .super-ralph/
     config.toml                    # Configuration (TOML)
-    AGENTS.md                      # Agent instructions
+    AGENTS.md                      # Agent instructions (for OpenCode, not super-ralph prompts)
     forward.hbs                    # Forward phase prompt template
     decompose.hbs                  # Decompose phase prompt template
     reverse.hbs                    # Reverse phase prompt template
