@@ -161,8 +161,11 @@ Implement work items (beads) from an epic, one at a time, in dependency order.
 #### 2.2.2 Setup
 
 1. Fetch the epic details via `br show <epicId> --json`.
-2. List all child beads.
-3. Count the total beads, completed beads, and remaining beads.
+2. List all child beads: extract child IDs from the epic's `dependents` array
+   (filtering for entries where `dependency_type === "parent-child"`), then fetch
+   full details via `br list --all --json --id <id1> --id <id2> ...`.
+3. Count the total beads, completed beads, and remaining beads (derived from
+   the child list by checking each bead's normalized status).
 4. Set `maxIterations` to `2 × totalBeadCount`. This safety cap MUST prevent
    runaway loops when beads are repeatedly retried.
 5. Return description: `"Forward: <epicTitle> (<remaining>/<total> beads remaining)"`.
@@ -221,7 +224,10 @@ new epic.
 
 1. Re-read the spec file content. The spec MUST be re-read on every iteration
    to support external edits during decomposition.
-2. List all beads currently under the epic.
+2. List all beads currently under the epic: call `br show <epicId> --json`,
+   extract child IDs from the `dependents` array (filtering for
+   `dependency_type === "parent-child"`), then fetch full details via
+   `br list --all --json --id <id1> --id <id2> ...`.
 3. Render the decompose prompt template with the spec content and existing beads.
 4. Return `{ label: "decompose-<N>", model, prompt }`.
 
@@ -1247,7 +1253,8 @@ TokenCounts {
 ### 4.5 BeadInfo
 
 Represents a work item from the Beads system. This is the system's internal
-representation after normalization.
+representation after normalization from raw `br` CLI output (see §8.6 for raw
+JSON schemas).
 
 ```
 BeadInfo {
@@ -1263,6 +1270,25 @@ BeadInfo {
   parentId: string?       // Parent epic ID
 }
 ```
+
+**Field mapping from raw `br` JSON to BeadInfo:**
+
+| Raw `br` field | BeadInfo field | Notes |
+|----------------|---------------|-------|
+| `id` | `id` | Direct mapping |
+| `title` | `title` | Direct mapping |
+| `description` | `description` | Empty string → `undefined` |
+| `status` | `status` | Normalized via §4.6 |
+| `labels` | `labels` | Default `[]` if absent |
+| `priority` | `priority` | Default `3` if absent |
+| `depends_on` | `dependsOn` | snake_case → camelCase; default `[]` |
+| `blocks` | `blocks` | Direct mapping; default `[]` |
+| `type` | `type` | Direct mapping |
+| `parent_id` | `parentId` | snake_case → camelCase |
+
+The system MUST accept both `snake_case` and `camelCase` variants for
+`depends_on`/`dependsOn` and `parent_id`/`parentId`, preferring the
+`snake_case` form.
 
 ### 4.6 BeadStatus Normalization
 
@@ -1721,11 +1747,117 @@ The system MUST interact with the `br` CLI using these exact commands:
 | `br list --all --json --id <id> [--id <id> ...]` | List specific beads by their IDs |
 | `br create --type epic --title <title> --json` | Create a new epic |
 
+> **Listing children of an epic:** There is no dedicated `br` command to list
+> children. Instead, call `br show <epicId> --json` and extract child IDs from
+> the `dependents` array (filtering for `dependency_type === "parent-child"`),
+> then use `br list --all --json --id <id1> --id <id2> ...` to fetch full
+> details. Alternatively, `br ready --parent <epicId> --json` returns only
+> unblocked children.
+
 ### 8.5 JSON Parsing Strategy for `br` Output
 
 The `br` CLI may emit non-JSON log lines to stdout (e.g., debug output). The
 system MUST filter these by scanning output lines for the first line that
 begins with `[` or `{`, and parsing from that line onward.
+
+### 8.6 `br` CLI Response Schemas
+
+This section defines the JSON output shapes for each `br` command. All bead
+objects share a common set of fields (the "raw bead object"). See §4.5 for the
+mapping from raw fields to the internal `BeadInfo` type.
+
+#### 8.6.1 Raw Bead Object
+
+Every bead returned by any `br` command contains at minimum:
+
+```json
+{
+  "id": "string",
+  "title": "string",
+  "description": "string",
+  "status": "string",
+  "labels": ["string"],
+  "priority": 0,
+  "depends_on": ["string"],
+  "blocks": ["string"],
+  "type": "string",
+  "parent_id": "string"
+}
+```
+
+All array fields default to `[]` and string fields to `""` when absent.
+
+#### 8.6.2 `br show <id> --json`
+
+Returns a single object (though implementations MUST also handle an array
+containing one element). For epics, the object includes a `dependents` array
+describing parent-child and dependency relationships:
+
+```json
+{
+  "id": "epic-1",
+  "title": "My Epic",
+  "type": "epic",
+  "status": "open",
+  "dependents": [
+    {
+      "id": "bead-1",
+      "dependency_type": "parent-child"
+    },
+    {
+      "id": "bead-2",
+      "dependency_type": "parent-child"
+    }
+  ]
+}
+```
+
+The `dependents` array contains objects with at least `id` (string) and
+`dependency_type` (string). To list children, filter for entries where
+`dependency_type === "parent-child"`.
+
+#### 8.6.3 `br ready --parent <id> --json --sort hybrid`
+
+Returns an **array** of raw bead objects representing unblocked beads under the
+specified parent, sorted by hybrid priority+dependency order. The first element
+is the highest-priority unblocked bead.
+
+```json
+[
+  { "id": "bead-3", "title": "...", "status": "open", ... },
+  { "id": "bead-5", "title": "...", "status": "open", ... }
+]
+```
+
+Returns an empty array `[]` when no unblocked beads remain.
+
+#### 8.6.4 `br list --all --json --id <id> [--id <id> ...]`
+
+Returns an **array** of raw bead objects for the specified IDs:
+
+```json
+[
+  { "id": "bead-1", "title": "...", "status": "open", ... },
+  { "id": "bead-2", "title": "...", "status": "done", ... }
+]
+```
+
+#### 8.6.5 `br create --type epic --title <title> --json`
+
+Returns the created object. The system MUST handle both a single object and an
+array containing one element (see §2.3.7):
+
+```json
+{ "id": "epic-42", "title": "My Epic", "type": "epic", "status": "open", ... }
+```
+
+#### 8.6.6 `br close <id> --suggest-next --json`
+
+Returns either:
+- An **array** of raw bead objects (the suggested next beads), or
+- An **object** with a `suggest_next` field containing an array of raw bead objects.
+
+The system MUST handle both formats.
 
 ---
 

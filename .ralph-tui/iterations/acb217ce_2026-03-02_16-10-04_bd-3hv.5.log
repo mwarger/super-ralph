@@ -1,0 +1,102 @@
+# Iteration 10 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.5
+- **Task Title**: Fresh eyes review pass 3
+- **Description**: ## Objective
+Carefully review this entire spec with completely fresh eyes. You have
+NOT seen this spec before. You are reviewing it as a clean-room
+specification — a document that must be complete eno...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T23:10:04.587Z
+- **Ended At**: 2026-03-02T23:15:09.301Z
+- **Duration**: 5m 4s
+- **Input Tokens**: 75
+- **Output Tokens**: 13564
+- **Total Tokens**: 13639
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by reading the spec and checking existing beads to understand what's already been reviewed.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m Show parent bead and children $ br show bd-3hv 2>/dev/null | head -80
+[94m[Bash][0m List all bd-3hv beads $ br list --tree 2>/dev/null | grep -E "bd-3hv" | head -40
+[94m[Read][0m [95m/Users/mat/.claude/projects/-Users-mat-dev-farsight-agent-framework/13269ce1-5b0e-44ec-a6ce-49456b4aef3f/tool-results/toolu_01B8FVpo6biJVnqVd9Wh25cv.txt[0m
+
+[91m[Error: File content (28247 tokens) exceeds maximum allowed tokens (25000). Please use offset and limit parameters to read specific portions of the file, or use the GrepTool to search for specific content.][0m
+[94m[Bash][0m Show all existing fix-up beads $ done
+
+[91m[Error: <tool_use_error>Sibling tool call errored</tool_use_error>][0m
+[94m[Read][0m [95m/Users/mat/.claude/projects/-Users-mat-dev-farsight-agent-framework/13269ce1-5b0e-44ec-a6ce-49456b4aef3f/tool-results/toolu_01B8FVpo6biJVnqVd9Wh25cv.txt[0m
+[94m[Read][0m [95m/Users/mat/.claude/projects/-Users-mat-dev-farsight-agent-framework/13269ce1-5b0e-44ec-a6ce-49456b4aef3f/tool-results/toolu_01B8FVpo6biJVnqVd9Wh25cv.txt[0m
+[94m[Read][0m [95m/Users/mat/.claude/projects/-Users-mat-dev-farsight-agent-framework/13269ce1-5b0e-44ec-a6ce-49456b4aef3f/tool-results/toolu_01B8FVpo6biJVnqVd9Wh25cv.txt[0m
+Now let me check what the existing fix-up beads cover so I don't duplicate work.
+[94m[Bash][0m Show all existing fix-up beads $ done
+[94m[TodoWrite][0m
+Now let me make the minor inline fixes. I've identified these:
+
+1. §2.10 - Clarify progress log write ownership (the engine directly)
+2. §6.3 - Fix misleading description of events.jsonl top-level field (type is nested inside event)
+3. §7.2 - Annotate orphaned `opencode.url` config key
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "The system MUST maintain an append-only Markdown f..." → "The **engine** (not the run tracker) MUST maintain..."
+Now fix the events.jsonl description in §6.3.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "- `events.jsonl` — Append-only log. Each line is a..." → "- `events.jsonl` — Append-only log. Each line is a..."
+Now annotate the orphaned `opencode.url` config key.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "[opencode]
+url = "http://localhost:4096"     # Def..." → "[opencode]
+# NOTE: This URL is NOT used for epheme..."
+Now let me create the fix-up beads for the significant gaps.
+[94m[TodoWrite][0m
+[94m[Bash][0m Create fix-up bead: br CLI schemas $ br create --parent bd-3hv \   --title "Fix spec: br CLI response schemas and child-listing commands"...
+[94m[Bash][0m Create fix-up bead: system prompt $ br create --parent bd-3hv \   --title "Fix spec: System prompt sourcing and AGENTS.md integration" \...
+[94m[Bash][0m Create fix-up bead: interactive mode scope $ br create --parent bd-3hv \   --title "Fix spec: Interactive mode infrastructure scope and cleanup" ...
+Good. Now wire the dependencies.
+[94m[TodoWrite][0m
+[94m[Bash][0m Wire dependencies for fix-up beads $ # Wire fix-up beads as deps of this review pass br dep add bd-3hv.17 bd-3hv.5 && \ br dep add bd-3hv...
+Since I found significant issues, I need to create the next review pass and wire it.
+[94m[Bash][0m Create next review pass $ br create --parent bd-3hv \   --title "Fresh eyes review pass 4" \   --type task \   --description "...
+[94m[Bash][0m Wire pass 4 dependencies $ # Wire pass 4 to depend on pass 3's fix-up beads br dep add bd-3hv.20 bd-3hv.17 && \ br dep add bd-3...
+Verify the consolidation bead has all dependencies wired.
+[94m[Bash][0m Verify consolidation bead deps $ br show bd-3hv.6 2>/dev/null | head -30
+Good, bd-3hv.6 now depends on bd-3hv.17, bd-3hv.18, bd-3hv.19, and bd-3hv.20. Now close this bead.
+[94m[TodoWrite][0m
+[94m[Bash][0m Close review pass 3 bead $ br close bd-3hv.5 --reason "Review pass 3: found 3 significant issues, created 3 fix-up beads (bd-3h...
+[94m[TodoWrite][0m
+## Review Pass 3 Summary
+
+### Changes I wholeheartedly agree improve the spec:
+
+1. **bd-3hv.17 - br CLI response schemas and child-listing commands**: This is the most critical gap. Multiple behavior sections (Forward setup, Forward iteration, Decompose iteration) depend on br CLI output but the JSON response shapes are completely unspecified. An implementer literally cannot build the Forward or Decompose phases without knowing what br returns. This blocks implementation.
+
+2. **bd-3hv.18 - System prompt sourcing and AGENTS.md integration**: The `system: systemPromptOrUndefined` in the SDK example is a dangling reference. AGENTS.md is scaffolded by init but never wired into the execution path. An implementer would be confused about whether to inject it as a system prompt or not.
+
+3. **bd-3hv.19 - Interactive mode infrastructure scope**: Interactive mode intentionally bypasses the engine, but the spec never explicitly states what that means for events, run tracking, progress logs, transcripts, cleanup, and return values. An implementer would waste significant effort trying to figure out what to replicate.
+
+### Changes I somewhat agree with (minor inline fixes made):
+- Progress log write ownership clarification (engine, not run tracker) - helpful but an attentive reader could infer this
+- events.jsonl description fix in §6.3 - minor inconsistency, not blocking
+- `opencode.url` config annotation - prevents confusion but not blocking
+
+### Considered but rejected:
+- **`tui.showToast` API unused**: The spec shows this API exists in the SDK reference but never specifies when to call it. I considered creating a fix-up bead but decided this is intentionally left as a project-customization hook, not a core behavior. The SDK reference section is just documenting available APIs.
+- **`question.asked` SSE event vs engine event confusion**: §2.9.2 lists it clearly in the SSE event table (not the engine event catalog §5.1). The distinction is clear enough from context.
+- **Decompose max iterations exhaustion**: §2.3.4 sets max to 50 but doesn't document what happens at exhaustion. However, the engine's generic loop behavior (§2.1.3) handles this — the loop exits naturally. Not a gap.
+
+### Artifacts created:
+- 3 fix-up beads: bd-3hv.17, bd-3hv.18, bd-3hv.19
+- 1 next review pass: bd-3hv.20
+- 3 inline fixes in the spec
+- All dependencies wired to consolidation bead bd-3hv.6
+
+<promise>COMPLETE</promise>
