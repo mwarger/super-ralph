@@ -1,0 +1,87 @@
+# Iteration 5 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.8
+- **Task Title**: Fix spec: Reverse phase output file lifecycle
+- **Description**: ## Problem
+§2.4.4 (Autonomous Mode) says "Read the current spec file from the output directory (if it exists)" but critical details are missing.
+
+### Gaps:
+1. **Output filename**: How is the spec file...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T22:36:14.857Z
+- **Ended At**: 2026-03-02T22:37:51.623Z
+- **Duration**: 1m 36s
+- **Input Tokens**: 150
+- **Output Tokens**: 3144
+- **Total Tokens**: 3294
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by reading the spec file to understand the current state and then make the necessary changes.
+[94m[Agent][0m Explore spec and template files
+[94m[Glob][0m pattern: [96m**/*.md[0m
+[94m[Glob][0m pattern: [96m**/*.txt[0m
+[94m[Glob][0m pattern: [96m**/*spec*[0m
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework -type d -name "spec" -o -type d -name "docs" -o -type d...
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96m§2\.4\.4|Autonomous Mode|reverse phase[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/phases/reverse.md[0m
+[94m[Glob][0m pattern: [96m**/reverse*[0m
+[94m[Glob][0m pattern: [96m**/*loop*[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/architecture/overview.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/phases/forward.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/reverse.hbs[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/engine/engine.md[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96m2\.4\.4[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/reverse.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/phases/decompose.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/reverse.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96mreverse phase|autonomous[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/.super-ralph/reverse.hbs[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/reverse.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/reverse.hbs[0m
+Now let me find §3.4.2 in the spec.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m pattern: [96m§3\.4|3\.4\.|Prompt Templates|Template Variables|reverse.*template[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/reverse.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+Now I have a complete picture. Let me make the spec edits.
+
+**What the implementation does:**
+- `getCurrentSpec()` picks the most recently modified `.md` file in the output directory
+- On first iteration, no spec exists — `currentSpec` is `""`, `isFirstIteration` is `true`
+- The sub-agent writes the file (the prompt template instructs it to write to `outputDir/`)
+- Template variables: `interactive`, `hasInputs`, `inputs`, `outputDir`, `currentSpec`, `currentSpecFilename`, `isFirstIteration`, `skillContent`
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "#### 2.4.4 Autonomous Mode
+
+Uses the standard engi..." → "#### 2.4.4 Autonomous Mode
+
+Uses the standard engi..."
+Now update §3.4.2 to enumerate the exact template variables for reverse.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "| `reverse.hbs` | Reverse | Phase-mode-dependent (..." → "| `reverse.hbs` | Reverse | `interactive` (bool), ..."
+Both edits are done. Let me verify the changes read correctly.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+All changes are in place. Here's what was added:
+
+**§2.4.4 — New "Output File Lifecycle" subsection:**
+- Output filename is chosen by the sub-agent (not the engine); the template suggests a descriptive name
+- Engine finds the current spec by selecting the most recently modified `.md` file in the output directory
+- First iteration: `currentSpec` = `""`, `currentSpecFilename` = `""`, `isFirstIteration` = `true`; template renders "No Spec Exists Yet" instructions
+- Subsequent iterations: engine reads the latest `.md` file and passes its content/filename to the template
+- Sub-agent writes the file; engine never writes spec content
+- Updated "Next Iteration" step 1 to explicitly describe the scan-and-select behavior
+
+**§3.4.2 — Enumerated exact template variables:**
+- Replaced the vague "Phase-mode-dependent (inputs, current spec, skill content)" with the full variable list: `interactive`, `hasInputs`, `inputs`, `outputDir`, `currentSpec`, `currentSpecFilename`, `isFirstIteration`, `skillContent` — each with its type.
+
+<promise>COMPLETE</promise>

@@ -207,9 +207,12 @@ _Severity: non-critical._
 
 ### Interactive session — `src/interactive.ts`
 
-**GAP-INT-01:** The behavior when `@clack/prompts` returns a cancel symbol
-(user presses Ctrl+C mid-question) is not explicitly handled in source.
-_Severity: non-critical._
+**GAP-INT-01:** ~~The behavior when `@clack/prompts` returns a cancel symbol
+(user presses Ctrl+C mid-question) is not explicitly handled in source.~~
+_Resolved: cancel is detected via `clack.isCancel()`, which returns `null`
+from the render function. This triggers `client.question.reject()` and
+returns `InteractiveResult` with `completion.status: "blocked"`.
+(`src/interactive.ts:187-196, 353, 381, 399`)_
 
 **GAP-INT-02:** Whether mock answer matching is case-sensitive beyond
 lowercasing is not confirmed from source.
