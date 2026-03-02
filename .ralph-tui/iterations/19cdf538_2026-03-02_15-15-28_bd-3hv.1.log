@@ -1,0 +1,144 @@
+# Iteration 1 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.1
+- **Task Title**: Deep study of source material
+- **Description**: ## Objective
+Exhaustively study and understand the source material described below.
+Your goal is to build a deep mental model of WHAT the system does and
+WHY — not to copy or paraphrase the source. Yo...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T22:15:28.547Z
+- **Ended At**: 2026-03-02T22:22:32.103Z
+- **Duration**: 7m 3s
+- **Input Tokens**: 11955
+- **Output Tokens**: 10943
+- **Total Tokens**: 22898
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by studying the source material exhaustively. Let me launch parallel sub-agents to research the different subsystems concurrently.
+[94m[Agent][0m Study core engine & orchestration
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/engine.ts[0m
+[94m[Agent][0m Study execution modes
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/run-state.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/run-status.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/events.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/timeout.ts[0m
+[94m[Agent][0m Study external integrations
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/forward.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/reverse.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/types.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/progress.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/config.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/opencode.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/decompose.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/interactive.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/types.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/engine.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/opencode.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/beads.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/skills.ts[0m
+[94m[Agent][0m Study CLI & configuration
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/types.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/output-parser.ts[0m
+[94m[Glob][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96mskills/*.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/index.ts[0m
+[94m[Agent][0m Study output & progress
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/config.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/events.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/init.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/types.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/package.json[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/README.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/output-parser.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/AGENTS.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/tsconfig.json[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/output-parser.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/progress.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/template.ts[0m
+[94m[Glob][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96msrc/**/*.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96mIterationResult[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96mexport (function|class|const|type|interface|enum)[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96mStreamCapture[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96mloadTemplate|renderPrompt[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96mreadRecentProgress|appendProgress|formatProgressEntry[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/skills.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/opencode.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/engine.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/run-status.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src/types.ts[0m pattern: [96mIterationResult[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/events.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/run-state.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src/opencode.ts[0m pattern: [96mStreamCapture[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src/interactive.ts[0m pattern: [96mStreamCapture[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src/forward.ts[0m pattern: [96mloadTemplate|renderPrompt[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src/reverse.ts[0m pattern: [96mloadTemplate|renderPrompt[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src/decompose.ts[0m pattern: [96mloadTemplate|renderPrompt[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/forward.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src/engine.ts[0m pattern: [96mappendProgress|readRecentProgress[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/decompose.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/reverse.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/template.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src/forward.ts[0m pattern: [96mappendProgress|readRecentProgress[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/beads.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/output-parser.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/timeout.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/progress.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/interactive.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96mcapture\.(addRawLine|addDisplayText|toolStatusText|getRawOutput|getDisplayOutput)[0m
+[94m[Glob][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96m**/.super-ralph/*.hbs[0m
+[94m[Glob][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96mtemplates/**/*[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96m\.hbs[0m
+[94m[Glob][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96mskills/**/*[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/templates/super-ralph-config.toml[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/.super-ralph/forward.hbs[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/.super-ralph/reverse.hbs[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/.super-ralph/decompose.hbs[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src[0m pattern: [96minterface PromptResult|interface InteractiveResult[0m
+All five sub-agents have returned comprehensive research. Now let me synthesize their findings into the analysis document.
+[94m[Bash][0m Create specs directory $ mkdir -p /Users/mat/dev/farsight/agent-framework/docs/specs
+[94m[Write][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-analysis.md[0m "# super-ralph: Deep Source Material Analysis
+
+> Prepared for clean-room specification authoring.
+> This document describes WHAT the system does and WHY — not how the code is structured.
+
+---
+
+## 1. Sy... (28840 chars)"
+Now let me close the bead.
+[94m[Bash][0m Close bead bd-3hv.1 $ br close bd-3hv.1 --reason "Analysis complete at docs/specs/super-ralph-analysis.md"
+The analysis is complete. Here's what was done:
+
+**Deep study of super-ralph source material** — all 19 TypeScript source files plus supporting project files were exhaustively analyzed using 5 parallel research agents, each covering a distinct subsystem:
+
+1. **Core engine & orchestration** — phase loop engine, run state persistence, run status queries, event system, timeout handling
+2. **Execution modes** — forward, reverse (autonomous + interactive), decompose, interactive session management
+3. **External integrations** — OpenCode SDK communication, beads CLI protocol, skills system
+4. **CLI & configuration** — command structure, argument parsing, TOML config, initialization, type definitions
+5. **Output & progress** — stream capture, progress logging, Handlebars templates
+
+The synthesized analysis document at `docs/specs/super-ralph-analysis.md` covers:
+- System summary and behavioral overview
+- All 14 features and capabilities
+- Complete CLI interface (7 commands with all flags)
+- Configuration format with defaults and merge behavior
+- All dependencies and external integrations
+- 6 categories of constraints
+- 7 categories of edge cases and error handling
+- 8 data format specifications
+- 15 design decisions with rationale
+- Complete event catalog (14 event types)
+- SSE streaming protocol details
+- Dual timeout architecture
+- Resource cleanup guarantees
+
+<promise>COMPLETE</promise>
