@@ -3,10 +3,10 @@
   "sessionId": "19cdf538-e65c-4a24-be03-beb31e2fabf2",
   "status": "running",
   "startedAt": "2026-03-02T22:15:24.790Z",
-  "updatedAt": "2026-03-02T22:36:13.632Z",
-  "currentIteration": 3,
+  "updatedAt": "2026-03-02T22:37:51.670Z",
+  "currentIteration": 4,
   "maxIterations": 10,
-  "tasksCompleted": 3,
+  "tasksCompleted": 4,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -82,6 +82,16 @@
       "durationMs": 289459,
       "startedAt": "2026-03-02T22:27:40.631Z",
       "endedAt": "2026-03-02T22:32:30.090Z"
+    },
+    {
+      "iteration": 4,
+      "status": "completed",
+      "taskId": "bd-3hv.7",
+      "taskTitle": "Fix spec: OpenCode server startup and SDK integration protocol",
+      "taskCompleted": true,
+      "durationMs": 222216,
+      "startedAt": "2026-03-02T22:32:31.362Z",
+      "endedAt": "2026-03-02T22:36:13.578Z"
     }
   ],
   "skippedTaskIds": [],

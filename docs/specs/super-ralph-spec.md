@@ -282,9 +282,39 @@ Uses the standard engine loop.
 2. Set `maxIterations` to 20.
 3. Return description: `"Reverse (autonomous): <inputSummary>"`.
 
+**Output File Lifecycle:**
+
+The output spec filename is **chosen by the sub-agent**, not by the engine. The
+prompt template provides the output directory path and instructs the sub-agent to
+write there. On the first iteration the template suggests a descriptive name
+(e.g., `spec.md` or `<component-name>.md`). On subsequent iterations the
+template includes the current filename so the sub-agent overwrites it in place.
+
+To read the current spec, the engine scans the output directory for `.md` files
+and selects the **most recently modified** one. This is the "current spec" for
+the next iteration. If no `.md` files exist (first iteration), the current spec
+is absent and the `isFirstIteration` flag is set to `true`.
+
+Concretely:
+- **First iteration:** No spec file exists. `currentSpec` is `""` (empty
+  string), `currentSpecFilename` is `""`, and `isFirstIteration` is `true`. The
+  prompt template renders a "No Spec Exists Yet" section instructing the
+  sub-agent to create an initial draft.
+- **Subsequent iterations:** The engine reads the most recently modified `.md`
+  file. `currentSpec` contains the file's full text, `currentSpecFilename`
+  contains its basename (e.g., `spec.md`), and `isFirstIteration` is `false`.
+  The prompt template renders the current spec inline and instructs the sub-agent
+  to refine it — rewriting the entire file, not appending.
+- **Who writes the file:** The sub-agent writes the spec file to disk. The
+  engine never writes spec content. The prompt template provides `outputDir` so
+  the sub-agent knows where to write.
+
 **Next Iteration:**
-1. Read the current spec file from the output directory (if it exists).
-2. Render the reverse prompt template with input materials and current spec.
+1. Scan the output directory for `.md` files; select the most recently modified
+   one as the current spec (or `null` if none exist).
+2. Render the reverse prompt template with input materials, current spec content,
+   current spec filename, output directory path, first-iteration flag, and skill
+   content.
 3. The prompt MUST explicitly instruct the sub-agent not to over-iterate — it
    must declare `"phase_done"` when the spec is complete.
 4. Return `{ label: "reverse-<N>", model, prompt }`.
@@ -909,7 +939,7 @@ The system MUST use Handlebars for prompt template rendering.
 |------|-------|--------------------------|
 | `forward.hbs` | Forward | `beadId`, `beadTitle`, `beadDescription`, `closingCommand`, `progressTail` |
 | `decompose.hbs` | Decompose | `specContent`, `epicId`, `existingBeads`, `include_review`, `include_bugscan`, `include_audit` |
-| `reverse.hbs` | Reverse | Phase-mode-dependent (inputs, current spec, skill content) |
+| `reverse.hbs` | Reverse | `interactive` (bool), `hasInputs` (bool), `inputs` (string[]), `outputDir` (string), `currentSpec` (string, empty on first iteration), `currentSpecFilename` (string, empty on first iteration), `isFirstIteration` (bool), `skillContent` (string or null) |
 
 ### 3.5 Skills System
 

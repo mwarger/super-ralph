@@ -1,0 +1,86 @@
+# Iteration 4 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.7
+- **Task Title**: Fix spec: OpenCode server startup and SDK integration protocol
+- **Description**: ## Problem
+§2.5 (Server Lifecycle), §2.1.3 (Iteration Loop steps 5d-5f), and §2.5.3 (SDK Client Setup) reference the OpenCode server and SDK but lack the concrete details an implementer needs.
+
+### Ga...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T22:32:31.362Z
+- **Ended At**: 2026-03-02T22:36:13.578Z
+- **Duration**: 3m 42s
+- **Input Tokens**: 4862
+- **Output Tokens**: 3706
+- **Total Tokens**: 8568
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by understanding the current state of the spec and the OpenCode SDK to fill in these gaps accurately.
+[94m[Agent][0m Explore spec and OpenCode SDK
+[94m[Glob][0m pattern: [96m**/*.md[0m
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework -name "package.json" -not -path "*/node_modules/*" | he...
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96mopencode[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/opencode.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/opencode.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/README.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/package.json[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/tasks/prd-ralph-tui-clean-room-spec.md[0m
+[94m[Bash][0m $ ls /Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/architecture/runtime-lifecycle.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m $ ls /Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/
+[94m[Bash][0m $ ls /Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/
+[94m[Bash][0m $ wc -l /Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Bash][0m $ ls /Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/
+[94m[Bash][0m $ ls /Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/gen/
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/index.d.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/index.d.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/client.d.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/client.d.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/gen/sdk.gen.d.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/sdk.gen.d.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/gen/types.gen.d.ts[0m pattern: [96mSessionPromptAsyncData|SessionMessagesData|SessionAbortData|SessionCreateData[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/gen/types.gen.d.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/gen/types.gen.d.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/gen/types.gen.d.ts[0m pattern: [96mSessionPromptAsyncData[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/sdk.gen.d.ts[0m pattern: [96mpromptAsync|SessionPromptAsync|abort[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/server.d.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/sdk.gen.d.ts[0m pattern: [96msubscribe|event\.subscribe|EventSubscribe[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/gen/types.gen.d.ts[0m pattern: [96mSessionMessagesData|SessionMessagesResponses[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/gen/types.gen.d.ts[0m pattern: [96mSessionCreateData|SessionCreateResponses[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/sdk.gen.d.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/gen/types.gen.d.ts[0m pattern: [96m^export type Session = |^export type TextPartInput|^export type Session \{[0m
+Now let me read the spec file to find the exact insertion point.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/opencode.ts[0m
+Now I have the full picture. Let me add the concrete §2.5.4 section to the spec.
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m edit: "Both clients MUST connect to the same server URL.
+..." → "Both clients MUST connect to the same server URL.
+..."
+Let me verify the edit looks correct in context.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/docs/specs/super-ralph-spec.md[0m
+The new §2.5.4 is properly inserted after §2.5.3 and before §2.6. The section covers all 8 gaps identified in the task:
+
+1. **Server startup command** — `createOpencode({ port: 0 })` factory, no separate CLI command needed
+2. **Server readiness detection** — single `client.session.list()` call (no polling loop needed since the factory blocks)
+3. **SDK client instantiation** — exact imports and constructors for both v1 (`createOpencodeClient`) and v2 (`@opencode-ai/sdk/v2`)
+4. **Session creation** — `client.session.create({ body: { title } })` with name format
+5. **Prompt execution** — `v2.session.promptAsync()` with full parameter shape including `parts`, `model`, and `system`
+6. **SSE subscription** — `v2.event.subscribe()` returning async iterable, event type table, session filtering, stream cleanup
+7. **Session abort** — both v1 (`{ path: { id } }`) and v2 (`{ sessionID }`) forms
+8. **Session messages format** — full message/part/ToolState structure and `task_complete` extraction logic
+
+<promise>COMPLETE</promise>
