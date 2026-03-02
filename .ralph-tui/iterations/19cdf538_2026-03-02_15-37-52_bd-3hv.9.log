@@ -1,0 +1,104 @@
+# Iteration 6 Log
+
+## Metadata
+
+- **Task ID**: bd-3hv.9
+- **Task Title**: Fix spec: Interactive mode question tool protocol
+- **Description**: ## Problem
+§2.4.5 (Interactive Mode) references a "question" tool that the sub-agent calls, and §2.9.2 lists `question.asked` as an SSE event, but the full protocol is unspecified.
+
+### Gaps:
+1. **Que...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-03-02T22:37:52.902Z
+- **Ended At**: 2026-03-02T22:41:27.413Z
+- **Duration**: 3m 34s
+- **Input Tokens**: 218
+- **Output Tokens**: 6354
+- **Total Tokens**: 6572
+- **Agent**: claude
+- **Model**: claude-opus-4-6
+- **Epic**: bd-3hv
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+
+
+I'll start by reading the spec file to understand the current state and then fix the gaps in the interactive mode question tool protocol.
+[94m[Skill][0m
+This is a well-defined spec fix task with clear requirements, not a creative design task. Let me read the current spec and make the targeted additions.
+[94m[Glob][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96m**/*.md[0m
+[94m[Read][0m [95m/Users/mat/.claude/projects/-Users-mat-dev-farsight-agent-framework/memory/MEMORY.md[0m
+
+[91m[Error: File does not exist. Note: your current working directory is /Users/mat/dev/farsight/agent-framework.][0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/interactive.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/infrastructure/events.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/CONVENTIONS.md[0m
+Now let me read the opencode integration spec and look at the source code to understand the actual protocol.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/opencode.md[0m
+[94m[Agent][0m Find question tool protocol in source
+[94m[Glob][0m pattern: [96msrc/**/*.ts[0m
+[94m[Glob][0m pattern: [96msrc/**/*.tsx[0m
+[94m[Glob][0m pattern: [96msrc/**/*.js[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96mquestion[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96mtool_use|tool_call[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96masked|select|multiselect[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96mSSE|event|stream[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96manswer[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/interactive.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/types.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/events.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/reverse.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96mquestion\.asked|question\.reply|question\.reject[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework[0m pattern: [96mQuestionInfo|QuestionAnswer[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/opencode.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/index.ts[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src/interactive.ts[0m pattern: [96meventType|properties|sessionID|requestID[0m
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/src/reverse.ts[0m pattern: [96mUse the question tool|question tool|options|custom[0m
+[94m[Bash][0m $ grep -r "question" /Users/mat/dev/farsight/agent-framework/src --include="*.ts" | grep -i "schema\|p...
+[94m[Bash][0m $ grep -r "QuestionInfo\|requestID\|requestId" /Users/mat/dev/farsight/agent-framework --include="*.ts...
+[94m[Bash][0m $ find /Users/mat/dev/farsight/agent-framework -name "*.d.ts" -o -name "package.json" | head -10
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/types.gen.d.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/types.gen.d.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/types.gen.d.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/types.gen.d.ts[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/node_modules/@opencode-ai/sdk/dist/v2/gen/sdk.gen.d.ts[0m
+[94m[Bash][0m $ grep -n "event.subscribe\|EventEvent" /Users/mat/dev/farsight/agent-framework/node_modules/@opencode...
+
+
+Excellent. I now have all the source-level evidence needed. Let me read the current spec sections that need updating, then make the changes.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/interactive.md[0m
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/gap-report.md[0m
+Now I have all the evidence. Let me also verify the cancel handling since the explore agent found explicit `isCancel` handling.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/src/interactive.ts[0m
+Now I have complete evidence. The cancel handling IS explicit (`isCancel` → return `null` → `question.reject`). Let me now update the spec.
+[94m[TodoWrite][0m
+[94m[Write][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/interactive.md[0m "# Interactive Session
+
+> Handles interactive Reverse mode: subscribes to SSE events, intercepts
+> agent questions, and renders them to the user via `@clack/prompts` or
+> fulfils them with pre-loaded m... (10190 chars)"
+[94m[TodoWrite][0m
+Now update the gap report — INT-01 is resolved (cancel handling is confirmed via `isCancel` + `question.reject`).
+[94m[Edit][0m [95m/Users/mat/dev/farsight/agent-framework/spec/gap-report.md[0m edit: "**GAP-INT-01:** The behavior when `@clack/prompts`..." → "**GAP-INT-01:** ~~The behavior when `@clack/prompt..."
+Now let me check if events.md needs updating — it covers the Engine's internal event bus, not the opencode SSE events. The `question.asked` event comes from the opencode SSE stream, not the Engine emitter.
+[94m[TodoWrite][0m
+The events.md file covers the Engine's internal `EngineEvent` emitter (phase lifecycle events like `iteration:start`, `run:complete`, etc.), not the opencode SSE stream events. The `question.asked` event is an opencode server SSE event, so it's correctly documented in the interactive session spec rather than the engine events spec.
+
+Let me verify the final spec reads well.
+[94m[Read][0m [95m/Users/mat/dev/farsight/agent-framework/spec/modules/integrations/interactive.md[0m
+The spec is complete and well-structured. Let me verify the coverage matrix references interactive mode correctly.
+[94m[Grep][0m [95m/Users/mat/dev/farsight/agent-framework/spec/coverage-matrix.md[0m pattern: [96minteractive[0m
+Good, the coverage matrix already links to the interactive spec. All five gaps from the task are now addressed:
+
+1. **Question tool schema** — defined in "Question Tool Parameter Schema" section with `QuestionInfo` and `QuestionOption` field tables
+2. **SSE event payload** — defined in "`question.asked` SSE Event" section with `QuestionRequest` field table
+3. **Answer return mechanism** — defined in "Answer Return Mechanism" section with `question.reply` and `question.reject` API signatures
+4. **Tool state detection** — clarified in "Relationship Between `question.asked` and `message.part.updated`" section
+5. **Multiselect with custom input fallback** — documented that the `custom` field (default `true`) controls this behavior
+
+Additionally resolved gap-report INT-01: cancel handling is now confirmed as explicit `isCancel()` → `question.reject()` → `status: "blocked"`.
+
+<promise>COMPLETE</promise>

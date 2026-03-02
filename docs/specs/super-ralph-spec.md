@@ -1135,8 +1135,8 @@ The system MUST emit exactly these 14 event types:
 ```
 Engine emits event
   → Event emitter distributes to all registered listeners:
-    → Console renderer (writes human-readable output to stdout)
-    → Run tracker:
+    → Console renderer (writes human-readable output to stderr; see §5.5)
+    → Run tracker (see §5.6):
         → Appends JSON event to events.jsonl
         → Updates SessionState counters
         → Writes session.json (both per-run and global mirror)
@@ -1162,6 +1162,118 @@ loop. When the `loop.completed` event is received, it carries the engine's
 authoritative final counts. The run tracker MUST overwrite its incremental
 counts with these authoritative values. This corrects any drift that may occur
 from retry decrements that the tracker does not model.
+
+### 5.5 Console Renderer
+
+The engine MUST register a console renderer as the first event listener. The
+console renderer writes human-readable output to **stderr** (not stdout — stdout
+is reserved for `--json` structured output and must not be polluted by
+diagnostic messages).
+
+No terminal formatting library is required. Output MUST use plain text with
+Unicode symbols for status indicators.
+
+The console renderer MUST produce the following output for each event type:
+
+| Event Type | Output |
+|-----------|--------|
+| `loop.description` | `{description}` |
+| `loop.dry_run_iteration` | `[dry-run] Iteration {iteration}: {label} (model: {model})` |
+| `loop.dry_run_complete` | Blank line, then `[dry-run] Would run up to {iterations} iterations` |
+| `server.started` | `OpenCode server at {url}` |
+| `server.attached` | `Attached to OpenCode server at {url}` |
+| `server.attach_hint` | `Attach TUI: opencode attach {url}` |
+| `iteration.started` | Blank line, then `--- Iteration {iteration} ---`, then `{label}`, then `Model: {model}` (three lines) |
+| `iteration.session_created` | `Session: {sessionId} — sending prompt...` |
+| `iteration.completed` | `✓ {label} — {status}`. If `reason` is present, a second line: `  reason: {reason}` |
+| `iteration.blocked` | `⚠ {label} blocked: {reason}` (defaults to `"unknown"` if reason is absent) |
+| `iteration.retrying` | `⚠ {label} {status}, retrying ({attempt}/{maxRetries})` |
+| `iteration.failed` | `✗ {label} {status} — {action}` |
+| `iteration.error` | `✗ {label} error: {error}` (written to stderr via `console.error`) |
+| `loop.completed` | Blank line, then `=== Phase Complete ===`, then `Completed: {completed}, Failed: {failed}, Skipped: {skipped}`, then `Total time: {totalTimeSeconds}s` (four lines, time rounded to whole seconds) |
+
+### 5.6 Run Tracker
+
+The run tracker is responsible for persisting run artifacts: an append-only
+event log, SessionState snapshots, and iteration transcripts.
+
+#### 5.6.1 Initialization
+
+The engine MUST create the run tracker **after** calling `setup` (which returns
+the description and max iterations) but **before** emitting the first event
+(`loop.description`). This means the run tracker is created between steps 1 and
+2 of the iteration loop (§2.1.3).
+
+Creation sequence:
+
+1. Generate a `runId` per §4.9.
+2. Create the run directory: `.super-ralph/runs/<runId>/`.
+3. Create the iterations subdirectory: `.super-ralph/runs/<runId>/iterations/`.
+4. Initialize a `SessionState` with `status: "running"`, the description,
+   maxIterations, `startedAt` set to the current ISO 8601 timestamp, and all
+   counters at zero.
+5. Write the initial `session.json` to both per-run and global locations (§6.4).
+6. Register as an event listener on the emitter.
+
+#### 5.6.2 events.jsonl Entry Schema
+
+Each line in `events.jsonl` MUST be a single JSON object with exactly two
+top-level fields:
+
+```json
+{ "ts": "<ISO 8601 timestamp>", "event": { <full event payload from §5.1> } }
+```
+
+- `ts` — The wall-clock time the event was recorded by the run tracker
+  (ISO 8601 format, e.g., `"2026-03-02T14:30:00.123Z"`).
+- `event` — The complete event object as defined in §5.1, including its `type`
+  field and all payload fields for that event type.
+
+**Example entry** (single line in the file):
+
+```
+{"ts":"2026-03-02T14:30:05.200Z","event":{"type":"iteration.started","iteration":1,"label":"bd-abc.1","model":"anthropic/claude-sonnet-4-20250514"}}
+```
+
+#### 5.6.3 Counter Update Mapping
+
+When the run tracker receives an event via its listener, it MUST update
+`SessionState` counters as follows:
+
+| Event Type | Counter Update |
+|-----------|---------------|
+| `iteration.started` | Set `currentIteration` to `event.iteration` |
+| `iteration.completed` | Increment `completed` by 1 |
+| `iteration.blocked` | Increment `skipped` by 1 |
+| `iteration.failed` | Increment `failed` by 1 |
+| `iteration.error` | Increment `failed` by 1 |
+| `loop.completed` | **Overwrite** `completed`, `failed`, and `skipped` with the event's authoritative values (see §5.4) |
+| All other event types | No counter update |
+
+After every event (regardless of whether counters changed), the run tracker
+MUST write the updated `SessionState` to both per-run and global locations
+(§6.4). This ensures external observers always see the latest state.
+
+#### 5.6.4 Finalization
+
+Finalization sets the run's terminal status. The `finalize` method accepts a
+status of `"completed"` or `"failed"` and MUST:
+
+1. Set `SessionState.status` to the provided status.
+2. Write `SessionState` to both per-run and global locations (§6.4), which also
+   updates `updatedAt` to the current timestamp.
+
+Finalization is called in two contexts:
+
+- **Normal exit** (§2.1.3 step 6): After `loop.completed` is emitted, the
+  engine finalizes as `"completed"` if there were no failures, or `"failed"` if
+  `failed > 0`.
+- **Cleanup** (§2.8): The `finally` block finalizes as `"failed"` if the run
+  has not already been finalized. This catches crashes and unexpected errors.
+
+The engine MUST track whether finalization has occurred (via a boolean flag) to
+prevent the `finally` block from overwriting a successful finalization with
+`"failed"`.
 
 ---
 
