@@ -746,8 +746,10 @@ output:
 
 #### 2.10.1 Format
 
-The system MUST maintain an append-only Markdown file at
-`.super-ralph/progress.md`. Each iteration MUST append an entry in this format:
+The **engine** (not the run tracker) MUST maintain an append-only Markdown file
+at `.super-ralph/progress.md`. The engine appends an entry after each iteration
+completes (§2.1.3 step 5h), using data from the `IterationResult`. Each entry
+MUST follow this format:
 
 ```markdown
 ## Iteration N — <beadId>: <beadTitle> [STATUS]
@@ -1537,8 +1539,8 @@ The CLI install directory is resolved at runtime via `getCliDir()` using
 Each run MUST create a directory at `.super-ralph/runs/<runId>/` containing:
 
 - `session.json` — The per-run SessionState, updated on every state change.
-- `events.jsonl` — Append-only log. Each line is a complete JSON object with a
-  `type` field discriminating the event variant.
+- `events.jsonl` — Append-only log. Each line is a JSON object with `ts` and
+  `event` fields (see §5.6.2). The `event.type` field discriminates the variant.
 - `iterations/` — Directory containing per-iteration transcript files.
 
 ### 6.4 Transcript File Naming
@@ -1629,7 +1631,11 @@ strategy = "retry"                # Error strategy: "retry" | "skip" | "abort"
 max_retries = 3                   # Max retries per iteration label
 
 [opencode]
-url = "http://localhost:4096"     # Default OpenCode server URL
+# NOTE: This URL is NOT used for ephemeral server startup (which uses port: 0
+# and discovers the URL from server.url — see §2.5.1). It is reserved for
+# potential future use (e.g., default attach URL). Currently unused by the
+# engine.
+url = "http://localhost:4096"
 
 [cli]
 path = ""                         # Path to super-ralph CLI installation
