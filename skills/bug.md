@@ -11,6 +11,7 @@
 - Edge cases around the fix: related inputs or states that could also be broken.
 - Data implications: corrupted data? Need migration or cleanup?
 - Test gaps: why wasn't this caught? What test is missing?
+- Existing test coverage: read test files for the buggy code path. What's tested? What's missing? Note file:line locations.
 
 ## Learned Questions
 Check `.super-ralph/intake-checklist.md` if it exists for learned questions from past epics.

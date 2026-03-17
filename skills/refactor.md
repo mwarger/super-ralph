@@ -15,6 +15,7 @@
 10. Data migration story? If data shapes change — migration plan? Online migration?
 11. What can be parallelized? Independent parts vs sequential dependencies.
 12. Rollback strategy? Feature flags? Backward-compatible changes?
+13. What do the tests tell you? Read the actual test files for code being refactored — they define the behavioral contract that must be preserved. Note file:line locations.
 
 ## Learned Questions
 Check `.super-ralph/intake-checklist.md` if it exists for learned questions from past epics.

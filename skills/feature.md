@@ -15,6 +15,7 @@
 10. What are the edge cases? Error states, race conditions, empty states, permission boundaries.
 11. What are the performance constraints? Latency budgets, data volume, concurrency.
 12. What's the testing strategy? Automatic vs manual verification, test infrastructure.
+13. What do the existing tests reveal? Study test files for related functionality — they document intended behavior, edge cases, and integration boundaries. Note file:line locations.
 
 ## Learned Questions
 Check `.super-ralph/intake-checklist.md` if it exists for learned questions from past epics.

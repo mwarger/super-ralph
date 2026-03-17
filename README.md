@@ -34,13 +34,19 @@ Every piece of work flows through three phases. Each phase is a **bead pack** �
 
 Analyze source code, requirements, or any input and produce a verified specification. The bead pack stamps beads for: analyze → draft → fresh-eyes reviews → verification. Review beads spawn dynamically based on spec complexity.
 
+Reverse agents explore the codebase first — if a question can be answered by reading code, they read code instead of asking. When studying existing code, agents leave `[see file:NN-MM]` citations in the spec that act as breadcrumbs for later phases. The synthesis step uses "Design It Twice" — proposing radically different approaches under different constraints, not minor variations — so the spec captures a deliberate architectural choice.
+
 ### Decompose: spec → work beads
 
-Break a specification into implementable work beads. The bead pack stamps beads for: analyze spec → stamp area beads → cross-review. Each work bead gets a fat description with implementation instructions, file targets, and acceptance criteria.
+Break a specification into implementable work beads. The bead pack stamps beads for: analyze spec → stamp area beads → cross-review. Each work bead is a **vertical slice** — a narrow but complete path through all layers (schema, API, logic, UI, tests), not a horizontal slice of one layer. The first bead is always a "tracer bullet": the narrowest end-to-end path that proves the architecture works. Subsequent beads widen the path one behavior at a time.
+
+Any `[see file:NN-MM]` citations from the spec are carried into bead descriptions, so implementing agents can follow the breadcrumbs back to the source code that informed the design.
 
 ### Forward: work beads → code
 
 No bead-stamping step needed — Decompose already produced the work beads. This is ralph-tui's native mode — just `ralph-tui run`. The runner selects the highest-priority ready bead, routes it to the appropriate agent/model, and the agent implements, tests, commits, and closes the bead.
+
+Forward agents follow TDD discipline: for each acceptance criterion, write a failing test first (RED), then write minimal code to pass it (GREEN). One test at a time, one slice at a time — never batch all tests up front. If the bead description contains `[see file:NN-MM]` citations, agents read those references first to ground their implementation in the existing codebase.
 
 ## How It Works
 

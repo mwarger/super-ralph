@@ -30,16 +30,23 @@ Each bead should be:
 - **Self-contained** — a fresh agent with no memory can pick it up and complete it
 - **Verifiable** — has clear acceptance criteria that can be mechanically checked
 - **Self-documenting** — description includes background, reasoning, and context so a fresh agent understands what to do and why
+- **Citation-linked** — if the spec contains `[see file:NN-MM]` references relevant to this bead, carry them into the bead description so the implementing agent can read the referenced code
 
 If a task feels too large to describe in 2-3 sentences, split it into smaller beads.
 
 ## Planning Guidance
 
-### Ordering and Dependencies
-- Create foundational beads first (schema, data models, core types)
-- Group related work into natural phases (core -> edge cases -> polish)
-- Wire `--depends-on` so beads unblock in a sensible order
-- Later beads should depend on the beads they need completed first
+### Vertical Slices and Tracer Bullets
+
+Each bead should be a **vertical slice** — a narrow but COMPLETE path through every integration layer (schema, API, logic, UI, tests). Not a horizontal slice of one layer.
+
+- **First bead = tracer bullet**: the narrowest complete path through the system that proves the architecture works end-to-end. Demoable on its own.
+- **Subsequent beads widen the path**: each adds one behavior or capability, still cutting through all layers.
+- A completed bead should be independently verifiable — not "all the schema" or "all the tests."
+- Wire `--depends-on` so beads unblock in a sensible order.
+- Prefer many thin slices over few thick ones.
+
+**Anti-pattern**: Don't create "schema bead, then API bead, then UI bead, then test bead." Instead: "login flow bead (schema + API + UI + tests), then registration flow bead, then password reset bead."
 
 ### Review and Quality Checkpoints
 {{#if includeReview}}
@@ -72,7 +79,8 @@ Use `br` CLI to create each bead:
 br create --parent {{epicId}} \
   --title "US-NNN: <Title>" \
   --description "$(cat <<'EOF'
-<Self-contained description with context, reasoning, and acceptance criteria>
+<Self-contained description with context, reasoning, and acceptance criteria.
+Include any [see file:NN-MM] citations from the spec relevant to this task.>
 
 ## Acceptance Criteria
 - [ ] <specific, verifiable criterion>

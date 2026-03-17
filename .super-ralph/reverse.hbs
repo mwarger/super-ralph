@@ -74,7 +74,7 @@ Before asking any questions:
 5. Deeply analyze all provided inputs — read files, fetch URLs, explore code
 {{/if}}
 
-This grounds your questions in the reality of the project, not abstract possibilities.
+This grounds your questions in the reality of the project, not abstract possibilities. If a question can be answered by exploring the codebase, explore the codebase instead of asking. When you find relevant code, note file and line ranges — these become `[see file:NN-MM]` citations in the spec that forward-phase agents follow back to source.
 
 ### Step 1: Structured Interrogation
 
@@ -128,11 +128,16 @@ Use the `question` tool with options like:
 
 ## Phase B: Synthesis
 
-### Step 2: Propose Approaches
+### Step 2: Propose Approaches (Design It Twice)
 
-Propose 2-3 different approaches with trade-offs. Lead with your recommendation and explain why.
+Propose 2-3 **radically different** approaches — not minor variations. Apply different constraints to each:
+- One that minimizes interface surface area
+- One that maximizes flexibility
+- One that optimizes for the most common case
 
-Present the approaches and ask the user to pick one using the `question` tool.
+For each approach, show: what the interface looks like, what complexity it hides, and the key trade-off. Lead with your recommendation and explain why.
+
+Present the approaches and ask the user to pick one using the `question` tool. The value is in the contrast — don't let approaches converge.
 
 ### Step 3: Incremental Design
 
@@ -155,6 +160,8 @@ Sections (scale each to its complexity — a few sentences if simple, paragraphs
 8. **Dependencies** — what it depends on, what depends on it
 9. **Testing Strategy** — what to test, how to verify
 10. **Non-Goals** — explicit scope boundaries
+
+When describing behavior or architecture, include `[see file:NN-MM]` citations to existing code you studied. These references become breadcrumbs that forward-phase agents follow during implementation.
 
 ### Step 4: Save the Spec
 
@@ -205,6 +212,8 @@ Before writing or refining the spec:
 - Don't guess — investigate
 - Each iteration should meaningfully improve the spec
 - Self-check: is every requirement specific enough for decompose? Are architecture decisions made?
+- When studying existing code, include `[see path/to/file.ts:NN-MM]` citations in the spec. These give forward-phase agents just-in-time context.
+- Study test files alongside source — tests reveal intended behavior, edge cases, and integration boundaries. Cite both.
 
 ## Spec Structure
 
@@ -233,5 +242,6 @@ Before writing or refining the spec:
 - This is a clean-room specification — describe behavior, not code structure.
 - Each iteration should meaningfully improve coverage or depth.
 - If the input is complex enough to warrant multiple specs, you may create additional spec files. But the default is one progressively refined spec.
+- When referencing existing code behavior, cite the source location: `[see path/to/file.ts:NN-MM]`. Forward-phase agents will follow these references during implementation.
 - **Always provide a `reason`** when calling `task_complete`. For `phase_done`, explain what the spec covers and why it's ready for decomposition. For `complete`, state what gaps remain. This reasoning is logged for evaluation.
 {{/if}}

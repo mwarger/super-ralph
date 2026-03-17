@@ -42,11 +42,19 @@ You have the `br` CLI available:
 1. Read `.super-ralph/progress.md` for learnings from previous iterations.
 2. Run `br show {{beadId}}` to confirm full details of your assignment.
 3. If you need context about completed dependencies, use `br show` to look them up.
-4. Search the codebase before implementing. Do not assume anything.
-5. Implement the bead following its acceptance criteria exactly.
-6. Run all quality gate commands. Fix any failures.
-7. Self-review: every acceptance criterion met, no scope creep, no placeholders.
-8. Commit with message: `feat: {{beadId}} - {{beadTitle}}`
-9. Close the bead: `br close {{beadId}}`
-10. Update `.super-ralph/progress.md` with learnings.
-11. Call `task_complete` with `status: "complete"`.
+4. If the bead description contains `[see ...]` citations, read those files and line ranges first — they reference existing code that informs your implementation.
+5. Follow TDD discipline: write a test for the bead's first acceptance criterion, then write minimal code to pass it. Repeat for each criterion. Don't write all tests first — vertical slices, not horizontal.
+6. Search the codebase before implementing. Do not assume anything.
+7. Implement the bead following its acceptance criteria exactly.
+8. Run all quality gate commands. Fix any failures.
+9. Self-review: every acceptance criterion met, no scope creep, no placeholders.
+10. Commit with message: `feat: {{beadId}} - {{beadTitle}}`
+11. Close the bead: `br close {{beadId}}`
+12. Update `.super-ralph/progress.md` with learnings.
+13. Call `task_complete` with `status: "complete"`.
+
+### TDD Rules
+- Tests verify **behavior through public interfaces**, not implementation details.
+- One test at a time → minimal code to pass → next test. Never batch all tests first.
+- Never refactor while RED. Get to GREEN first.
+- Tests should survive internal refactoring — if you rename a private function and a test breaks, that test was wrong.
