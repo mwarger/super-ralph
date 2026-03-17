@@ -1,0 +1,45 @@
+---
+name: super-ralph-feature
+description: Stamp reverse process beads with feature-specific question bank for deeper business and technical interrogation
+---
+
+# Reverse Pack (Feature Domain)
+
+This skill composes with `/super-ralph-reverse`. It stamps the **same bead graph** (deep study → draft → 3 review passes → consolidation), but injects the feature-specific question bank into bead 1's study instructions.
+
+## How to Use
+
+Follow `/super-ralph-reverse` exactly, but when stamping **Bead 1 (Deep Study of Source Material)**, replace the `## Question Bank` section with the feature question bank below.
+
+Everything else — the bead graph structure, dependency wiring, description templates, stamping procedure — is identical to `/super-ralph-reverse`.
+
+## Feature Question Bank
+
+Include this in bead 1's description under `## Question Bank`:
+
+```markdown
+## Question Bank
+
+Use these feature-specific questions to guide your study — they ensure
+you don't miss important dimensions of the system:
+
+### Business Interrogation
+1. Why does this matter? Business case, cost of not doing it, cost of delay.
+2. Who is affected? Users, systems, teams, downstream effects.
+3. What does success look like? Measurable changes, metrics, behavior changes.
+4. What are the boundaries? What is this NOT? Adjacent scope we're not touching? Tempting scope creep?
+5. What has been tried before? Prior art in codebase? Previous attempts? Why abandoned?
+6. What are the risks? Failure modes, blast radius if it breaks.
+
+### Technical Deep-Dive
+7. What exists already? Related code, patterns, abstractions. Extend or build new?
+8. What's the data model? Entities, relationships, storage, migrations.
+9. What are the integration points? APIs, databases, queues, external services.
+10. What are the edge cases? Error states, race conditions, empty states, permission boundaries.
+11. What are the performance constraints? Latency budgets, data volume, concurrency.
+12. What's the testing strategy? Automatic vs manual verification, test infrastructure.
+13. What do the existing tests reveal? Study test files for related functionality — they document intended behavior, edge cases, and integration boundaries. Note file:line locations.
+
+### Learned Questions
+Check `.super-ralph/intake-checklist.md` if it exists for learned questions from past epics.
+```
