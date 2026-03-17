@@ -57,19 +57,21 @@ Implement work beads one at a time. This is ralph-tui's native mode — just `ra
 
 ## Getting Started
 
+Each phase is a skill that runs inside an agent session (e.g., Claude Code). The skill stamps beads, then ralph-tui executes them.
+
 ```bash
-# 1. Produce a spec from source code or requirements
-#    (invoke the reverse bead pack skill)
-ralph-tui skill reverse ./src "rebuild auth layer"
+# 1. Invoke the reverse skill to produce a spec
+#    (runs inside your agent — stamps process beads into an epic)
+ralph-tui run --tracker beads-rust --epic <reverse-epic-id>
 
-# 2. Decompose the spec into work beads
-ralph-tui skill decompose --spec docs/specs/auth-spec.md
+# 2. Invoke the decompose skill to break the spec into work beads
+ralph-tui run --tracker beads-rust --epic <decompose-epic-id>
 
-# 3. Implement — ralph-tui's native mode
-ralph-tui run
+# 3. Implement the work beads
+ralph-tui run --tracker beads-rust --epic <work-epic-id>
 ```
 
-Each step is independent — have a spec already? Skip to decompose. Have beads? Skip straight to `ralph-tui run`.
+Each step is a separate `ralph-tui run` against an epic of process beads. Have a spec already? Skip to decompose. Have work beads? Skip straight to step 3.
 
 ## Design Documentation
 
